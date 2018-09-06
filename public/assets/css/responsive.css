@@ -1,0 +1,46 @@
+@charset "utf-8";
+/* CSS Document */
+/*start of 480*/
+@media only screen and (max-width: 480px){
+ .logoBlock{text-align:center;}
+ .logoBlock img {max-width: 70%;}
+ .bf-left, .bf-right{width:100%;text-align:center;}
+ .footer-bottom{font-weight:normal;}
+ .btnBlockxs{display:block;}
+  
+}
+
+/*---------------------------------------------------end of max 480 resolution------------------------------------------------------*/
+/*start of 481*/
+@media screen and (min-width: 481px) and (max-width: 767px) {
+ .logoBlock img {
+    max-width: 30%;
+}
+  
+}
+
+/*----------------------------------------------end of min 481 to max767 resolution----------------------------------------*/
+/*start of 768*/
+@media screen and (min-width: 768px) and (max-width: 980px) {
+ .logoBlock img {
+    max-width: 30%;
+}
+	 
+	
+}
+/*---------------------------------------------------end of 980 resolution------------------------------------------------------*/
+/*start of 981*/
+@media screen and (min-width: 981px) and (max-width: 1200px) {
+	
+}
+/*---------------------------------------------------end of 1200 resolution------------------------------------------------------*/
+
+@media screen and (min-width: 991px){
+	.noPadding{padding:0;}
+.noLeftPadd{padding-left:0;}
+.noRightPadd{padding-right:0;}
+	
+	}
+	@media screen and (max-width:990px){
+		.noPaddingXS{padding:0px;}
+		}
