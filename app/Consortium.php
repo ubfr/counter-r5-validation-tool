@@ -16,7 +16,7 @@ class Consortium extends Model
 	  protected $table = 'consortium_configuration';
 	  
 	  protected $fillable = [
-	      'configuration_name','remarks', 'provider_name', 'provider_url', 'apikey', 'customer_id','requestor_id',
+	      'configuration_name','remarks',
 	  ];
 	  
 	  protected $hidden = [

@@ -1,0 +1,16 @@
+Report_Name,Book Access Denied,,,,,,,,,,,,,,,,
+Report_ID,TR_B2,,,,,,,,,,,,,,,,
+Release,5,,,,,,,,,,,,,,,,
+Institution_Name,Johnson Matthey,,,,,,,,,,,,,,,,
+Institution_ID,mu-0000036,,,,,,,,,,,,,,,,
+Metric_Types,Limit_Exceeded; No_License,,,,,,,,,,,,,,,,
+Report_Filters,Data_Type=Book; Access_Method=Regular,,,,,,,,,,,,,,,,
+Report_Attributes,,,,,,,,,,,,,,,,,
+Exceptions,,,,,,,,,,,,,,,,,
+Reporting_Period,2018-01-01 to 2018-05-31,,,,,,,,,,,,,,,,
+Created,03-07-18,,,,,,,,,,,,,,,,
+Created_By,MPS,,,,,,,,,,,,,,,,
+,,,,,,,,,,,,,,,,,
+Title,Publisher,Publisher_ID,Platform,DOI,Proprietary_ID,ISBN,Print_ISSN,Online_ISSN,URI,Metric_Type,Reporting_Period_Total,Jan-18,Feb-18,Mar-18,Apr-18,May-18,
+Catalysis 30,Royal Society of Chemistry,,RSC eBooks,10.1039/9781788013048,,978-1-78801-304-8,978-1-78801-151-8,1465-1920,,Controlled,Total_Item_Investigations,1000,0,0,0,0,1
+Catalysis 30,Royal Society of Chemistry,,RSC eBooks,10.1039/9781788013048,,978-1-78801-304-8,978-1-78801-151-8,ncata,,Controlled,Total_Item_Investigations,1000,0,0,0,0,1

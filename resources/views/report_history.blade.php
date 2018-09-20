@@ -31,9 +31,9 @@
 						<table id="example" class="table table-striped table-bordered dataTable" cellspacing="0" width="100%" role="grid" aria-describedby="example_info" style="width: 100%;">
 							<thead>
 								<tr role="row">
+								    <th class="sorting" tabindex="0" aria-controls="example" rowspan="1" colspan="1" aria-label="Name: activate to sort column ascending" style="width: 148px;">ID</th>
 									<th class="sorting" tabindex="0" aria-controls="example" rowspan="1" colspan="1" aria-label="Position: activate to sort column ascending" style="width: 233px;">Report Code</th>
 									<th class="sorting" tabindex="0" aria-controls="example" rowspan="1" colspan="1" aria-label="Position: activate to sort column ascending" style="width: 233px;">Report Name</th>
-									
 								    <th class="sorting" tabindex="0" aria-controls="example" rowspan="1" colspan="1" aria-label="Office: activate to sort column ascending" style="width: 108px;">Edit</th>
 									<th class="sorting" tabindex="0" aria-controls="example" rowspan="1" colspan="1" aria-label="Start date: activate to sort column ascending" style="width: 99px;">Delete</th>
 								</tr>
@@ -43,22 +43,23 @@
 							</thead>
 							<tfoot>
 								<tr>
+								    <th rowspan="1" colspan="1">ID</th>
 									<th rowspan="1" colspan="1">Report Code</th>
 									<th rowspan="1" colspan="1">Report Name</th>
-									
 									<th rowspan="1" colspan="1">Edit</th>
-									<th rowspan="1" colspan="1">Delete</th>
+									<th rowspan="1" colspan="1">Delete</th> 
 								</tr>
 								
 								
 							</tfoot>
 							<tbody> 
 								<?php 
+								$i=1;
 								foreach($reportsname as $reportDetails){?>
 								<tr role="row" class="even">
+								    <td class=""><?php echo $i++;?></td>
 									<td class=""><?php echo $reportDetails->report_code;?></td>
 									<td class=""><?php echo $reportDetails->report_name;?></td>
-									
 									<td class=""><a href="edit_report/{{$reportDetails->id}}"><i class="fa fa-pencil-square-o" aria-hidden="true"></i></a></td>
 									<td class=""><a onclick='show_confirm(<?php echo $reportDetails->id;?>);'><i class="fa fa-trash-o trashIcon" style="font-size: 15px;padding-right: 10px;"></i></a></td>
 								</tr>

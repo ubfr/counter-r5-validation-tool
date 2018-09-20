@@ -49,6 +49,8 @@ class CommonController extends Controller
         return $filename;
     }
 
+    
+    
    //////// function for check code and id only /////////
     
     public function jsonHeaderCodeIDValidate($reportname, $reportid)
@@ -65,7 +67,10 @@ class CommonController extends Controller
         $ReportName = $reportdataa::select('id')->where('report_name', trim($reportname))->first();
         if (! isset($ReportName->id)) {
             $warning[$b]["data"] = $reportname ?? '';
-            $warning[$b]["error"] = "Report name is invalid in Master Report Header";
+            if($reportname=='Structure error in JSON file')
+                $warning[$b]["error"] = "Structure error of JSON File";
+            else 
+                $warning[$b]["error"] = "Report name is invalid in Master Report Header";
             $b ++;
             $data_warning ++;
             return $warning;
@@ -333,6 +338,7 @@ class CommonController extends Controller
             }
             
             $publisherJson = $dataValue['Publisher']??'';
+            // echo "<pre>";print_r($dataValue); die;
             if (empty($publisherJson)) {
                 $warning[$b]["data"] = $publisherJson;
                 $warning[$b]["error"] = "Publisher is Empty in Report_Items Index[ ".$key." ]";
@@ -354,7 +360,7 @@ class CommonController extends Controller
             // echo "<pre>";print_r($yopJson); die;
             if (empty($yopJson)){
                 $warning[$b]["data"] = $yopJson;
-                $warning[$b]["error"] = "YOP is Empty in Report_Items Index[ ".$key." ]";
+                $warning[$b]["error"] = "YOP is Invalid in Report_Items Index[ ".$key." ]";
                 $b ++;
                 $data_warning ++;
             }
@@ -476,20 +482,30 @@ class CommonController extends Controller
                 
                 if ($ItemData['Type'] == 'Print_ISSN' && (empty($ItemData['Value']))) {
                     $warning[$b]["data"] = $ItemData['Value'];
-                    $warning[$b]["error"] = "Print_ISSN value is Empty in Report_Items Index[ ".$key." ] Item Id index[ ".$k." ]";
+                    $warning[$b]["error"] = "Print_ISSN value is Invalid in Report_Items Index[ ".$key." ] Item Id index[ ".$k." ]";
                     $b ++;
                     $data_warning ++;
                 }
-                
+
                 if ($ItemData['Type'] == 'Online_ISSN') {
-                    $check = $this->issn(strtoupper($ItemData['Value']));
-                    if (($check == false) || (empty($ItemData['Value']))) {
+                    
+                    if(empty($ItemData['Value'])){
                         $warning[$b]["data"] = $ItemData['Value'];
                         $warning[$b]["error"] = "Online_ISSN value is Empty in Report_Items Index[ ".$key." ] Item Id index[ ".$k." ]";
                         $b ++;
-                        $data_warning ++;
+                        $data_error ++;
+                    }else{
+                        $check = $this->issn(strtoupper($ItemData['Value']));
+                        if ($check == false) {
+                            $warning[$b]["data"] = $ItemData['Value'];
+                            $warning[$b]["error"] = "Online_ISSN value is Invalid in Report_Items Index[ ".$key." ] Item Id index[ ".$k." ]";
+                            $b ++;
+                            $data_error ++;
+                        }
                     }
                 }
+                
+                
                 if ($ItemData['Type'] == 'URI' && empty($ItemData['Value'])) {
                     $warning[$b]["data"] = $ItemData['Value'];
                     $warning[$b]["error"] = "URI value is Empty in Report_Items Index[ ".$key." ] Item Id index[ ".$k." ]";
@@ -635,16 +651,25 @@ class CommonController extends Controller
                     $b ++;
                     $data_warning ++;
                 }
-                
+           
                 if ($ItemData['Type'] == 'Online_ISSN') {
-                    $check = $this->issn(strtoupper($ItemData['Value']));
-                    if (($check == false) || (empty($ItemData['Value']))) {
+                    
+                    if(empty($ItemData['Value'])){
                         $warning[$b]["data"] = $ItemData['Value'];
                         $warning[$b]["error"] = "Online_ISSN value is Empty in Report_Items Index[ ".$key." ] Item Id index[ ".$k." ]";
                         $b ++;
-                        $data_warning ++;
+                        $data_error ++;
+                    }else{
+                        $check = $this->issn(strtoupper($ItemData['Value']));
+                        if ($check == false) {
+                            $warning[$b]["data"] = $ItemData['Value'];
+                            $warning[$b]["error"] = "Online_ISSN value is Invalid in Report_Items Index[ ".$key." ] Item Id index[ ".$k." ]";
+                            $b ++;
+                            $data_error ++;
+                        }
                     }
                 }
+                
                 /*if ($ItemData['Type'] == 'URI' && empty($ItemData['Value'])) {
                     $warning[$b]["data"] = $ItemData['Value'];
                     $warning[$b]["error"] = "URI value is Empty in Report_Items Index[ ".$key." ] Item Id index[ ".$k." ]";
@@ -661,6 +686,7 @@ class CommonController extends Controller
                 $data_warning ++;
             }
             $publisherJson = $dataValue['Publisher']??'';
+            // echo "<pre>";print_r($publisherJson);die;
             if (empty($publisherJson)) {
                 $warning[$b]["data"] = $publisherJson;
                 $warning[$b]["error"] = "Publisher is Empty in Report_Items Index[ ".$key." ]";
@@ -672,7 +698,7 @@ class CommonController extends Controller
             // echo "<pre>";print_r($yopJson);die;
             if (empty($yopJson)) {
                 $warning[$b]["data"] = $yopJson;
-                $warning[$b]["error"] = "YOP is Empty in Report_Items Index[ ".$key." ]";
+                $warning[$b]["error"] = "YOP is Invalid in Report_Items Index[ ".$key." ]";
                 $b ++;
                 $data_warning ++;
             }
@@ -723,6 +749,7 @@ class CommonController extends Controller
                         $b ++;
                         $data_warning ++;
                     }
+                    
                 }
             }
             // performance closed

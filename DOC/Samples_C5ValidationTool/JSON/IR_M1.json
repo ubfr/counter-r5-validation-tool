@@ -1,0 +1,43 @@
+{
+    "Report_Header": {
+        "Created": "2018-07-03T09:44:54Z",
+        "Created_By": "",
+        "Customer_ID": "000100077",
+        "Report_ID": "IR_M1",
+        "Release": "5",
+        "Report_Name": "Multimedia Item Requests",
+        "Institution_Name": "",
+        "Institution_ID": [
+            {
+                "Type": "ISNI",
+                "Value": ""
+            }
+        ],
+        "Report_Filters": [
+            {
+                "Name": "Begin_Date",
+                "Value": "2018-01"
+            },
+            {
+                "Name": "End_Date",
+                "Value": "2018-05"
+            }
+        ],
+        "Report_Attributes": [
+            {
+                "Name": "",
+                "Value": ""
+            }
+        ],
+        "Exceptions": [
+            {
+                "Code": "3030",
+                "Severity": "Error",
+                "Message": "No Usage Available for Requested Dates",
+                "Help_URL": "string",
+                "Data": "Service did not find any data for the date range specified."
+            }
+        ]
+    },
+    "Report_Items": []
+}

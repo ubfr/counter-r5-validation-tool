@@ -71,6 +71,68 @@ class Validatereportjr1Controller extends FilevalidateController
 		->where('report_code',trim($getreportCode))
 		->first();
 		
+////////////////////////////////////////report_attribute/////////////////////////////////////////////////////////
+		
+		$Headervalue = $Header=$sheet->rangeToArray('A14' . ':' .'Q14',NULL, TRUE, FALSE);
+		
+		$headerdataarray=$Headervalue[0];
+		
+		if($getreportCode=='DR'|| $getreportCode=='IR'||$getreportCode=='TR'|| $getreportCode=='PR'){
+		   
+		   $attributeValue = $attribute=$sheet->rangeToArray('B8' . ':' .'B8',NULL, TRUE, FALSE);
+		    
+		    $Cellvalue = $attributeValue[0][0]??'';
+		    
+		   
+		    $CellArrayvalue =  explode('=', $Cellvalue);
+		    
+		    
+		    $attribute=$CellArrayvalue[1];
+		   
+		    
+		    $attributearrayvalue =  explode('|',  $attribute);
+		   
+		    $flagvalue=0;
+		    $invalidattribute=array();
+		    $string_check=0;
+		    $a=0;
+		    $b=0;
+		    $structure_error=0;
+		    $data_error=0;
+		    $structure_warning=0;
+		    $data_warning=0;
+		    $topMostMaxRowNo = 15;
+		    $MetricTypeColumn = '';
+		    
+		    //die($attributearrayvalue);
+		    
+		    //echo "<pre>";print_r($flagvalue);die;
+		    foreach($attributearrayvalue as $singleattributevalue){
+		        $Searchingvalue= trim($singleattributevalue);
+		        //echo "<pre>";print_r($Searchingvalue);die;
+		        
+		        if (!in_array($Searchingvalue,$headerdataarray)) {
+		            $flagvalue=1;
+		            $invalidattribute[]=$Searchingvalue;
+		        }
+		       // die('sadfa');
+		        
+		    }
+		    if($flagvalue==0){
+		        $error[$b]["data"]=implode(",",$invalidattribute);
+		        $error[$b]["error"]="Platform columns are missing in Cell A14";
+		        $b++;
+		        $data_error++;
+		    }
+		    
+		   
+		}
+		
+	// echo "<pre>";print_r($error);die;
+		
+	
+	
+
 		//checking matrix type
 		$MatrixValue = $MatrixFilter=$sheet->rangeToArray('B6' . ':' .'B6',NULL, TRUE, FALSE);
 		
@@ -101,14 +163,14 @@ class Validatereportjr1Controller extends FilevalidateController
 		    $error[$b]["data"]=$getreportCode??'';
 		    $error[$b]["error"]="Platform code in report does not match any registered platforms in Cell B2";
 		    $b++;
-		    $data_warning++;
+		    $data_error++;
 		}
 		//echo "<pre>".$Reportname1;print_r($actulareport);die;
 		  else if($ReportId['id']==''){
 		    $error[$b]["data"]=$Reportname1;
 		    $error[$b]["error"]="Platform name in report does not match any registered platforms in Cell B1";
 		    $b++;
-		    $data_warning++;
+		    $data_error++;
 		}
 	/*	else if($flageForMatrixfilter==1){
 		    $invalidMetric = implode(";",$invalidMetric);

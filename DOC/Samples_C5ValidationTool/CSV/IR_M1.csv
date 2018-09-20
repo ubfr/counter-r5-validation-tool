@@ -1,0 +1,15 @@
+"Report_Name","Multimedia Item Requests
+"
+"Report_ID","IR_M1"
+"Release","5"
+"Institution_Name","Johnson Matthey"
+"Institution_ID","mu-0000036"
+"Metric_Types","Total_Item_Requests"
+"Report_Filters","Data_Type=Multimedia; Access_Method=Regular"
+"Report_Attributes",""
+"Exceptions",""
+"Reporting_Period","2018-01-01 to 2018-05-31"
+"Created","2018-07-03"
+"Created_By","MPS"
+
+"Item","Publisher","Publisher_ID","Platform","DOI","Proprietary_ID","URI","Metric_Type","Reporting_Period_Total","Jan-2018","Feb-2018","Mar-2018","Apr-2018","May-2018"

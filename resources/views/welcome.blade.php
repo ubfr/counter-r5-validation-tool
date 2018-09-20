@@ -19,7 +19,7 @@ foreach ($reportsname as $reportDetails) {
 ?>
     <!--========================login form start here======================================-->
 
-<div class="main-content">
+
 	@if (Session::has('error'))
 	<div class="alert alert-success" style="color: red">{{
 		Session::get('error') }}</div>
@@ -115,27 +115,34 @@ foreach ($reportsname as $reportDetails) {
 										style="color: #ff0000">{{
 										$errors->welcome->first('Requestorurl') }}</span>
 								</div>
-								<div class="form-group col-md-6 noPaddingXS noLeftPadd">
+								
+								<div class="form-group col-md-4 noPaddingXS noLeftPadd">
+									<input value="{{ old('APIkey') }}" type="text" name="APIkey"
+										id="name" class="form-control input-lg"
+										placeholder="API Key*"> <span style="color: #ff0000">{{
+										$errors->welcome->first('APIkey')}}</span>
+								</div>
+								
+								<div class="form-group col-md-4 noPaddingXS noLeftPadd">
 									<input value="{{ old('CustomerId') }}" type="text"
 										name="CustomerId" id="CustomerId"
 										class="form-control input-lg" placeholder="Customer ID*"> <span
 										style="color: #ff0000">{{
 										$errors->welcome->first('CustomerId') }}</span>
 								</div>
-								<div class="form-group col-md-6 noRightPadd noPaddingXS">
 								
-								<select class="form-control input-lg">
-                                 <option value="">APIKey</option>
-                                    <option value="">Requestor ID</option>
-                                     
-								</select>
+								<div class="form-group col-md-4 noPaddingXS noLeftPadd">
+									<input value="{{ old('CustomerId') }}" type="text"
+										name="RequestorId" id="RequestorId"
+										class="form-control input-lg" placeholder="Requestor ID*"> <span
+										style="color: #ff0000">{{
+										$errors->welcome->first('RequestorId') }}</span>
 								</div>
 								
-								<div class="form-group">
-									<input value="{{ old('APIkey') }}" type="text" name="APIkey"
+								<div class="form-group col-md-12 noPaddingXS noLeftPadd">
+									<input value="" type="text" name="remarks"
 										id="name" class="form-control input-lg"
-										placeholder="Value*"> <span style="color: #ff0000">{{
-										$errors->welcome->first('APIkey')}}</span>
+										placeholder="Remarks"> <span style="color: #ff0000"></span>
 								</div>
 								</fieldset>
 								<fieldset>

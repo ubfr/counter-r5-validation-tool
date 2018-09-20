@@ -80,12 +80,17 @@ class FilevalidateController extends CommonController
                 $data_warning = 0;
                 
                 // /////////////////////// start for json /////////////////////////////////////////////
+                
                 $jsonpath = Input::file('import_file')->getRealPath();
                 $json = json_decode(file_get_contents($jsonpath), true);
                 
                 // /////// validate id and code
                 $currentMasterID = $json['Report_Header']['Report_ID'] ?? '';
-                $currentReportName = str_replace('"', '', $json['Report_Header']['Report_Name'] ?? '');
+                if($json === null) {
+                    $currentReportName = 'Structure error in JSON file';
+                }else{
+                    $currentReportName = str_replace('"', '', $json['Report_Header']['Report_Name'] ?? '');
+                }
                 
                 // /////// checking Code and ID first time
                 $result = CommonController::jsonHeaderCodeIDValidate($currentReportName, $currentMasterID);
@@ -95,6 +100,7 @@ class FilevalidateController extends CommonController
                     $upload_file = $this->fileupload($file);
                     
                     $user = Session::get('user');
+                    
                     $data['warning_details'] =array();
                     $data['structure_error'] = $result['structure_error'] ?? '0';
                     $data['error_details'] = $result ?? '0';

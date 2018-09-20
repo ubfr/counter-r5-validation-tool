@@ -1,0 +1,972 @@
+{
+    "Report_Header": {
+        "Created": "",
+        "Created_By": "",
+        "Customer_ID": "000100077",
+        "Report_ID": "TR_J323",
+        "Release": "5123",
+        "Report_Name": "Journal Usage by Access Type",
+        "Institution_Name": "",
+        "Institution_ID": [
+            {
+                "Type": "ISNI",
+                "Value": "000100077"
+            }
+        ],
+        "Report_Filters": [
+            {
+                "Name": "Begin_Date",
+                "Value": "2018-01"
+            },
+            {
+                "Name": "End_Date",
+                "Value": "2016-05"
+            }
+        ],
+        "Report_Attributes": [
+            {
+                "Name": "",
+                "Value": ""
+            }
+        ],
+        "Exceptions": [
+            {
+                "Code": "",
+                "Severity": "",
+                "Message": "",
+                "Help_URL": "",
+                "Data": ""
+            }
+        ]
+    },
+    "Report_Items": [
+        {
+            "Title": "Advances in Civil Engineering Materials",
+            "Item_ID": [
+                {
+                    "Type": "DOI",
+                    "Value": ""
+                },
+                {
+                    "Type": "Proprietary_ID",
+                    "Value": ""
+                },
+                {
+                    "Type": "ISBN",
+                    "Value": ""
+                },
+                {
+                    "Type": "Print_ISSN",
+                    "Value": ""
+                },
+                {
+                    "Type": "Online_ISSN",
+                    "Value": "2165-3984"
+                },
+                {
+                    "Type": "URI",
+                    "Value": ""
+                }
+            ],
+            "Platform": "astm.org",
+            "Publisher": "ASTM International",
+            "Publisher_ID": [
+                {
+                    "Type": "ISNI",
+                    "Value": ""
+                }
+            ],
+            "Data_Type": "Journal",
+            "Section_Type": "",
+            "YOP": "",
+            "Access_Type": "Controlled",
+            "Access_Method": "Regular",
+            "Performance": [
+                {
+                    "Period": {
+                        "Begin_Date": "2018-04-01",
+                        "End_Date": "2018-04-30"
+                    },
+                    "Instance": [
+                        {
+                            "Metric_Type": "Total_Item_Investigations",
+                            "Count": 1
+                        },
+                        {
+                            "Metric_Type": "Total_Item_Requests",
+                            "Count": 1
+                        },
+                        {
+                            "Metric_Type": "Unique_Item_Investigations",
+                            "Count": 1
+                        },
+                        {
+                            "Metric_Type": "Unique_Item_Requests",
+                            "Count": 1
+                        }
+                    ]
+                },
+                {
+                    "Period": {
+                        "Begin_Date": "2018-05-01",
+                        "End_Date": "2018-05-31"
+                    },
+                    "Instance": [
+                        {
+                            "Metric_Type": "Total_Item_Investigations",
+                            "Count": 1
+                        },
+                        {
+                            "Metric_Type": "Total_Item_Requests",
+                            "Count": 1
+                        },
+                        {
+                            "Metric_Type": "Unique_Item_Investigations",
+                            "Count": 1
+                        },
+                        {
+                            "Metric_Type": "Unique_Item_Requests",
+                            "Count": 1
+                        }
+                    ]
+                }
+            ]
+        },
+        {
+            "Title": "Cement, Concrete, and Aggregates",
+            "Item_ID": [
+                {
+                    "Type": "DOI",
+                    "Value": ""
+                },
+                {
+                    "Type": "Proprietary_ID",
+                    "Value": ""
+                },
+                {
+                    "Type": "ISBN",
+                    "Value": ""
+                },
+                {
+                    "Type": "Print_ISSN",
+                    "Value": "0149-6123"
+                },
+                {
+                    "Type": "Online_ISSN",
+                    "Value": "1945-7561"
+                },
+                {
+                    "Type": "URI",
+                    "Value": ""
+                }
+            ],
+            "Platform": "astm.org",
+            "Publisher": "ASTM International",
+            "Publisher_ID": [
+                {
+                    "Type": "ISNI",
+                    "Value": ""
+                }
+            ],
+            "Data_Type": "Journal",
+            "Section_Type": "",
+            "YOP": "",
+            "Access_Type": "Controlled",
+            "Access_Method": "Regular",
+            "Performance": [
+                {
+                    "Period": {
+                        "Begin_Date": "2018-03-01",
+                        "End_Date": "2018-03-31"
+                    },
+                    "Instance": [
+                        {
+                            "Metric_Type": "Total_Item_Investigations",
+                            "Count": 1
+                        },
+                        {
+                            "Metric_Type": "Total_Item_Requests",
+                            "Count": 1
+                        },
+                        {
+                            "Metric_Type": "Unique_Item_Investigations",
+                            "Count": 1
+                        },
+                        {
+                            "Metric_Type": "Unique_Item_Requests",
+                            "Count": 1
+                        }
+                    ]
+                }
+            ]
+        },
+        {
+            "Title": "Geotechnical Testing Journal",
+            "Item_ID": [
+                {
+                    "Type": "DOI",
+                    "Value": ""
+                },
+                {
+                    "Type": "Proprietary_ID",
+                    "Value": ""
+                },
+                {
+                    "Type": "ISBN",
+                    "Value": ""
+                },
+                {
+                    "Type": "Print_ISSN",
+                    "Value": "0149-6115"
+                },
+                {
+                    "Type": "Online_ISSN",
+                    "Value": "1945-7545"
+                },
+                {
+                    "Type": "URI",
+                    "Value": ""
+                }
+            ],
+            "Platform": "astm.org",
+            "Publisher": "ASTM International",
+            "Publisher_ID": [
+                {
+                    "Type": "ISNI",
+                    "Value": ""
+                }
+            ],
+            "Data_Type": "Journal",
+            "Section_Type": "",
+            "YOP": "",
+            "Access_Type": "Controlled",
+            "Access_Method": "Regular",
+            "Performance": [
+                {
+                    "Period": {
+                        "Begin_Date": "2018-03-01",
+                        "End_Date": "2018-03-31"
+                    },
+                    "Instance": [
+                        {
+                            "Metric_Type": "Total_Item_Investigations",
+                            "Count": 1
+                        },
+                        {
+                            "Metric_Type": "Total_Item_Requests",
+                            "Count": 1
+                        },
+                        {
+                            "Metric_Type": "Unique_Item_Investigations",
+                            "Count": 1
+                        },
+                        {
+                            "Metric_Type": "Unique_Item_Requests",
+                            "Count": 1
+                        }
+                    ]
+                },
+                {
+                    "Period": {
+                        "Begin_Date": "2018-04-01",
+                        "End_Date": "2018-04-30"
+                    },
+                    "Instance": [
+                        {
+                            "Metric_Type": "Total_Item_Investigations",
+                            "Count": 4
+                        },
+                        {
+                            "Metric_Type": "Total_Item_Requests",
+                            "Count": 4
+                        },
+                        {
+                            "Metric_Type": "Unique_Item_Investigations",
+                            "Count": 4
+                        },
+                        {
+                            "Metric_Type": "Unique_Item_Requests",
+                            "Count": 4
+                        }
+                    ]
+                },
+                {
+                    "Period": {
+                        "Begin_Date": "2018-05-01",
+                        "End_Date": "2018-05-31"
+                    },
+                    "Instance": [
+                        {
+                            "Metric_Type": "Total_Item_Investigations",
+                            "Count": 1
+                        },
+                        {
+                            "Metric_Type": "Total_Item_Requests",
+                            "Count": 1
+                        },
+                        {
+                            "Metric_Type": "Unique_Item_Investigations",
+                            "Count": 1
+                        },
+                        {
+                            "Metric_Type": "Unique_Item_Requests",
+                            "Count": 1
+                        }
+                    ]
+                }
+            ]
+        },
+        {
+            "Title": "Journal of ASTM International",
+            "Item_ID": [
+                {
+                    "Type": "DOI",
+                    "Value": ""
+                },
+                {
+                    "Type": "Proprietary_ID",
+                    "Value": ""
+                },
+                {
+                    "Type": "ISBN",
+                    "Value": ""
+                },
+                {
+                    "Type": "Print_ISSN",
+                    "Value": "1546-962X"
+                },
+                {
+                    "Type": "Online_ISSN",
+                    "Value": "1546-962X"
+                },
+                {
+                    "Type": "URI",
+                    "Value": ""
+                }
+            ],
+            "Platform": "astm.org",
+            "Publisher": "ASTM International",
+            "Publisher_ID": [
+                {
+                    "Type": "ISNI",
+                    "Value": ""
+                }
+            ],
+            "Data_Type": "Journal",
+            "Section_Type": "",
+            "YOP": "",
+            "Access_Type": "Controlled",
+            "Access_Method": "Regular",
+            "Performance": [
+                {
+                    "Period": {
+                        "Begin_Date": "2018-01-01",
+                        "End_Date": "2018-01-31"
+                    },
+                    "Instance": [
+                        {
+                            "Metric_Type": "Total_Item_Investigations",
+                            "Count": 1
+                        },
+                        {
+                            "Metric_Type": "Total_Item_Requests",
+                            "Count": 1
+                        },
+                        {
+                            "Metric_Type": "Unique_Item_Investigations",
+                            "Count": 1
+                        },
+                        {
+                            "Metric_Type": "Unique_Item_Requests",
+                            "Count": 1
+                        }
+                    ]
+                },
+                {
+                    "Period": {
+                        "Begin_Date": "2018-02-01",
+                        "End_Date": "2018-02-28"
+                    },
+                    "Instance": [
+                        {
+                            "Metric_Type": "Total_Item_Investigations",
+                            "Count": 1
+                        },
+                        {
+                            "Metric_Type": "Total_Item_Requests",
+                            "Count": 1
+                        },
+                        {
+                            "Metric_Type": "Unique_Item_Investigations",
+                            "Count": 1
+                        },
+                        {
+                            "Metric_Type": "Unique_Item_Requests",
+                            "Count": 1
+                        }
+                    ]
+                },
+                {
+                    "Period": {
+                        "Begin_Date": "2018-03-01",
+                        "End_Date": "2018-03-31"
+                    },
+                    "Instance": [
+                        {
+                            "Metric_Type": "Total_Item_Investigations",
+                            "Count": 1
+                        },
+                        {
+                            "Metric_Type": "Total_Item_Requests",
+                            "Count": 1
+                        },
+                        {
+                            "Metric_Type": "Unique_Item_Investigations",
+                            "Count": 1
+                        },
+                        {
+                            "Metric_Type": "Unique_Item_Requests",
+                            "Count": 1
+                        }
+                    ]
+                },
+                {
+                    "Period": {
+                        "Begin_Date": "2018-04-01",
+                        "End_Date": "2018-04-30"
+                    },
+                    "Instance": [
+                        {
+                            "Metric_Type": "Total_Item_Investigations",
+                            "Count": 2
+                        },
+                        {
+                            "Metric_Type": "Total_Item_Requests",
+                            "Count": 2
+                        },
+                        {
+                            "Metric_Type": "Unique_Item_Investigations",
+                            "Count": 2
+                        },
+                        {
+                            "Metric_Type": "Unique_Item_Requests",
+                            "Count": 2
+                        }
+                    ]
+                }
+            ]
+        },
+        {
+            "Title": "Journal of Composites Technology and Research",
+            "Item_ID": [
+                {
+                    "Type": "DOI",
+                    "Value": ""
+                },
+                {
+                    "Type": "Proprietary_ID",
+                    "Value": ""
+                },
+                {
+                    "Type": "ISBN",
+                    "Value": ""
+                },
+                {
+                    "Type": "Print_ISSN",
+                    "Value": "0885-6804"
+                },
+                {
+                    "Type": "Online_ISSN",
+                    "Value": "1945-7537"
+                },
+                {
+                    "Type": "URI",
+                    "Value": ""
+                }
+            ],
+            "Platform": "astm.org",
+            "Publisher": "ASTM International",
+            "Publisher_ID": [
+                {
+                    "Type": "ISNI",
+                    "Value": ""
+                }
+            ],
+            "Data_Type": "Journal",
+            "Section_Type": "",
+            "YOP": "",
+            "Access_Type": "Controlled",
+            "Access_Method": "Regular",
+            "Performance": [
+                {
+                    "Period": {
+                        "Begin_Date": "2018-04-01",
+                        "End_Date": "2018-04-30"
+                    },
+                    "Instance": [
+                        {
+                            "Metric_Type": "Total_Item_Investigations",
+                            "Count": 2
+                        },
+                        {
+                            "Metric_Type": "Total_Item_Requests",
+                            "Count": 2
+                        },
+                        {
+                            "Metric_Type": "Unique_Item_Investigations",
+                            "Count": 1
+                        },
+                        {
+                            "Metric_Type": "Unique_Item_Requests",
+                            "Count": 1
+                        }
+                    ]
+                }
+            ]
+        },
+        {
+            "Title": "Journal of Forensic Sciences",
+            "Item_ID": [
+                {
+                    "Type": "DOI",
+                    "Value": ""
+                },
+                {
+                    "Type": "Proprietary_ID",
+                    "Value": ""
+                },
+                {
+                    "Type": "ISBN",
+                    "Value": ""
+                },
+                {
+                    "Type": "Print_ISSN",
+                    "Value": "0022-1198"
+                },
+                {
+                    "Type": "Online_ISSN",
+                    "Value": "1556-4029"
+                },
+                {
+                    "Type": "URI",
+                    "Value": ""
+                }
+            ],
+            "Platform": "astm.org",
+            "Publisher": "ASTM International",
+            "Publisher_ID": [
+                {
+                    "Type": "ISNI",
+                    "Value": ""
+                }
+            ],
+            "Data_Type": "Journal",
+            "Section_Type": "",
+            "YOP": "",
+            "Access_Type": "Controlled",
+            "Access_Method": "Regular",
+            "Performance": [
+                {
+                    "Period": {
+                        "Begin_Date": "2018-01-01",
+                        "End_Date": "2018-01-31"
+                    },
+                    "Instance": [
+                        {
+                            "Metric_Type": "Total_Item_Investigations",
+                            "Count": 20
+                        },
+                        {
+                            "Metric_Type": "Total_Item_Requests",
+                            "Count": 20
+                        },
+                        {
+                            "Metric_Type": "Unique_Item_Investigations",
+                            "Count": 19
+                        },
+                        {
+                            "Metric_Type": "Unique_Item_Requests",
+                            "Count": 19
+                        }
+                    ]
+                },
+                {
+                    "Period": {
+                        "Begin_Date": "2018-02-01",
+                        "End_Date": "2018-02-28"
+                    },
+                    "Instance": [
+                        {
+                            "Metric_Type": "Total_Item_Investigations",
+                            "Count": 7
+                        },
+                        {
+                            "Metric_Type": "Total_Item_Requests",
+                            "Count": 7
+                        },
+                        {
+                            "Metric_Type": "Unique_Item_Investigations",
+                            "Count": 6
+                        },
+                        {
+                            "Metric_Type": "Unique_Item_Requests",
+                            "Count": 6
+                        }
+                    ]
+                },
+                {
+                    "Period": {
+                        "Begin_Date": "2018-03-01",
+                        "End_Date": "2018-03-31"
+                    },
+                    "Instance": [
+                        {
+                            "Metric_Type": "Total_Item_Investigations",
+                            "Count": 19
+                        },
+                        {
+                            "Metric_Type": "Total_Item_Requests",
+                            "Count": 19
+                        },
+                        {
+                            "Metric_Type": "Unique_Item_Investigations",
+                            "Count": 19
+                        },
+                        {
+                            "Metric_Type": "Unique_Item_Requests",
+                            "Count": 19
+                        }
+                    ]
+                },
+                {
+                    "Period": {
+                        "Begin_Date": "2018-04-01",
+                        "End_Date": "2018-04-30"
+                    },
+                    "Instance": [
+                        {
+                            "Metric_Type": "Total_Item_Investigations",
+                            "Count": 9
+                        },
+                        {
+                            "Metric_Type": "Total_Item_Requests",
+                            "Count": 9
+                        },
+                        {
+                            "Metric_Type": "Unique_Item_Investigations",
+                            "Count": 9
+                        },
+                        {
+                            "Metric_Type": "Unique_Item_Requests",
+                            "Count": 9
+                        }
+                    ]
+                },
+                {
+                    "Period": {
+                        "Begin_Date": "2018-05-01",
+                        "End_Date": "2018-05-31"
+                    },
+                    "Instance": [
+                        {
+                            "Metric_Type": "Total_Item_Investigations",
+                            "Count": 4
+                        },
+                        {
+                            "Metric_Type": "Total_Item_Requests",
+                            "Count": 4
+                        },
+                        {
+                            "Metric_Type": "Unique_Item_Investigations",
+                            "Count": 4
+                        },
+                        {
+                            "Metric_Type": "Unique_Item_Requests",
+                            "Count": 4
+                        }
+                    ]
+                }
+            ]
+        },
+        {
+            "Title": "Journal of Testing and Evaluation",
+            "Item_ID": [
+                {
+                    "Type": "DOI",
+                    "Value": ""
+                },
+                {
+                    "Type": "Proprietary_ID",
+                    "Value": ""
+                },
+                {
+                    "Type": "ISBN",
+                    "Value": ""
+                },
+                {
+                    "Type": "Print_ISSN",
+                    "Value": "0090-3973"
+                },
+                {
+                    "Type": "Online_ISSN",
+                    "Value": "1945-7553"
+                },
+                {
+                    "Type": "URI",
+                    "Value": ""
+                }
+            ],
+            "Platform": "astm.org",
+            "Publisher": "ASTM International",
+            "Publisher_ID": [
+                {
+                    "Type": "ISNI",
+                    "Value": ""
+                }
+            ],
+            "Data_Type": "Journal",
+            "Section_Type": "",
+            "YOP": "",
+            "Access_Type": "Controlled",
+            "Access_Method": "Regular",
+            "Performance": [
+                {
+                    "Period": {
+                        "Begin_Date": "2018-01-01",
+                        "End_Date": "2018-01-31"
+                    },
+                    "Instance": [
+                        {
+                            "Metric_Type": "Total_Item_Investigations",
+                            "Count": 5
+                        },
+                        {
+                            "Metric_Type": "Total_Item_Requests",
+                            "Count": 5
+                        },
+                        {
+                            "Metric_Type": "Unique_Item_Investigations",
+                            "Count": 5
+                        },
+                        {
+                            "Metric_Type": "Unique_Item_Requests",
+                            "Count": 5
+                        }
+                    ]
+                },
+                {
+                    "Period": {
+                        "Begin_Date": "2018-02-01",
+                        "End_Date": "2018-02-28"
+                    },
+                    "Instance": [
+                        {
+                            "Metric_Type": "Total_Item_Investigations",
+                            "Count": 3
+                        },
+                        {
+                            "Metric_Type": "Total_Item_Requests",
+                            "Count": 3
+                        },
+                        {
+                            "Metric_Type": "Unique_Item_Investigations",
+                            "Count": 3
+                        },
+                        {
+                            "Metric_Type": "Unique_Item_Requests",
+                            "Count": 3
+                        }
+                    ]
+                },
+                {
+                    "Period": {
+                        "Begin_Date": "2018-03-01",
+                        "End_Date": "2018-03-31"
+                    },
+                    "Instance": [
+                        {
+                            "Metric_Type": "Total_Item_Investigations",
+                            "Count": 5
+                        },
+                        {
+                            "Metric_Type": "Total_Item_Requests",
+                            "Count": 5
+                        },
+                        {
+                            "Metric_Type": "Unique_Item_Investigations",
+                            "Count": 5
+                        },
+                        {
+                            "Metric_Type": "Unique_Item_Requests",
+                            "Count": 5
+                        }
+                    ]
+                },
+                {
+                    "Period": {
+                        "Begin_Date": "2018-04-01",
+                        "End_Date": "2018-04-30"
+                    },
+                    "Instance": [
+                        {
+                            "Metric_Type": "Total_Item_Investigations",
+                            "Count": 6
+                        },
+                        {
+                            "Metric_Type": "Total_Item_Requests",
+                            "Count": 6
+                        },
+                        {
+                            "Metric_Type": "Unique_Item_Investigations",
+                            "Count": 6
+                        },
+                        {
+                            "Metric_Type": "Unique_Item_Requests",
+                            "Count": 6
+                        }
+                    ]
+                },
+                {
+                    "Period": {
+                        "Begin_Date": "2018-05-01",
+                        "End_Date": "2018-05-31"
+                    },
+                    "Instance": [
+                        {
+                            "Metric_Type": "Total_Item_Investigations",
+                            "Count": 2
+                        },
+                        {
+                            "Metric_Type": "Total_Item_Requests",
+                            "Count": 2
+                        },
+                        {
+                            "Metric_Type": "Unique_Item_Investigations",
+                            "Count": 2
+                        },
+                        {
+                            "Metric_Type": "Unique_Item_Requests",
+                            "Count": 2
+                        }
+                    ]
+                }
+            ]
+        },
+        {
+            "Title": "Materials Performance and Characterization",
+            "Item_ID": [
+                {
+                    "Type": "DOI",
+                    "Value": ""
+                },
+                {
+                    "Type": "Proprietary_ID",
+                    "Value": ""
+                },
+                {
+                    "Type": "ISBN",
+                    "Value": ""
+                },
+                {
+                    "Type": "Print_ISSN",
+                    "Value": ""
+                },
+                {
+                    "Type": "Online_ISSN",
+                    "Value": "2165-3992"
+                },
+                {
+                    "Type": "URI",
+                    "Value": ""
+                }
+            ],
+            "Platform": "astm.org",
+            "Publisher": "ASTM International",
+            "Publisher_ID": [
+                {
+                    "Type": "ISNI",
+                    "Value": ""
+                }
+            ],
+            "Data_Type": "Journal",
+            "Section_Type": "",
+            "YOP": "",
+            "Access_Type": "Controlled",
+            "Access_Method": "Regular",
+            "Performance": [
+                {
+                    "Period": {
+                        "Begin_Date": "2018-01-01",
+                        "End_Date": "2018-01-31"
+                    },
+                    "Instance": [
+                        {
+                            "Metric_Type": "Total_Item_Investigations",
+                            "Count": 1
+                        },
+                        {
+                            "Metric_Type": "Total_Item_Requests",
+                            "Count": 1
+                        },
+                        {
+                            "Metric_Type": "Unique_Item_Investigations",
+                            "Count": 1
+                        },
+                        {
+                            "Metric_Type": "Unique_Item_Requests",
+                            "Count": 1
+                        }
+                    ]
+                },
+                {
+                    "Period": {
+                        "Begin_Date": "2018-02-01",
+                        "End_Date": "2018-02-28"
+                    },
+                    "Instance": [
+                        {
+                            "Metric_Type": "Total_Item_Investigations",
+                            "Count": 2
+                        },
+                        {
+                            "Metric_Type": "Total_Item_Requests",
+                            "Count": 2
+                        },
+                        {
+                            "Metric_Type": "Unique_Item_Investigations",
+                            "Count": 2
+                        },
+                        {
+                            "Metric_Type": "Unique_Item_Requests",
+                            "Count": 2
+                        }
+                    ]
+                },
+                {
+                    "Period": {
+                        "Begin_Date": "2018-05-01",
+                        "End_Date": "2018-05-31"
+                    },
+                    "Instance": [
+                        {
+                            "Metric_Type": "Total_Item_Investigations",
+                            "Count": 4
+                        },
+                        {
+                            "Metric_Type": "Total_Item_Requests",
+                            "Count": 4
+                        },
+                        {
+                            "Metric_Type": "Unique_Item_Investigations",
+                            "Count": 4
+                        },
+                        {
+                            "Metric_Type": "Unique_Item_Requests",
+                            "Count": 4
+                        }
+                    ]
+                }
+            ]
+        }
+    ]
+}

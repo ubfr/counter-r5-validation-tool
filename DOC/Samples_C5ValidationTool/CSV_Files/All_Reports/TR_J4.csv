@@ -1,0 +1,17 @@
+Report_Name,Journal Requests by YOP Requests(Excluding OA_Gold),,,,,,,,,,,,,,,
+Report_ID,TR_J4,,,,,,,,,,,,,,,
+Release,5,,,,,,,,,,,,,,,
+Institution_Name,Ohio State Univ Libraries,,,,,,,,,,,,,,,
+Institution_ID,100077,,,,,,,,,,,,,,,
+Metric_Types,Total_Item_Requests; Unique_Item_Requests,,,,,,,,,,,,,,,
+Report_Filters,Data_Type=Journal; Access_Type=Controlled; Access_Method=Regular,,,,,,,,,,,,,,,
+Report_Attributes,,,,,,,,,,,,,,,,
+Exceptions,,,,,,,,,,,,,,,,
+Reporting_Period,2018-01-01 to 2018-05-31,,,,,,,,,,,,,,,
+Created,03-07-18,,,,,,,,,,,,,,,
+Created_By,MPS,,,,,,,,,,,,,,,
+,,,,,,,,,,,,,,,,
+Title,Publisher,Publisher_ID,Platform,DOI,Proprietary_ID,Print_ISSN,Online_ISSN,URI,YOP,Metric_Type,Reporting_Period_Total,Jan-18,Feb-18,Mar-18,Apr-18,May-18
+Advances in Civil Engineering Materials,,,astm.org,10.1520/ACEM20150030,,,2165-3984,,2016,Total_Item_Requests,8,5,0,2,1,0
+Advances in Civil Engineering Materials,,,astm.org,10.1520/ACEM20150030,,,2165-3984,,2016,Total_Item_Requests,1,0,0,0,1,0
+Advances in Civil Engineering Materials,,,astm.org,10.1520/ACEM20150030,,,2165-3984,,2016,Total_Item_Requests,0,0,0,0,0,0
