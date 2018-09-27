@@ -6,12 +6,8 @@
 
 @section("content")
 
-<link
-	href="https://code.jquery.com/ui/1.10.4/themes/ui-lightness/jquery-ui.css"
-	rel="stylesheet">
-<script
-	src="https://ajax.googleapis.com/ajax/libs/jquery/2.1.1/jquery.min.js"></script>
-<script src="https://code.jquery.com/jquery-1.10.2.js"></script>
+<link href="https://code.jquery.com/ui/1.10.4/themes/ui-lightness/jquery-ui.css" rel="stylesheet">
+<link href="{{URL::asset('assets/css/multiselect.css')}}" rel="stylesheet">
 <script src="https://code.jquery.com/ui/1.10.4/jquery-ui.js"></script>
 
 
@@ -29,13 +25,105 @@
 	<div class="row">
 		<div class="col-xs-12 col-sm-12 col-lg -12 col-md-12">
 			<ul class="nav nav-tabs ulTabs">
-
-				<li class="active"><a data-toggle="tab" href="#file1">Configuration</a></li>
-				<li><a data-toggle="tab" href="#menu1">Harvesting</a></li>
+				<li class="active"><a data-toggle="tab" href="#file1">Harvesting</a></li>
+				<li><a data-toggle="tab" href="#menu1">  Configuration</a></li>
+				<li><a data-toggle="tab" href="#menu2">Transaction</a></li>
 			</ul>
 			<div class="tab-content pull-left">
 
 				<div id="file1" class="tab-pane fade in active">
+
+					<div class="clearfix"></div>
+
+					<div class="col-xs-12 col-sm-12 col-md-12">
+<!--                                                <form name="runconsortium" id="runconsortium" method="post" action="/showprogress" enctype="multipart/form-data">
+                                                <input type="hidden" name="_token" value="<?php echo csrf_token() ?>">
+                                                <input type="hidden" name="configurationid" id="configurationid" >-->
+						<h3>Harvesting Consortium Configuration List</h3>
+                                               
+						<hr class="colorgraph">
+
+<!--						<div class="row">
+							<div class="col-md-4">
+								<h4>Please Provide Date Range:</h4>
+							</div>
+							<div class="col-md-4">
+								<p>
+									Begin Date: <input type="text" name="begin_date" id="datepicker-12" class="date-picker">
+								</p>
+							</div>
+							<div class="col-md-4">
+								<p>
+                                                                    End Date: <input type="text" name="end_date" id="datepicker-10" class="date-picker">
+								</p>
+							</div>
+						</div>-->
+                                                <!-- select Report for configuration -->
+<!--                                                <div class="row">
+                                                    <div class="col-md-12">
+                                                        
+                                                    <h4>Please Select Reports:</h4>
+                                                    <select id="reports" name="reports[]" multiple>
+                                                     @foreach($allreports as $report)
+                                                        <option selected="selected" value="{{$report['report_code']}}">{{$report['report_code']}}</option>
+                                                        @endforeach
+                                                    </select>
+                                                        
+                                                    </div>
+						</div>-->
+                                                <hr>
+                                                <div class="clearfix"></div>
+						<div class="widget-content">
+							<table id="Harvesting_list"
+								class="table table-striped table-bordered">
+								<thead>
+									<tr>
+										<th>Id</th>
+										<th>Configuration_name</th>
+										<th>Providers</th>
+										<th>Remarks</th>
+										<th>Action</th>
+									</tr>
+								</thead>
+								<tbody>
+                                    <?php
+                                    $i = 1;
+                                    if (count($file_detail) > 0) {
+                                        foreach ($file_detail as $filedetails) {
+                                            // echo "<pre>";print_r($filedetails);die;
+                                            ?>
+                                            <tr>
+										<td><?php echo $i++; ?></td>
+										<td><?php echo $filedetails['configuration_name']; ?></td>
+										<td><?php echo $filedetails['providers']==''?'<a href="add_provider/'.$filedetails['id'].'">Add Provider</a>':$filedetails['providers'].'<a href="add_provider/'.$filedetails['id'].'"> </a>';?></td>
+										<td><?php echo $filedetails['remarks']; ?></td>
+
+										<td class="td-actions">
+                                                                                    <!--<input onclick="validateDateNew('<?php echo $filedetails['id']; ?>')" type="button" value="Run"/>-->
+                                                                                    <!--<a	onclick="validateDate('/showprogress/<?php echo $filedetails['id']; ?>')" href="javascript:void(0)"><i class="fa fa-play" aria-hidden="true"></i></a>-->
+<!--                                                                                    <a	onclick="validateDateNew('<?php echo $filedetails['id']; ?>')" href="javascript:void(0)"><i class="fa fa-play" aria-hidden="true"></i></a>-->
+                                                                                    <button title="Run Configuration" rel="<?php echo $filedetails['id']; ?>" type="button" class="btn btn-success openBtn"><i class="fa fa-play" aria-hidden="true"></i></button>
+                                                                                </td>
+									</tr>
+                                            <?php
+                                        }
+                                    } else {
+                                        ?>
+                                            <tr>
+										<td colspan="5">No Record found!</td>
+									</tr> 
+                                       <?php
+                                    }
+                                    ?>
+                                </tbody>
+							</table>
+						</div>
+<!--                                            </form>-->
+					</div>
+				</div>
+				
+				
+				<div id="menu1" class="tab-pane fade">
 
 					<div class="col-md-12">
 						<div class="widget stacked widget-table action-table">
@@ -69,11 +157,11 @@
 									</div>
 
 									<div class="form-group col-md-8 noPaddingXS noLeftPadd">
-										<input
+										<input 
 											value="{{ old('remarks') }}<?php echo $singleDetail['remarks']??''; ?>"
 											type="text" name="remarks" id="name"
 											class="form-control input-lg" placeholder="Remarks"> <span
-											style="color: #ff0000"> {{
+											style="color: #ff0000">{{
 											$errors->consortium->first('remarks') }}</span>
 									</div>
 							
@@ -85,6 +173,15 @@
 									<input type="submit"
 										value="<?php echo isset($singleDetail['id'])?'Update Configurataion':'Add Configuration';?>"
 										class="btn btn-primary btn-block btn-lg" tabindex="7">
+								</div>
+							</div>
+							
+							
+							<div class="form-group">
+								<div class="col-xs-12 col-md-4">
+									<input type="button" onClick="location.href='importconfiguration'" value='Import Configuration' class="btn btn-primary btn-block btn-lg" tabindex="7">
+									
+									
 								</div>
 							</div>
 							</form>
@@ -133,7 +230,9 @@
 												class="fa fa-edit" aria-hidden="true"></i></a>&nbsp;&nbsp; <a
 											onclick="return confirm('Are you sure for delete this configuration?')"
 											href="delete_consortium/<?php echo $filedetails['id']; ?>"><i
-												class="fa fa-trash" aria-hidden="true"></i></a></td>
+												class="fa fa-trash" aria-hidden="true"></i></a>&nbsp;&nbsp;<a
+											href="/downloadconfiguration/<?php echo $filedetails['id']; ?>"><i
+												class="fa fa-download" aria-hidden="true"></i></a></td>
 									</tr>
                                             <?php
                                         }
@@ -152,60 +251,56 @@
 					</div>
 
 				</div>
-				<div id="menu1" class="tab-pane fade">
+				
+				<div id="menu2" class="tab-pane fade">
 
-					<div class="clearfix"></div>
+					
 
 					<div class="col-xs-12 col-sm-12 col-md-12">
-						<h3>Harvesting Consortium Configuration List</h3>
+						<h3>Harvesting Consortium Transaction Lists</h3>
 						<hr class="colorgraph">
 
-						<div class="row">
-							<div class="col-md-4">
-								<h4>Please Provide Date Range:</h4>
-							</div>
-							<div class="col-md-4">
-								<p>
-									Begin_Date: <input type="text" id="datepicker-12" class="date-picker">
-								</p>
-							</div>
-							<div class="col-md-4">
-								<p>
-									End_Date: <input type="text" id="datepicker-10" class="date-picker">
-								</p>
-							</div>
-						</div>
+						
 
 						<div class="widget-content">
-							<table id="Harvesting_list"
+						<table id="Transcation_list"
 								class="table table-striped table-bordered">
 								<thead>
 									<tr>
 										<th>Id</th>
+										<th>Transcation_Id</th>
 										<th>Configuration_name</th>
-										<th>Providers</th>
-										<th>Remarks</th>
-										<th>Action</th>
+										<th>Start_Date</th>
+										<th>End_Date</th>
+										<th>No.of Record Processed</th>
+										<th>No.of Record Completed</th>
+										<th>Message</th>
+										<th>Status</th>
+										<th>Download Zip File</th>
 									</tr>
 								</thead>
 								<tbody>
-                                    <?php
+								<?php
                                     $i = 1;
-                                    if (count($file_detail) > 0) {
-                                        foreach ($file_detail as $filedetails) {
-                                            // echo "<pre>";print_r($filedetails);die;
+                                    if (count($alltransaction) > 0) {
+                                        foreach ($alltransaction as  $TransactionSingle) {                                            
                                             ?>
-                                            <tr>
+                                            
+                                        <tr>
 										<td><?php echo $i++; ?></td>
-										<td><?php echo $filedetails['configuration_name']; ?></td>
-										<td><?php echo $filedetails['providers']==''?'<a href="add_provider/'.$filedetails['id'].'">Add Provider</a>':$filedetails['providers'].'<a href="add_provider/'.$filedetails['id'].'"> </a>';?></td>
-										<td><?php echo $filedetails['remarks']; ?></td>
-
-										<td class="td-actions"><a
-											onclick="validateDate('/showprogress/<?php echo $filedetails['id']; ?>')"
-											href="javascript:void(0)"><i class="fa fa-play"
-												aria-hidden="true"></i></a></td>
-									</tr>
+										<td><?php echo $TransactionSingle['transaction_id']; ?></td>
+										<td><?php echo $TransactionSingle['config_name']; ?></td>
+										<td><?php echo $TransactionSingle['begin_date']; ?></td>
+										<td><?php echo $TransactionSingle['end_date']; ?></td>
+										<td><?php echo $TransactionSingle['count']; ?></td>
+										<td><?php echo $TransactionSingle['count']; ?></td>
+										<td><?php echo $TransactionSingle['message']; ?></td>
+										<td><?php echo $TransactionSingle['status']; ?></td>
+										<td><a href="/upload/json/<?php echo $TransactionSingle['transaction_id']; ?>.zip"><i class="fa fa-download"
+												aria-hidden="true"></i>	</a></td>
+							</tr>
+							
+							
                                             <?php
                                         }
                                     } else {
@@ -216,15 +311,44 @@
                                        <?php
                                     }
                                     ?>
-                                </tbody>
+							</tbody>		
 							</table>
+							
 						</div>
 					</div>
 				</div>
 			</div>
 		</div>
+		</div>
+		</div>
 
 		@endsection
+                
+                
+                
+                
+                
+                <!-- Modal -->
+                <div class="modal fade" id="myModal" role="dialog">
+                    <div class="modal-dialog">
+                        <!-- Modal content-->
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <button type="button" class="close" data-dismiss="modal">&times;</button>
+                                <h4 class="modal-title">Run configuration parameter</h4>
+                            </div>
+                            <div class="modal-body">
+
+                            </div>
+                            
+                        </div>
+                    </div>
+                </div>
+                
+                
+                
+                
+                
 		<!--========================login form END here======================================-->
 		
 		@section("additionaljs")
@@ -232,12 +356,21 @@
 		<script src="{{URL::asset('assets/js/jquery.min.js')}}"></script>
 		<script src="{{URL::asset('assets/js/bootstrap.min.js')}}"></script>
 		<script src="{{URL::asset('assets/js/bootstrap-datepicker.min.js')}}"></script>
+		<script src="{{URL::asset('assets/js/jquery.multi-select.min.js')}}"></script>
 		<script type="text/javascript" language="javascript"
 			src="https://cdn.datatables.net/1.10.11/js/jquery.dataTables.min.js">
 	</script>
 		<script type="text/javascript" language="javascript"
 			src="https://cdn.datatables.net/1.10.11/js/dataTables.bootstrap.min.js">
 	</script>
+        <script>
+        $('.openBtn').on('click',function(){
+        var CurrentConsortiumId = $(this).attr('rel');
+        $('.modal-body').load('showprogressnew/'+CurrentConsortiumId,function(){
+        $('#myModal').modal({show:true});
+        });
+        });
+        </script>
 		<script type="text/javascript" class="init">
 	
 
@@ -255,7 +388,23 @@ function validateDate(url){
 	}
 		
 }
-
+//function validateDateNew(id){
+//    
+//    var date1 = $("#datepicker-12").val();
+//    var date2 = $("#datepicker-10").val();
+//    var reports = $("#reports").val();
+//    if(!reports){
+//        alert("Please select one report");
+//        return false;
+//    }
+//    if(date1 && date2){
+//        $('#configurationid').val(id);
+//        $( "#runconsortium" ).submit();	
+//    }else{
+//        alert("Please enter date first");
+//        return false;
+//    }
+//}
 $(document).ready(function() {
 	
 	$('#Consortium_list').DataTable( {
@@ -290,6 +439,24 @@ $(document).ready(function() {
     } );
 	 
 } );
+
+$(document).ready(function() {
+	
+	$('#Transcation_list').DataTable( {
+		 "searching": true,
+        "language": {
+			
+            "lengthMenu": "Show entry _MENU_ ",
+            "zeroRecords": "No data available in table",
+            "info": "Showing _START_ to _END_ of _TOTAL_ entries",
+            "infoEmpty": "No data available in table",
+            "infoFiltered": "(filtered from _MAX_ total records)",
+	       
+        }
+		
+    } );
+	 
+} );
 	</script>
 
 		<!-- Javascript for date-picker -->
@@ -307,130 +474,21 @@ $(document).ready(function() {
                     
                     
                     
-         $(function() {
-        	//$('input').datepicker({format: 'yyyy-mm-dd'});
-            //$( "#datepicker-12" ).datepicker({format: 'yyyy-mm'});
-            //$('input').datepicker({format: 'yyyy-mm-dd'});
-            //$( "#datepicker-10" ).datepicker({format: 'yyyy-mm'});
-           
-         });
 </script>
 
-		<script>
+	<script>
+        jQuery(function(){
+        jQuery('#reports').multiSelect();
+        jQuery('#line-wrap-example').multiSelect({
+            selectAllValue: 'multiselect-all',
+            positionMenuWithin: $('.position-menu-within')
+        });
+    }); 
     //jQuery plugin
-    (function ($) {
-
-        $.fn.uploader = function (options) {
-            var settings = $.extend({
-                MessageAreaText: "No files selected.",
-                MessageAreaTextWithFiles: "File List:",
-                DefaultErrorMessage: "Unable to open this file.",
-                BadTypeErrorMessage: "We cannot accept this file type at this time.",
-                acceptedFileTypes: ['pdf', 'jpg', 'gif', 'jpeg', 'bmp', 'tif', 'tiff', 'png', 'xps', 'doc', 'docx',
-                    'fax', 'wmp', 'ico', 'txt', 'cs', 'rtf', 'xls', 'xlsx', 'json']
-            }, options);
-
-            var uploadId = 1;
-            //update the messaging 
-            $('.file-uploader__message-area p').text(options.MessageAreaText || settings.MessageAreaText);
-
-            //create and add the file list and the hidden input list
-            var fileList = $('<ul class="file-list"></ul>');
-            var hiddenInputs = $('<div class="hidden-inputs hidden"></div>');
-            $('.file-uploader__message-area').after(fileList);
-            $('.file-list').after(hiddenInputs);
-
-            //when choosing a file, add the name to the list and copy the file input into the hidden inputs
-            $('.file-chooser__input').on('change', function () {
-                var file = $('.file-chooser__input').val();
-                var fileName = (file.match(/([^\\\/]+)$/)[0]);
-
-                //clear any error condition
-                $('.file-chooser').removeClass('error');
-                $('.error-message').remove();
-
-                //validate the file
-                var check = checkFile(fileName);
-                if (check === "valid") {
-
-                    // move the 'real' one to hidden list 
-                    $('.hidden-inputs').append($('.file-chooser__input'));
-
-                    //insert a clone after the hiddens (copy the event handlers too)
-                    $('.file-chooser').append($('.file-chooser__input').clone({withDataAndEvents: true}));
-
-                    //add the name and a remove button to the file-list
-                    $('.file-list').append('<li style="display: none;"><span class="file-list__name">' + fileName + '</span><button class="removal-button" data-uploadid="' + uploadId + '"></button></li>');
-                    $('.file-list').find("li:last").show(800);
-
-                    //removal button handler
-                    $('.removal-button').on('click', function (e) {
-                        e.preventDefault();
-
-                        //remove the corresponding hidden input
-                        $('.hidden-inputs input[data-uploadid="' + $(this).data('uploadid') + '"]').remove();
-
-                        //remove the name from file-list that corresponds to the button clicked
-                        $(this).parent().hide("puff").delay(10).queue(function () {
-                            $(this).remove();
-                        });
-
-                        //if the list is now empty, change the text back 
-                        if ($('.file-list li').length === 0) {
-                            $('.file-uploader__message-area').text(options.MessageAreaText || settings.MessageAreaText);
-                        }
-                    });
-
-                    //so the event handler works on the new "real" one
-                    $('.hidden-inputs .file-chooser__input').removeClass('file-chooser__input').attr('data-uploadId', uploadId);
-
-                    //update the message area
-                    $('.file-uploader__message-area').text(options.MessageAreaTextWithFiles || settings.MessageAreaTextWithFiles);
-
-                    uploadId++;
-
-                } else {
-                    //indicate that the file is not ok
-                    $('.file-chooser').addClass("error");
-                    var errorText = options.DefaultErrorMessage || settings.DefaultErrorMessage;
-
-                    if (check === "badFileName") {
-                        errorText = options.BadTypeErrorMessage || settings.BadTypeErrorMessage;
-                    }
-
-                    $('.file-chooser__input').after('<p class="error-message">' + errorText + '</p>');
-                }
-            });
-
-            var checkFile = function (fileName) {
-                var accepted = "invalid",
-                        acceptedFileTypes = this.acceptedFileTypes || settings.acceptedFileTypes,
-                        regex;
-
-                for (var i = 0; i < acceptedFileTypes.length; i++) {
-                    regex = new RegExp("\\." + acceptedFileTypes[i] + "$", "i");
-
-                    if (regex.test(fileName)) {
-                        accepted = "valid";
-                        break;
-                    } else {
-                        accepted = "badFileName";
-                    }
-                }
-
-                return accepted;
-            };
-        };
-    }(jQuery));
+    
 
 /////init 
 
-    $(document).ready(function () {
-        $('.fileUploader').uploader({
-            MessageAreaText: "Upload File Here"
-        });
-
-    });
     /*$('#sandbox-container .input-daterange').datepicker({
      changeMonth: true,
      changeYear: true,
@@ -463,6 +521,13 @@ $(document).ready(function() {
 
 
     }
+    
+    
+    
+   
+    
+    
+    
 </script>
 
 </head>

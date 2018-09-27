@@ -41,6 +41,9 @@ class CommonController extends Controller
     // //////////////////file upload////////////////////
     public function fileupload($file)
     {
+        ini_set('max_execution_time', 0);
+        ini_set('memory_limit', '2048M');
+        ini_set('max_memory', '2048M');
         $user = Session::get('user');
         // echo app_path();die;
         $destinationPath = app_path() . '/public/uploadfile/';
@@ -85,7 +88,7 @@ class CommonController extends Controller
             $b ++;
             $data_warning ++;
             return $warning;
-        }
+        } 
     }
 
     
@@ -874,7 +877,7 @@ class CommonController extends Controller
             $attachfile = app_path() . '/public/downloadfile/' . $filename . '.' . 'xlsx';
             
             $message->subject('File Validate Error Report');
-            $message->from('rana.kiran199680@gmail.com', 'support');
+            $message->from('countermps@gmail.com', 'support');
             $message->attach($attachfile);
             $message->to($email_to);
         });

@@ -44,6 +44,9 @@ class FilevalidateController extends CommonController
     // ///////////////////////////////////////validate file///////////////////////////////////////////////////////
     public function filevalidate()
     {
+        ini_set('max_execution_time', 0);
+        ini_set('memory_limit', '2048M');
+        ini_set('max_memory', '2048M');
         $excel = [];
         $err = [];
         $warning = [];

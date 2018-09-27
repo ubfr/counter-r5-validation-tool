@@ -103,7 +103,8 @@ $TransactionId = $d->format("YmdHisu");
             }
         });
         $('#transactionvalue').html('<strong>' + '<?php echo $TransactionId; ?>' + '</strong>')
-        $.get('/runconsortium/<?php echo $id; ?>/<?php echo $TransactionId; ?>/<?php echo $begin_date; ?>/<?php echo $end_date; ?>', function (response) {
+        $.get('/runconsortium/<?php echo $id; ?>/<?php echo $TransactionId; ?>/<?php echo $begin_date; ?>/<?php echo $end_date; ?>/<?php echo $selectedReports;?>/<?php echo $selectedProviders;?>',
+            function (response) {
             //got file name
             $('#downloadcomplete').hide();
             $('#downloadid').show();
@@ -117,7 +118,7 @@ $TransactionId = $d->format("YmdHisu");
 
 
         function get_records() {
-            $.get('/showprogressrecord/<?php echo $id; ?>/<?php echo $TransactionId; ?>/<?php echo $begin_date; ?>/<?php echo $end_date; ?>', function (response) {
+            $.get('/showprogressrecord/<?php echo $id; ?>/<?php echo $TransactionId; ?>/<?php echo $begin_date; ?>/<?php echo $end_date; ?>/<?php echo $selectedReports;?>', function (response) {
                 $('#showstatus').html(response);
             });
         }

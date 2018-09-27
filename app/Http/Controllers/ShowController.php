@@ -18,6 +18,7 @@ use App\Filtertype;
 use App\Consortium;
 use App\Provider;
 use Illuminate\Http\Request;
+use Maatwebsite\Excel\Facades\Excel;
 use File;
 use App\Transactionmaster;
 use App\Transactionmasterdetail;
@@ -27,6 +28,8 @@ use RecursiveIteratorIterator;
 use RecursiveDirectoryIterator;
 use DateTime;
 use App\Currenttransaction;
+use PHPExcel_Cell;
+use PHPExcel_Cell_DataType;
 
 class ShowController extends Controller {
 
@@ -63,16 +66,6 @@ class ShowController extends Controller {
                 ->take(10)
                 ->get();
 
-        // $i=0;
-        // $FilterReports = Filtertype::where(array())->orderBy('id', 'asc')->get()->toArray();
-        // foreach( $FilterReports as $filterReport)
-        // {
-        // $value[$i] ['name']=$filterReport['name'];
-        // echo "<pre>";print_r($value); die;
-        // $i++;
-        // }
-        // echo "<pre>";print_r($value); die;
-
         $AllReports = Reportname::where(array())->orderBy('report_name', 'asc')->get();
         // echo "<pre>sdfdf";print_r($AllReports);die;
         $data['reportsname'] = $AllReports;
@@ -88,11 +81,79 @@ class ShowController extends Controller {
         $data['file_detail'] = $filename;
         return view('welcome', $data);
     }
+    
+    
+    function downloadExcelConfig($configurationId='')
+    {
+        $user = Session::get('user');
+        
+       
+        $Configurations = Provider::select('configuration_id','provider_name','provider_url','apikey','requestor_id','customer_id')
+        ->where('configuration_id', $configurationId)
+        ->get()->toArray();
+        
+        $Configurationname=Consortium::select('configuration_name','remarks') 
+        ->where('id', $configurationId)
+        ->get()->first()->toArray();
+        $ConfigurationsDetail[0][] = 'Configuration Name';
+        $ConfigurationsDetail[0][] = $Configurationname['configuration_name'];
+        $ConfigurationsDetail[0][] = 'Remarks';
+        $ConfigurationsDetail[0][] = $Configurationname['remarks'];
+        // Initialize the array which will be passed into the Excel
+        // generator.
+        $Newarray = [];
+        
+        // Define the Excel spreadsheet headers
+        $Newarray[] = [
+            'configuration_id',
+            'provider_name',
+            'provider_url',
+            'apikey',
+            'requestor_id',
+            'customer_id',
+            
+        ];
+        
+        // Convert each member of the returned collection into an array,
+        // and append it to the  array.
+        $Newarray = array_merge($ConfigurationsDetail,$Newarray);
+        $Configurations = array_merge($Newarray,$Configurations);
+        // Generate and return the spreadsheet
+        $filename="hc_".$Configurationname['configuration_name'];
+        Excel::create($filename, function ($excel) use ($Configurations) {
+            
+            // Set the spreadsheet title, creator, and description
+            $excel->setTitle('Provider Report');
+            $excel->setCreator('Laravel')->setCompany('Counter Project');
+            $excel->setDescription('Provider Report file');
+            
+            // Build the spreadsheet, passing in the array
+            
+            $excel->sheet('sheet1', function ($sheet) use ($Configurations) {
+                $styleArray = array(
+                    'font' => array(
+                        'bold' => true
+                    )
+                );
+                $sheet->fromArray($Configurations, null, 'A1', false, false);
+                $sheet->getStyle('B1')->applyFromArray($styleArray);
+                $sheet->getStyle('D1')->applyFromArray($styleArray);
+            });
+           
+        })->download('xlsx');
+    }
 
     // ////////////// start for Consortium/////////////////
     function harvetsingvalidate($id = 0) {
         $user = Session::get('user');
-
+        //collect all reports for show in page
+        $AllReportCodes = Reportname::select(array(
+                                    'report_code'
+                                ))->orderBy('id', 'asc')
+                                ->get()
+                                ->toArray();
+        
+        
         if ($id > 0) {
             $ConsortiumsSingleValue = Consortium::where(array(
                         'id' => $id
@@ -125,12 +186,28 @@ class ShowController extends Controller {
         $data['userDisplayName'] = $user['display_name'];
         $data['utype'] = $user['utype'];
         $data['file_detail'] = $providerMaster;
-        $data['userDisplayName'] = $user->display_name;
-        $data['utype'] = $user->utype;
-        //echo "<pre>";print_r($user);die;
+        
+        $TransactionDetail = Transactionmasterdetail::
+        select(array('config_name','transaction_id', 'provider_name', 'begin_date','end_date','message','status'))
+        
+        ->addSelect(DB::raw('count(ID) as count'))
+         //->where('transaction_id', $TransactionId)
+        ->groupBy('transaction_id')
+        ->groupBy('provider_name')
+        ->groupBy('begin_date')
+        ->groupBy('end_date')
+        ->groupBy('config_name')
+        ->groupBy('message')
+        ->groupBy('status')
+        ->orderBy('transaction_id', 'desc')
+        
+        //->groupBy('member_name')
+        ->get()->toArray();
+        $data['alltransaction'] = $TransactionDetail;
+        $data['allreports'] = $AllReportCodes;
+        //echo "<pre>222";print_r($data);die;
         return view('consortium', $data);
     }
-
 
     // ///////////////////////////////
     function saveConsortiumConfig() {
@@ -174,10 +251,6 @@ class ShowController extends Controller {
             $user = Session::get('user');
 
             $Consortiums = Consortium::select('id', 'configuration_name', 'Remarks')->where('id', $id)->get();
-
-            // $data['utype']=$user['utype'];
-            // $data['userDisplayName']= $user['display_name'];
-            // $data['gender']= $user['gender'];
             $data['file_detail'] = $Consortiums;
             // echo "<pre>";print_r($data);die;
             return view('consortium', $data);
@@ -237,11 +310,6 @@ class ShowController extends Controller {
         $filename = Filename::join('users', 'users.id', '=', 'filenames.user_id')->select('filenames.id', 'filenames.filename', 'filenames.file_type', 'filenames.report_name', 'filenames.report_id', 'filenames.filename', 'users.email')
                 ->orderBy('id', 'desc')
                 ->get();
-        // echo "<pre>";print_r($filename);die;
-        // $AllSushiReports = Allreportsname::where(array())->orderBy('id','desc')->take(100)->get();
-        // $data['sushireports']=$AllSushiReports;
-        // echo "<pre>1234";print_r($AllSushiReport);die;
-        // //////////////////////////////////////////////
         $data['userDisplayName'] = $user['display_name'];
         $data['utype'] = $user['utype'];
         $data['file_detail'] = $filename;
@@ -299,9 +367,32 @@ class ShowController extends Controller {
             // echo "<pre>";print_r($id);die;
         }
     }
-
+    public function showConsortiumProgressnew(int $configurationId=0){
+        $user = Session::get('user');
+        $AllReportCodes = Reportname::select(array(
+                                    'report_code'
+                                ))->orderBy('id', 'asc')
+                                ->get()
+                                ->toArray();
+        
+        $Consortiums = Consortium::where('id',$configurationId)
+                ->get()->first()
+                ->toArray();
+            $AllProvidersList = Provider::where(array(
+                        'configuration_id' => $Consortiums['id']
+                    ))->get()->toArray();
+            // get providers name comma separted
+        $data['userDisplayName'] = $user['display_name'];
+        $data['utype'] = $user['utype'];
+        $data['allreports'] = $AllReportCodes;
+        $data['allproviders'] = $AllProvidersList;
+        $data['configuration_id'] = $configurationId;
+        return view('show_consortium_progressnew', $data);
+    }
     //show progress bar for data download
-    function showConsortiumProgress($id = 0, $begin_date = '', $end_date = '') {
+    function showConsortiumProgress() {
+        $Postdata = Input::all();
+        $id = $Postdata['configurationid']??0;
         //get configuration Name
         $Configurationname = Consortium::where('id',$id)->get()->first()->toArray();
         
@@ -311,17 +402,20 @@ class ShowController extends Controller {
         $data['userDisplayName'] = $user['display_name'];
         $data['utype'] = $user['utype'];
 
-        $data['id'] = $id;
-        $data['begin_date'] = $begin_date;
-        $data['end_date'] = $end_date;
+        $data['id'] = $Postdata['configurationid'];
+        $data['begin_date'] = $Postdata['begin_date'];
+        $data['end_date'] = $Postdata['end_date'];
+        $data['selectedReports'] = implode(",", $Postdata['reports']);
+        $data['selectedProviders'] = implode(",", $Postdata['providers']);
         $data['success'] = 1;
         $data['uploaded_file'] = "a.zip";
         $data['configuration_name'] = $Configurationname['configuration_name'];
+        //echo "<pre>";print_r($data);die;
         return view('show_consortium_progress', $data);
     }
 
     //show current Record progress File
-    function showConsortiumProgressForRecord($id = 0,$TransactionId='',$begin_date = '', $end_date = '') {
+    function showConsortiumProgressForRecord($id = 0,$TransactionId='',$begin_date = '', $end_date = '',$selectedReports='') {
         //$TransactionId = $this->getTransctionId();
         ini_set('max_execution_time', 0);
         ini_set('memory_limit', '2048M');
@@ -345,14 +439,15 @@ class ShowController extends Controller {
         $dataToShow = array();
         $statusMaster = array('1' => 'Completed');
         $OutputString = "<table class='table table-striped table-bordered dataTable'  width='100%'>";
-        $OutputString = $OutputString."<tr><th>Sl. No.</th><th>Transaction ID</th><th>Provider Name</th><th>Member Name</th><th>Processed Report</th></tr>";
+        $OutputString = $OutputString."<tr><th>Sl. No.</th><th>Provider Name</th><th>Member Name</th><th>Reports</th><th>Processed Report</th></tr>";
         $i = 1;
         foreach ($TransactionDetail as $keyValue => $TransactionSingle) {
             $OutputString = $OutputString . "<tr>";
             $OutputString = $OutputString . "<td>" . $i++ . "</td>";
-            $OutputString = $OutputString . "<td>" . $TransactionSingle['transaction_id'] . "</td>";
+            //$OutputString = $OutputString . "<td>" . $TransactionSingle['transaction_id'] . "</td>";
             $OutputString = $OutputString . "<td>" . $TransactionSingle['provider_name'] . "</td>";
             $OutputString = $OutputString . "<td>" . $TransactionSingle['member_name'] . "</td>";
+            $OutputString = $OutputString . "<td>" . $selectedReports . "</td>";
             $OutputString = $OutputString . "<td>" . $TransactionSingle['count'] . "</td>";
             $OutputString = $OutputString . "</tr>";
         }
@@ -360,12 +455,13 @@ class ShowController extends Controller {
         die($OutputString);
         //die("Processed  Done for no of records.");
     }
-
+    
     // /////////Run Consortium///////////////////////////////
-    // /////////Run Consortium///////////////////////////////
-    function runConsortium($id = 0,$TransactionId='', $begin_date = '', $end_date = '') {
+    function runConsortium($id = 0,$TransactionId='', $begin_date = '', $end_date = '',$selectedReport = '',$selectedProviders='') {
         ini_set('max_execution_time', 0);
         ini_set('memory_limit', '2048M');
+        $SelectedReport = explode(",",$selectedReport);
+        $SelectedProviders = explode(",",$selectedProviders);
         $ConfigurationName = Consortium::where('id', $id)->get()->first()->toArray();
         $ConfigurationName = $ConfigurationName['configuration_name'] ?? '';
         $begin_date = explode("-", $begin_date);
@@ -402,6 +498,8 @@ class ShowController extends Controller {
             //die("Hello");
             // log for unique Config Run ID
             foreach ($AllProvidersList as $ProviderDetail) {
+                if(!in_array($ProviderDetail['id'],$SelectedProviders ))
+                                            continue;
                 //echo "<pre>";print_r($ProviderDetail);die;
                 extract($ProviderDetail);
                 $ProviderDetailID = $ProviderDetail['id'];
@@ -443,8 +541,10 @@ class ShowController extends Controller {
                         //echo "<pre>";print_r($json);die;
                         //member detail creating file
                         $providerNameFolder = str_replace(" ", "_", $provider_name);
-                        $destinationPath = public_path() . "/upload/json/" . $TransactionId . "/" . $providerNameFolder . "/";
-                        $destinationPathCopy = public_path() . "/upload/json/" . $TransactionId . "/" . $providerNameFolder . "/";
+                        //$destinationPath = public_path() . "/upload/json/" . $TransactionId . "/" . $providerNameFolder . "/";
+                        $destinationPath = public_path() . "/upload/json/" . $TransactionId . "/";
+                        //$destinationPathCopy = public_path() . "/upload/json/" . $TransactionId . "/" . $providerNameFolder . "/";
+                        $destinationPathCopy = public_path() . "/upload/json/" . $TransactionId . "/";
                         $file = $providerNameFolder . "_members.json";
                         if (!is_dir($destinationPath)) {
                             mkdir($destinationPath, 0777, true);
@@ -454,14 +554,14 @@ class ShowController extends Controller {
                         // Now Checking for each Report related to Member
                         //try {
                         foreach ($json as $Member) {
-                            //echo "<pre>";print_r($Member);die;
-                            if (isset($Member['Apikey'])) {
                                 // loop for reprt code
                                 foreach ($AllReportCodes as $ReportCode) {
+                                    if(!in_array($ReportCode['report_code'],$SelectedReport ))
+                                            continue;
                                     // Config run ID, Config Name, Config ID, provider, Member, report , start Date_time stamp
                                     extract($Member);
                                     $Mfields = array(
-                                        'apikey' => $Apikey,
+                                        'apikey' => $apikey,
                                         'customer_id' => $Customer_ID,
                                         'begin_date' => $begin_date,
                                         'end_date' => $end_date
@@ -494,9 +594,7 @@ class ShowController extends Controller {
                                     if (!preg_match("~^(?:f|ht)tps?://~i", $Murl)) {
                                         $Murl = "https://" . $Murl;
                                     }
-
                                     $Mfile = $customer_id . '_file.json';
-
                                     $Mcurl = curl_init($Murl);
                                     // echo "<pre>";print_r($curl);die;
                                     curl_setopt($Mcurl, CURLOPT_NOBODY, true);
@@ -521,12 +619,14 @@ class ShowController extends Controller {
                                             $context = stream_context_create($opts);
 
                                             // Open the file using the HTTP headers set above
-                                            // $file = file_get_contents('https://c5.mpsinsight.com/insightc5api/services/reports/tr_j1?customer_id=11&begin_date=2018-01-01&end_date=2018-06-30', false, $context);
                                             $data = file_get_contents($Murl, false, $context);
                                             //$Mjson = json_decode(($data), true);
                                             //making directory
-                                            $file = $Member['Customer_ID'] . "_" . $ReportCode['report_code'] . ".json";
-                                            $destinationPath = $destinationPathCopy . "/" . $Member['Customer_ID'] . "/";
+                                            $startdatetimstampEnd = date('Y-m-d H:i:s');
+                                            $rundate = date('Y-m-d');
+                                            $file = $provider_name."_".$Member['Customer_ID'] . "_" . $ReportCode['report_code'] ."_5_".$begin_date."_".$end_date."_".$rundate.".json";
+                                            //$destinationPath = $destinationPathCopy . "/" . $Member['Customer_ID'] . "/";
+                                            $destinationPath = $destinationPathCopy;
                                             //die($destinationPath);
 
                                             if (!is_dir($destinationPath)) {
@@ -537,10 +637,10 @@ class ShowController extends Controller {
                                             $fileSize = filesize($destinationPath . $file);
 
                                             //updating for file size and status
-                                            $startdatetimstampEnd = date('Y-m-d H:i:s');
+                                            
                                             $UpdateTransactionInfo = array(
                                                 'status' => 2,
-                                                'message' => 'successed',
+                                                'message' => 'success',
                                                 'remarks' => $Remarks,
                                                 'exception' => '',
                                                 'details' => 'Success:',
@@ -567,7 +667,6 @@ class ShowController extends Controller {
                                     // update below with End Date_time_stamp along with rematks, exception and status
                                     // Config run ID, Config Name, Config ID, provider, Member, report , start Date_time_stamp
                                 } // tomorrow fiday 14 sep
-                            }
                         }
                         //} catch (Exception $e) {
                         //capture Wrong Information
@@ -581,16 +680,33 @@ class ShowController extends Controller {
             //root Directory
 
             $publicpathforzip = public_path() . '/upload/json/' . $TransactionId . "/";
-            $publicpathforzipNew = public_path() . '/upload/json';
+            $publicpathforzipNew = public_path() . '/upload/json/';
             //die($publicpathforzip);
-            $zip = new ZipArchive();
             $ZipFileName = $TransactionId . ".zip";
-            $resonse = $this->zipData($publicpathforzip, $publicpathforzipNew . "/" . $ZipFileName, $zip);
+            $resonse = $this->convertZipFile($TransactionId,$publicpathforzip, $publicpathforzipNew . "/" . $ZipFileName);
+            //$resonse = $this->zipData($publicpathforzip, $publicpathforzipNew . "/" . $ZipFileName, $zip);
             //$finalZipFileURL = $publicpathforzipNew . "/" . $ZipFileName;
+            //delete folder after zip finish
+            $this->removeDirectory($publicpathforzip);
             echo "/upload/json/" . $ZipFileName;die;
             //return response()->download($publicpathforzipNew . "/" . $ZipFileName);
             //return view('harvesting_report', $dataforpassing);
         }
+    }
+    
+    //remove directory
+    function removeDirectory($dir='') {
+        //$dir = 'samples' . DIRECTORY_SEPARATOR . 'sampledirtree';
+        $it = new RecursiveDirectoryIterator($dir, RecursiveDirectoryIterator::SKIP_DOTS);
+        $files = new RecursiveIteratorIterator($it, RecursiveIteratorIterator::CHILD_FIRST);
+        foreach ($files as $file) {
+            if ($file->isDir()) {
+                rmdir($file->getRealPath());
+            } else {
+                unlink($file->getRealPath());
+            }
+        }
+        rmdir($dir);
     }
 
     ///////////////////  creating a zip file for download/////////////////////////
@@ -605,6 +721,7 @@ class ShowController extends Controller {
                     $source = realpath($source);
                     if (is_dir($source) === true) {
                         $files = new RecursiveIteratorIterator(new RecursiveDirectoryIterator($source), RecursiveIteratorIterator::SELF_FIRST);
+                        //$files = scandir($source);
                         foreach ($files as $file) {
 
                             $file = realpath($file);
@@ -627,20 +744,29 @@ class ShowController extends Controller {
         return false;
     }
 
-    public function zipFileDownload() {
+    //public function zipFileDownload() {
+    public function convertZipFile($TransactionId='',$publicpathforzip='', $publicpathforzipNew='',$ZipFileName='') {
 
-        $public_dir = public_path() . '/upload';
-        $zipFileName = 'json.zip';
-        //root Directory
-        $publicpathforzip = $public_dir . "/json/88888888";
-        $publicpathforzipNew = $public_dir . "/json/";
-        //die($publicpathforzip);
-        $zip = new ZipArchive();
-        ini_set('max_execution_time', 600);
-        ini_set('memory_limit', '1024M');
-        $resonse = $this->zipData($publicpathforzip, $publicpathforzipNew . "/backupnew.zip", $zip);
+        $zip = new ZipArchive;
 
-        //echo 'Finished.';
+
+        if ($zip->open($publicpathforzipNew.$ZipFileName, ZipArchive::CREATE) === TRUE) {
+            $dir = preg_replace('/[\/]{2,}/', '/', $publicpathforzip . "/");
+                //$dh = opendir($dir);
+                $allFiles = scandir($dir);
+                $files = array_diff($allFiles, array('..', '.'));
+                //echo "<pre>";print_r($files);die;
+                foreach ($files as $value) {
+                    //echo $archive_folder."/".$value."===>".$value.'<hr>';
+                    $zip->addFile($publicpathforzip."/".$value,$TransactionId.'/'.$value);
+                }
+                //die;
+            $zip->close();
+            return true;
+        }
+        else {
+            return false;
+        }
     }
 
     function get_client_ip() {
@@ -847,6 +973,16 @@ class ShowController extends Controller {
                 // return view('provider', $data);
             }
         }
+    }
+
+	//////////////////Creating New View page for Import configuration////////////////////////
+    public function importConfiguration(){
+    $user = Session::get('user');
+    
+    $data['userDisplayName'] = $user['display_name'];
+    $data['utype'] = $user['utype'];
+   
+    return view('import_configuration', $data);
     }
 
     /*

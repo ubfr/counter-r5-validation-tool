@@ -29,6 +29,9 @@ class Validatereportjr1Controller extends FilevalidateController
     static $valid=true;
 	////////////////////validate file//////////////////////////////////
 	function JournalReport1R4($sheet,$highestRow,$highestColumn,$error,$warning){
+	    ini_set('max_execution_time', 0);
+	    ini_set('memory_limit', '2048M');
+	    ini_set('max_memory', '2048M');
 	   // die();
 		$string_check=0;
 		$a=0;
@@ -94,15 +97,7 @@ class Validatereportjr1Controller extends FilevalidateController
 		   
 		    $flagvalue=0;
 		    $invalidattribute=array();
-		    $string_check=0;
-		    $a=0;
-		    $b=0;
-		    $structure_error=0;
-		    $data_error=0;
-		    $structure_warning=0;
-		    $data_warning=0;
-		    $topMostMaxRowNo = 15;
-		    $MetricTypeColumn = '';
+		    
 		    
 		    //die($attributearrayvalue);
 		    

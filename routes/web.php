@@ -112,9 +112,14 @@ Route::group([
     Route::get('edit_provider/{id}/{configid}', 'ShowController@addProvider');
     Route::post('save_provider', 'ShowController@saveProvider');
     
-    Route::get('runconsortium/{id}/{transactionId}/{begin_date}/{end_date}', 'ShowController@runConsortium');
-    Route::get('showprogress/{id}/{begin_date}/{end_date}', 'ShowController@showConsortiumProgress');
-    Route::get('showprogressrecord/{id}/{transactionId}/{begin_date}/{end_date}', 'ShowController@showConsortiumProgressForRecord');
+    Route::get('runconsortium/{id}/{transactionId}/{begin_date}/{end_date}/{selectedreports}/{selectedproviders}', 'ShowController@runConsortium');
+    Route::post('showprogress/', 'ShowController@showConsortiumProgress');
+    Route::get('showprogressnew/{configurationId}', 'ShowController@showConsortiumProgressNew');
+    Route::get('showprogressrecord/{id}/{transactionId}/{begin_date}/{end_date}/{selectedreports}', 'ShowController@showConsortiumProgressForRecord');
+    Route::get('downloadconfiguration/{id}','ShowController@downloadExcelConfig');
+    Route::get('importconfiguration', 'ShowController@importConfiguration');
+    Route::post('readConfigfile', 'ShowController@readConfigurationFile');
+   
     // Route::get('/download','FilevalidateController@downloadfile');
     Route::get('/download/{file_id}/{filename}', [
         'as' => 'admin.invoices.downloadfile',
