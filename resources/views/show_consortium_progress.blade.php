@@ -103,7 +103,7 @@ $TransactionId = $d->format("YmdHisu");
             }
         });
         $('#transactionvalue').html('<strong>' + '<?php echo $TransactionId; ?>' + '</strong>')
-        $.get('/runconsortium/<?php echo $id; ?>/<?php echo $TransactionId; ?>/<?php echo $begin_date; ?>/<?php echo $end_date; ?>/<?php echo $selectedReports;?>/<?php echo $selectedProviders;?>',
+        $.get('/runconsortium/<?php echo $id; ?>/<?php echo $TransactionId; ?>/<?php echo $begin_date; ?>/<?php echo $end_date; ?>/<?php echo $selectedReports;?>/<?php echo $selectedProviders;?>/<?php echo $selectedMembers;?>/<?php echo $selectedFormat;?>',
             function (response) {
             //got file name
             $('#downloadcomplete').hide();

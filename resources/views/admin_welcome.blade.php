@@ -1,4 +1,3 @@
-
 <!DOCTYPE HTML>
 <html>
 <head>
@@ -56,7 +55,6 @@
 									<th class="sorting" tabindex="0" aria-controls="example" rowspan="1" colspan="1" aria-label="Start date: activate to sort column ascending" style="width: 99px;">Action</th>
 								    <th class="sorting" tabindex="0" aria-controls="example" rowspan="1" colspan="1" aria-label="Start date: activate to sort column ascending" style="width: 99px;">Delete</th>
 								    <th class="sorting" tabindex="0" aria-controls="example" rowspan="1" colspan="1" aria-label="Start date: activate to sort column ascending" style="width: 99px;">Status</th>
-								    <th class="sorting" tabindex="0" aria-controls="example" rowspan="1" colspan="1" aria-label="Start date: activate to sort column ascending" style="width: 99px;">Gender</th>
 								    
 								</tr>
 							
@@ -71,7 +69,6 @@
 									<th rowspan="1" colspan="1">Action</th>
 									<th rowspan="1" colspan="1">Delete</th>
 									<th rowspan="1" colspan="1">Status</th>
-									<th rowspan="1" colspan="1">Gender</th>
 								</tr>
 							</tfoot>
 							<tbody> 
@@ -90,8 +87,8 @@
 							        		<i class="fa fa-trash-o trashIcon" style="font-size: 15px;padding-right: 10px;"></i>
 							        	</a>
 						        	</td>
-                                    <td class=""><input type="checkbox" class="activecheckbox" id="checkbox1" name="Active" <?php echo $user_details->status=='1'?'checked':'';?> value="<?php echo $user_details->id;?>"></td>
-                                    <td class=""><?php echo $user_details->gender;?></td> 
+									<td class=""><input type="checkbox" class="activecheckbox" id="checkbox1" name="Active" <?php echo $user_details->status=='1'?'checked':'';?> value="<?php echo $user_details->id;?>"></td>
+                                 
 								</tr>
 		
 								<?php }?>

@@ -26,6 +26,7 @@ use App\Reportname;
 use App\Filtertype;
 use App\Http\Controllers\CommonController;
 use File;
+use App\Sushitransaction;
 
 // phpinfo();die;
 // set_error_handler(null);
@@ -44,9 +45,6 @@ class FilevalidateController extends CommonController
     // ///////////////////////////////////////validate file///////////////////////////////////////////////////////
     public function filevalidate()
     {
-        ini_set('max_execution_time', 0);
-        ini_set('memory_limit', '2048M');
-        ini_set('max_memory', '2048M');
         $excel = [];
         $err = [];
         $warning = [];
@@ -190,6 +188,7 @@ class FilevalidateController extends CommonController
                 else {
                     $path = Input::file('import_file')->getRealPath();
                 }
+                // Excel processing start here
                 Excel::load($path, function ($reader) use (&$excel, &$err, &$warning, &$validatereport, &$Reportname1, &$getreportCode) {
                     $error = array();
                     $reader->calculate();
@@ -197,7 +196,6 @@ class FilevalidateController extends CommonController
                     $sheet = $objExcel->getSheet(0);
                     $highestRow = $sheet->getHighestRow();
                     $highestColumn = $sheet->getHighestColumn();
-                    
                     for ($row = 1; $row <= 1; $row ++) {
                         // Read a row of data into an array
                         $rowData = $sheet->rangeToArray('A' . $row . ':' . 'B' . $row, NULL, TRUE, FALSE);
@@ -215,7 +213,7 @@ class FilevalidateController extends CommonController
                 }
             
             );
-                // / /////////////////////////save file in public/uploadfile folder//////////////
+                // //////////////////////////save file in public uploadfile folder//////////////
                 
                 $file = Input::file('import_file');
                 $upload_file = $this->fileupload($file);
@@ -280,38 +278,59 @@ class FilevalidateController extends CommonController
         
         $rules = array(
             'Requestorurl' => 'required',
-            // 'Email' => 'required|email',
             'CustomerId' => 'required',
-            'APIkey' => 'required',
-            'ReportName' => 'required|not_in:0',
-            'Release' => 'required',
-            'month' => 'required',
-            'endmonth' => 'required'
+            //'APIkey' => 'required',
+                //'ReportName' => 'required|not_in:0',
+                //'Release' => 'required',
+                //'startmonth' => 'required',
+                //'endmonth' => 'required'
         );
         $validator = Validator::make($allRequstVarible, $rules);
         if ($validator->fails()) {
             // If validation falis redirect back to login.
             return Redirect::back()->withInput(array())->withErrors($validator, 'welcome');
         } else {
-            
-            //make URL for call
-            
-           // echo "<pre>1234";print_r($allRequstVarible);die;
-            $result = "";
-            $mainURL = $allRequstVarible['Requestorurl'];
-            $ReportName = $allRequstVarible['ReportName'];
-            $mainURL    =    $mainURL."/".$ReportName."?";
-            
-            $fields = array('customer_id' => $allRequstVarible['CustomerId'],
-                'begin_date' => $allRequstVarible['month'],
-                'end_date' => $allRequstVarible['endmonth']
+            if ($allRequstVarible['requestButton'] == 'getmembers' || $allRequstVarible['requestButton'] == 'getverify') {
+                //$members = 'https://c5beta.mpsinsight.com/insightc5api/services/members?apikey=rsc::94d66f4a0f51dcd8d68924dda75e9ad9&customer_id=mu-0000033';
+                $mainURL = $allRequstVarible['Requestorurl'];
+                $mainURL = $mainURL . "/members" . "?";
+                $fields = array(
+                    'customer_id' => $allRequstVarible['CustomerId'],
+                    'apikey' => $allRequstVarible['APIkey']
                 );
-
-            $url = $mainURL. http_build_query($fields, '', "&");
-            
-            if (!preg_match("~^(?:f|ht)tps?://~i", $url)) {
-                $url = "https://" . $url;
+                $url = $mainURL . http_build_query($fields, '', "&");
             }
+            else if($allRequstVarible['requestButton'] == 'getsupportedreports'){
+                $mainURL = $allRequstVarible['Requestorurl'];
+                $mainURL = $mainURL . "/reports" . "?";
+                $fields = array(
+                    'customer_id' => $allRequstVarible['CustomerId'],
+                    'apikey' => $allRequstVarible['APIkey']
+                );
+                $url = $mainURL . http_build_query($fields, '', "&");
+            }
+            else if($allRequstVarible['requestButton'] == 'getstatus'){
+                $mainURL = $allRequstVarible['Requestorurl'];
+                $mainURL = $mainURL . "/status" . "?";
+                $fields = array(
+                    'customer_id' => $allRequstVarible['CustomerId'],
+                    'apikey' => $allRequstVarible['APIkey']
+                );
+                $url = $mainURL . http_build_query($fields, '', "&");
+            }
+            
+            else if($allRequstVarible['requestButton'] == 'getall'){
+                $mainURL = $allRequstVarible['Requestorurl'];
+                $mainURL = $mainURL . "/reports" . "?";
+                $fields = array(
+                    'customer_id' => $allRequstVarible['CustomerId'],
+                    'apikey' => $allRequstVarible['APIkey']
+                );
+                $url = $mainURL . http_build_query($fields, '', "&");
+                
+                if (!preg_match("~^(?:f|ht)tps?://~i", $url)) {
+                    $url = "https://" . $url;
+                }
             
             $file = time() . '_file.json';
             $curl = curl_init($url);
@@ -320,14 +339,14 @@ class FilevalidateController extends CommonController
             if ($result !== false) {
                 $statusCode = curl_getinfo($curl, CURLINFO_HTTP_CODE);
                 if ($statusCode == 404) {
-                    $result = array("Shushi URL doest not exist");
+                    $result = array("SUSHI URL doest not exist");
                 } else {
                     //$data = json_encode(['Text 1','Text 2','Text 3','Text 4','Text 5']);
                     $opts = [
                         "http" => [
                             "method" => "GET",
                             "header" => "Accept-language: en\r\n" .
-                            "apikey: ".$allRequstVarible['APIkey']
+                            "apikey: " . $allRequstVarible['APIkey']
                         ]
                     ];
 
@@ -337,28 +356,100 @@ class FilevalidateController extends CommonController
                     //$file = file_get_contents('https://c5.mpsinsight.com/insightc5api/services/reports/tr_j1?customer_id=11&begin_date=2018-01-01&end_date=2018-06-30', false, $context);
                     $data = file_get_contents($url, false, $context);
 
-                    $destinationPath=public_path()."/upload/json/";
-                    if (!is_dir($destinationPath)) {  mkdir($destinationPath,0777,true);  }
-                    //die("asdfdf");
-                    
-                    File::put($destinationPath.$file,$data);
-                    response()->download($destinationPath.$file);
-                }
-            } else {
-                $result = array("Shushi URL doest not exist");
-            }
+                    $destinationPath = public_path() . "/upload/json/";
+                    if (!is_dir($destinationPath)) {
+                        mkdir($destinationPath, 0777, true);
+                    }
+
+                    File::put($destinationPath . $file, $data);
+                    $completePath = $destinationPath . $file;
+
+                    //data insertsion for sushi transaction 
+                    //echo "<pre>";print_r($user);die;
+                    $DataForInsertion = array(
+                                    'user_email'=>$user['email']??'',
+                                    'session_id'=>$user['display_name']??'',
+                                    'sushi_url'=>substr($mainURL, 0, -1)??'',
+                                    'request_name'=>$allRequstVarible['requestButton']??'',
+                                    'platform'=>$allRequstVarible['requestButton']??'',
+                                    'success'=>'Y',
+                                    'number_of_errors'=>0
+                                );
+                    //echo "<pre>ddd";print_r($DataForInsertion);die;
+                    Sushitransaction::create($DataForInsertion);
 
 
-            //echo "<pre>####";print_r($url);die;
-            
-            
-            //$json = file_get_contents($url);
+                    $headers = ['Content-Type: application/json'];
+                    $newName = $file;
+                    return response()->download($completePath, $file, $headers);
                 
-            //$result = $json;
+            }
+            } 
+            }
+            
+            
+            
+            if (!preg_match("~^(?:f|ht)tps?://~i", $url)) {
+                    $url = "https://" . $url;
+                }
+            
+            $file = time() . '_file.json';
+                $curl = curl_init($url);
+                curl_setopt($curl, CURLOPT_NOBODY, true);
+                $result = curl_exec($curl);
+                if ($result !== false) {
+                    $statusCode = curl_getinfo($curl, CURLINFO_HTTP_CODE);
+                    if ($statusCode == 404) {
+                        $result = array("SUSHI URL doest not exist");
+                    } else {
+                        //$data = json_encode(['Text 1','Text 2','Text 3','Text 4','Text 5']);
+                        $opts = [
+                            "http" => [
+                                "method" => "GET",
+                                "header" => "Accept-language: en\r\n" .
+                                "apikey: " . $allRequstVarible['APIkey']
+                            ]
+                        ];
 
-            
-            
-            
+                        $context = stream_context_create($opts);
+
+                        // Open the file using the HTTP headers set above
+                        //$file = file_get_contents('https://c5.mpsinsight.com/insightc5api/services/reports/tr_j1?customer_id=11&begin_date=2018-01-01&end_date=2018-06-30', false, $context);
+                        $data = file_get_contents($url, false, $context);
+
+                        $destinationPath = public_path() . "/upload/json/";
+                        if (!is_dir($destinationPath)) {
+                            mkdir($destinationPath, 0777, true);
+                        }
+                        
+                        File::put($destinationPath . $file, $data);
+                        $completePath = $destinationPath . $file;
+                        
+                        //data insertsion for sushi transaction 
+                        //echo "<pre>";print_r($user);die;
+                        $DataForInsertion = array(
+                                        'user_email'=>$user['email']??'',
+                                        'session_id'=>$user['display_name']??'',
+                                        'sushi_url'=>substr($mainURL, 0, -1)??'',
+                                        'request_name'=>$allRequstVarible['requestButton']??'',
+                                        'platform'=>$allRequstVarible['requestButton']??'',
+                                        'success'=>'Y',
+                                        'number_of_errors'=>0
+                                    );
+                        //echo "<pre>ddd";print_r($DataForInsertion);die;
+                        Sushitransaction::create($DataForInsertion);
+                        
+                        
+                        $headers = ['Content-Type: application/json'];
+                        $newName = $file;
+                        return response()->download($completePath, $file, $headers);
+                        
+                    }
+                } else {
+                    //die;
+                    $result = array("SUSHI URL seems to invalid");
+                }
+                //use App\Sushitransaction
             $statusArray = array();
             $statusArray['success'] = 1;
             $statusArray['uploaded_file'] = $file;
@@ -372,4 +463,224 @@ class FilevalidateController extends CommonController
             return view('validate_sushi_report', $statusArray);
         }
     }
+    
+    public function sushiRequest() {
+        if (Session::has('user')) {
+            $user = Session::get('user');
+            $UserType = $user['utype'];
+            if($UserType==='admin'){
+                $allSushiRequest = Sushitransaction::select()
+                            //->where('user_email', $user['email'])
+                            ->orderBy('date_time', 'desc')->get();
+            }else{
+                $allSushiRequest = Sushitransaction::select()
+                            ->where('user_email', $user['email'])
+                            ->orderBy('date_time', 'desc')->get();
+            }
+            //echo "<pre>####";print_r($allSushiRequest->toArray());die;
+            $data['utype'] = $user['utype'];
+            $data['userDisplayName'] = $user['display_name'];
+            $data['sushi_detail'] = $allSushiRequest;
+            return view('sushi_request_history', $data);
+        } else {
+            return Redirect::to('login');
+        }
+    }
+    
+    ///////////////////////
+    function delete_sushi_request($id) {
+        //  die('coming here');
+        if (Session::has('user')) {
+            
+            $user = Session::get('user');
+            $UserType = $user['utype'];
+            if($UserType==='admin'){
+                $alltransaction = Sushitransaction::where('id', $id)->delete();
+            }else{
+                $alltransaction = Sushitransaction::where('id', $id)->delete();
+            }
+            
+            Session::flash('userdelmsg', 'Report successfully deleted');
+            return Redirect::intended('/sushirequest');
+            
+        }
+    }
+    
+    
+    
+    //sushi parameter form
+    public function sushiRequestParameter($Requestorurl='',$apikey='',$CustomerId='',$platform='') {
+        //get Report list
+         $user = Session::get('user');
+        if ($user['email'] == '') {
+            return Redirect::to('/');
+        }
+        $user = Session::get('user');
+        $data['Requestorurl'] = $Requestorurl;
+        $data['apikey'] = $apikey;
+        $data['CustomerId'] = $CustomerId;
+        $data['platform'] = $platform;
+        $AllReportCodes = Reportname::select(array(
+                                    'report_code'
+                                ))->orderBy('report_code', 'asc')
+                                ->get()
+                                ->toArray();
+        $data['allreports'] = $AllReportCodes;
+        return view('sushi_parameter_view', $data);
+    }
+    
+    
+    
+    
+    //downloading Sushi Report
+    public function getSushiReport() {
+        $user = Session::get('user');
+        if ($user['email'] == '') {
+            return Redirect::to('/');
+        }
+        $allRequstVarible = Input::all();
+        $result = "";
+        $mainURL = str_replace('_','/',$allRequstVarible['Requestorurl']);
+        $ReportName = $allRequstVarible['ReportName'];
+        $mainURL    =    $mainURL."/reports/".strtolower($ReportName)."?";
+        
+        $begin_date = explode("-", $allRequstVarible['startmonth']);
+        $begin_date = $begin_date[1] . "-" . $begin_date[0] . "-01";
+        $end_date = explode("-", $allRequstVarible['endmonth']);
+        $d = cal_days_in_month(CAL_GREGORIAN, $end_date[0], $end_date[1]);
+        $end_date = $end_date[1] . "-" . $end_date[0] . "-" . $d;
+        
+        
+        //metricType paremeter
+        $metricType = implode(',',$allRequstVarible['metricType']??array());
+        $accessType = implode(',',$allRequstVarible['accessType']??array());
+        $accessMethod = implode(',',$allRequstVarible['accessMethod']??array());
+        $data_type = implode(',',$allRequstVarible['data_type']??array());
+        $plateformValue =  isset($allRequstVarible['platform']) ? $allRequstVarible['platform']:'';
+        $fields = array(
+            'apikey' => $allRequstVarible['APIkey']==0?'':$allRequstVarible['APIkey'],
+            'customer_id' => $allRequstVarible['CustomerId'],
+            'begin_date' => $begin_date,
+            'end_date' => $end_date,
+            'metric_type' => $metricType,
+            'access_type' => $accessType,
+            'access_method' => $accessMethod,
+            'data_type' => $data_type,
+            'platform' => $plateformValue
+            );
+        $fields = array_filter($fields);
+        $url = $mainURL. http_build_query($fields, '', "&");
+        if (!preg_match("~^(?:f|ht)tps?://~i", $url)) {
+            $url = "https://" . $url;
+        }
+        $file = time() . '_file.json';
+        $curl = curl_init($url);
+        curl_setopt($curl, CURLOPT_NOBODY, true);
+        $result = curl_exec($curl);
+            if ($result !== false) {
+                $statusCode = curl_getinfo($curl, CURLINFO_HTTP_CODE);
+                if ($statusCode == 404) {
+                    $result = array("SUSHI URL does not exist");
+                } else {
+                    $opts = [
+                        "http" => [
+                            "method" => "GET",
+                            "header" => "Accept-language: en\r\n" .
+                            "apikey: ".$allRequstVarible['APIkey']
+                        ]
+                    ];
+
+                    $context = stream_context_create($opts);
+
+                    // Open the file using the HTTP headers set above
+                    //$file = file_get_contents('https://c5.mpsinsight.com/insightc5api/services/reports/tr_j1?customer_id=11&begin_date=2018-01-01&end_date=2018-06-30', false, $context);
+                    $data = file_get_contents($url, false, $context);
+                    $json = json_decode($data, true);
+                    
+                    
+                    $jsonReportHeader = $json['Report_Header'];
+                    
+                    $currentReportID = $jsonReportHeader['Report_ID'];
+                    if ($currentReportID == 'DR_D1' || $currentReportID == 'DR_D2' || $currentReportID == 'DR') {
+                        
+                        $AllDrReport = $json['Report_Items'];
+                        $bodyResult = CommonController::jsonDrValidate($AllDrReport);
+                    }
+                    else if ($currentReportID == 'PR_P1' || $currentReportID == 'PR') {
+                        $AllPrReport = $json['Report_Items'];
+                        $bodyResult = CommonController::jsonPrValidate($AllPrReport);
+                    }
+                    else if ($currentReportID == 'IR_A1' || $currentReportID == 'IR_M1' || $currentReportID == 'IR') {
+                        $AllIrReport = $json['Report_Items'];
+                        $bodyResult = CommonController::jsonIrValidate($AllIrReport);
+                    }
+                    else {
+                        
+                        $AllBodyReport = $json['Report_Items'];
+                        $bodyResult = CommonController::jsonBodyValidate($AllBodyReport);
+                    }
+                    
+                    $user = Session::get('user');
+                    
+                    $dataIncludeHeader =  $bodyResult['data_error'];
+                    
+                    if($dataIncludeHeader == 0){
+                        
+                        $destinationPath=public_path()."/upload/json/";
+                        if (!is_dir($destinationPath)) {  mkdir($destinationPath,0777,true);  }
+                        
+                      
+                        File::put($destinationPath.$file,$data);
+                        //response()->download($destinationPath.$file);
+                        $completePath = $destinationPath.$file;
+                        
+                        $DataForInsertion = array(
+                            'user_email'=>$user['email']??'',
+                            'session_id'=>$user['display_name']??'',
+                            'sushi_url'=>str_replace("_","/", $allRequstVarible['Requestorurl']),
+                            'request_name'=>'getreportrequest',
+                            'platform'=>'getreport',
+                            'success'=>'Y',
+                            'number_of_errors'=>0
+                        );
+                        
+                        Sushitransaction::create($DataForInsertion);
+                        
+                        $headers = ['Content-Type: application/json'];
+                        $newName = $file;
+                        return response()->download($completePath, $file, $headers);
+                        
+                    } else {
+                    
+                    $destinationPath=public_path()."/upload/json/";
+                    if (!is_dir($destinationPath)) {  mkdir($destinationPath,0777,true);  }
+                    
+                    File::put($destinationPath.$file,$data);
+                    
+                    $completePath = $destinationPath.$file;
+                   
+                    $DataForInsertion = array(
+                        'user_email'=>$user['email']??'',
+                        'session_id'=>$user['display_name']??'',
+                        'sushi_url'=>str_replace("_","/", $allRequstVarible['Requestorurl']),
+                        'request_name'=>'getreportrequest',
+                        'platform'=>'fail',
+                        'success'=>'N',
+                        'number_of_errors'=>$dataIncludeHeader
+                    );
+                    
+                    Sushitransaction::create($DataForInsertion);
+                    
+                    $headers = ['Content-Type: application/json'];
+                    $newName = $file;
+                    return response()->download($completePath, $file, $headers);
+                    
+                }    
+            } 
+        
 }
+        
+    }
+}
+
+

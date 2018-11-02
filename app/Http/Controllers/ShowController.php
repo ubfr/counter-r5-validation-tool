@@ -1,5 +1,4 @@
 <?php
-
 namespace App\Http\Controllers;
 
 use App\Allreportsname;
@@ -22,6 +21,7 @@ use Maatwebsite\Excel\Facades\Excel;
 use File;
 use App\Transactionmaster;
 use App\Transactionmasterdetail;
+use App\Members;
 use Exception;
 use ZipArchive;
 use RecursiveIteratorIterator;
@@ -30,9 +30,11 @@ use DateTime;
 use App\Currenttransaction;
 use PHPExcel_Cell;
 use PHPExcel_Cell_DataType;
+use App\Sushitransaction;
+use App\Transactiondetailtemp;
 
 class ShowController extends Controller {
-
+    
     public $TransctionIdCurrent=0;
 
     public function __construct() {
@@ -42,6 +44,8 @@ class ShowController extends Controller {
         }
     }
 
+   
+    
     function checkview() {
 
         // dd('you are in after welcome');
@@ -86,6 +90,9 @@ class ShowController extends Controller {
     function downloadExcelConfig($configurationId='')
     {
         $user = Session::get('user');
+        if ($user['email'] == '') {
+            return Redirect::to('/');
+        }
         
        
         $Configurations = Provider::select('configuration_id','provider_name','provider_url','apikey','requestor_id','customer_id')
@@ -110,8 +117,7 @@ class ShowController extends Controller {
             'provider_url',
             'apikey',
             'requestor_id',
-            'customer_id',
-            
+            'customer_id', 
         ];
         
         // Convert each member of the returned collection into an array,
@@ -146,6 +152,9 @@ class ShowController extends Controller {
     // ////////////// start for Consortium/////////////////
     function harvetsingvalidate($id = 0) {
         $user = Session::get('user');
+        if ($user['email'] == '') {
+            return Redirect::to('/');
+        }
         //collect all reports for show in page
         $AllReportCodes = Reportname::select(array(
                                     'report_code'
@@ -166,7 +175,7 @@ class ShowController extends Controller {
             }
         }
 
-        $Consortiums = Consortium::where(array())->orderBy('configuration_name', 'asc')
+        $Consortiums = Consortium::where(array('created_by'=>$user['email']))->orderBy('configuration_name', 'asc')
                 ->get()
                 ->toArray();
         $providerMaster = array();
@@ -178,7 +187,7 @@ class ShowController extends Controller {
             // get providers name comma separted
             $newProvderList = array();
             foreach ($AllProvidersList as $Providerevalue) {
-                $newProvderList[] = $Providerevalue['provider_name'];
+                $newProvderList[] = '<a title="Cick for get members detail." href="member/'.$Providerevalue['id'].'">'.$Providerevalue['provider_name']."</a>";
             }
             $providernamecommaseparted = implode(", ", $newProvderList);
             $providerMaster[$key]['providers'] = $providernamecommaseparted;
@@ -191,7 +200,7 @@ class ShowController extends Controller {
         select(array('config_name','transaction_id', 'provider_name', 'begin_date','end_date','message','status'))
         
         ->addSelect(DB::raw('count(ID) as count'))
-         //->where('transaction_id', $TransactionId)
+        ->where('user_id', $user['email'])
         ->groupBy('transaction_id')
         ->groupBy('provider_name')
         ->groupBy('begin_date')
@@ -200,18 +209,166 @@ class ShowController extends Controller {
         ->groupBy('message')
         ->groupBy('status')
         ->orderBy('transaction_id', 'desc')
-        
-        //->groupBy('member_name')
         ->get()->toArray();
+        
         $data['alltransaction'] = $TransactionDetail;
         $data['allreports'] = $AllReportCodes;
         //echo "<pre>222";print_r($data);die;
         return view('consortium', $data);
     }
+    
 
+  //////////////// delete transaction /////////////  
+    function delete_transaction($id) {
+      // die('coming here');
+        if (Session::has('user')) {
+            
+            $user = Session::get('user');
+            $UserType = $user['utype'];
+            if($UserType==='admin'){
+                $alltransaction = Transactionmasterdetail::where('transaction_id', $id)->delete();
+            }else{
+                $alltransaction = Transactionmasterdetail::where('transaction_id', $id)->delete();
+            }
+            
+            Session::flash('colupdatemsg', 'Transaction successfully deleted');
+            Session::put('keyconsortium', 'delete');
+            return Redirect::intended('/consortium');
+            
+        }
+    }
+    
+  /////////////Members Listing////////////////////
+    function memberListing($id='') {
+        $user = Session::get('user');
+        if ($user['email'] == '') {
+            return Redirect::to('/');
+        }
+        $ProviderDetail = Provider::where(array(
+            'id' => $id
+        ))->get()
+        ->first()
+       
+        ;
+                
+        $Allmembers = Members::select()
+        ->where('provider_id', $id)
+        ->get()->toArray();
+          //echo "<pre>";print_r($Allmembers);die;
+        $data['allmember'] = $Allmembers;
+        $data['SingleProvder'] = $ProviderDetail;;
+        //echo "<pre>222";print_r($data);die;
+        return view('members', $data);
+
+    }
+    //////////////////Member Delete/////////////
+    
+    function deleteMembers($id='',$provider='') {
+       
+        $user = Session::get('user');
+        if ($user['email'] == '') {
+            return Redirect::to('/');
+        }
+        $Allmember= Members::where('id', $id)->delete();
+            Session::flash('memberdeletemsg', 'Member details successfully deleted');
+            return Redirect::intended('/member/'.$provider);
+        //echo "<pre>";print_r($id);die;
+        }
+    
+        //////////////////Member Retrieving after deletion/////////////
+        function refreshMembers($provider='') {
+           // die('bdfhhfhd');
+            $user = Session::get('user');
+            if ($user['email'] == '') {
+                return Redirect::to('/');
+            }
+            
+            Members::where('provider_id', $provider)->delete();
+            
+            $data=Provider::select()
+            ->where('id',$provider)
+            ->get()
+            ->first()
+            ->toarray();
+                        
+            $mainURL =$data['provider_url'];
+            $fields = array(
+                'apikey' => $data['apikey'],
+                'customer_id' => $data['customer_id']
+            );
+            //                         echo "<pre>";print_r($fields);die;
+            $url = $mainURL . "/members?" . http_build_query($fields, '', "&");
+            //                         echo "<pre>";print_r($url);die;
+            if (!preg_match("~^(?:f|ht)tps?://~i", $url)) {
+                $url = "https://" . $url;
+            }
+            $file = time() . '_file.json';
+            $curl = curl_init($url);
+            curl_setopt($curl, CURLOPT_NOBODY, true);
+            $result = curl_exec($curl);
+            //  echo "<pre>";print_r($result);die;
+            if ($result !== false) {
+                
+                $statusCode = curl_getinfo($curl, CURLINFO_HTTP_CODE);
+                if ($statusCode == 404) {
+                    //mark Shushi URL is incorrect and save in Database;
+                } else {
+                    
+                    // $data = json_encode(['Text 1','Text 2','Text 3','Text 4','Text 5']);
+                    $opts = [
+                        "http" => [
+                            "method" => "GET",
+                            "header" => "Accept-language: en\r\n"
+                        ]
+                        
+                    ];
+                    $context = stream_context_create($opts);
+                    $dataValue = file_get_contents($url, false, $context);
+                    $MembersList = json_decode($dataValue);
+                    foreach($MembersList as $Member){
+                        
+                        $CustomerId = $Member->Customer_ID??'';
+                        $RequestorId = $Member->Requestor_ID??'';
+                        $Name = $Member->Name??'';
+                        $Notes = $Member->Notes??'';
+                        $InstitutionIdType = $Member->Institution_ID[0]->Type??'';
+                        // echo "<pre>";print_r($InstitutionIdType);die;
+                        $InstitutionIdvalue = $Member->Institution_ID[0]->Value??'';
+                        $ProviderId = $provider;
+                        //echo "<pre>";print_r($ProviderId);die;
+                        //$InsertedIDOfProvider
+                        
+                        // echo "<pre>";print_r($CustomerId);die;
+                        
+                        $MembersValue= array(
+                            'customer_id' => $CustomerId,
+                            'requestor_id' => $RequestorId,
+                            'name' => $Name,
+                            'notes' => $Notes,
+                            'institution_id_type' => $InstitutionIdType,
+                            'institution_id_value' => $InstitutionIdvalue,
+                            'provider_id' => $ProviderId,
+                            
+                        );
+                        if(!empty($MembersValue['customer_id'])){
+                            $SaveMemberNew = Members::create($MembersValue);
+                        }
+                    }
+                }
+                
+            }
+            
+            Session::flash('memberfreshmsg', 'Member details successfully refreshed');
+            return Redirect::intended('/member/'.$provider);
+        }
     // ///////////////////////////////
     function saveConsortiumConfig() {
+        $user = Session::get('user');
+        if ($user['email'] == '') {
+            return Redirect::to('/');
+        }
         $data = Input::all();
+        $data['created_by']=$user['email'];
         // echo "<pre>";print_r($data);die;
         $rules = array(
             'configuration_name' => 'required',
@@ -247,9 +404,13 @@ class ShowController extends Controller {
 
     // ////////////////Edit Consortium////////////////////
     function edit_consortium($id) {
+        $user = Session::get('user');
+        if ($user['email'] == '') {
+            return Redirect::to('/');
+        }
         if (Session::has('user')) {
             $user = Session::get('user');
-
+            
             $Consortiums = Consortium::select('id', 'configuration_name', 'Remarks')->where('id', $id)->get();
             $data['file_detail'] = $Consortiums;
             // echo "<pre>";print_r($data);die;
@@ -260,6 +421,10 @@ class ShowController extends Controller {
     }
 
     function update_consortium() {
+        $user = Session::get('user');
+        if ($user['email'] == '') {
+            return Redirect::to('/');
+        }
         if (session::has('user')) {
 
             $data = Input::all();
@@ -283,6 +448,10 @@ class ShowController extends Controller {
 
     // //////////Function For Report History//////////
     function showreport() {
+        $user = Session::get('user');
+        if ($user['email'] == '') {
+            return Redirect::to('/');
+        }
         // ///////////show file upload list/////////////
         $user = Session::get('user');
 
@@ -304,6 +473,10 @@ class ShowController extends Controller {
 
     // ///////////////////////////////////////////////
     function uploaded_report() {
+        $user = Session::get('user');
+        if ($user['email'] == '') {
+            return Redirect::to('/');
+        }
         // ///////////show file upload list/////////////
         $user = Session::get('user');
 
@@ -318,6 +491,10 @@ class ShowController extends Controller {
 
     // ///////////show Rule Management Page////////////
     function show_rule_manage() {
+        $user = Session::get('user');
+        if ($user['email'] == '') {
+            return Redirect::to('/');
+        }
         $user = Session::get('user');
         // $reportname=Reportname::all();
         $reportname = Validationrule::all();
@@ -344,6 +521,10 @@ class ShowController extends Controller {
 
     // delete providers value
     function deleteConsortium($id) {
+        $user = Session::get('user');
+        if ($user['email'] == '') {
+            return Redirect::to('/');
+        }
         if (Session::has('user')) {
 
             Consortium::where('id', $id)->delete();
@@ -356,18 +537,30 @@ class ShowController extends Controller {
 
     // delete providers value
     function deleteProvider($id = 0, $configid = 0) {
+        $user = Session::get('user');
+        if ($user['email'] == '') {
+            return Redirect::to('/');
+        }
         if (Session::has('user')) {
-
             Provider::where(array(
                 'id' => $id,
                 'configuration_id' => $configid
             ))->delete();
-            Session::flash('colupdatemsg', 'Provider successfully deleted');
+            
+            Members::where(array(
+                'provider_id'=> $id,
+            ))->delete();
+            
+            Session::flash('colupdatemsg', 'Provider and its Member successfully deleted');
             return Redirect::intended('/add_provider/' . $configid);
             // echo "<pre>";print_r($id);die;
         }
     }
     public function showConsortiumProgressnew(int $configurationId=0){
+        $user = Session::get('user');
+        if ($user['email'] == '') {
+            return Redirect::to('/');
+        }
         $user = Session::get('user');
         $AllReportCodes = Reportname::select(array(
                                     'report_code'
@@ -381,21 +574,60 @@ class ShowController extends Controller {
             $AllProvidersList = Provider::where(array(
                         'configuration_id' => $Consortiums['id']
                     ))->get()->toArray();
+            
+            $allMembers = array();
+            //echo "<pre>";print_r($AllProvidersList);die;
+            foreach ($AllProvidersList as $singlProvider) {
+                $allMembers[$singlProvider['id']] = Members::where(array(
+                        'provider_id' => $singlProvider['id']
+                    ))->get()->toArray();
+            }
+            //echo "<pre>";print_r($allMembers);die;
+            //converting signle array removing duplicates
+            $UniquMembervalue = array();
+            foreach ($allMembers as $MemberValue) {
+                foreach ($MemberValue as $Mvalue) {
+                    $UniquMembervalue[$Mvalue['customer_id']] = $Mvalue['name'];
+                }
+            }
+            
             // get providers name comma separted
         $data['userDisplayName'] = $user['display_name'];
         $data['utype'] = $user['utype'];
         $data['allreports'] = $AllReportCodes;
         $data['allproviders'] = $AllProvidersList;
         $data['configuration_id'] = $configurationId;
+        $data['all_members'] = $UniquMembervalue;
         return view('show_consortium_progressnew', $data);
     }
     //show progress bar for data download
     function showConsortiumProgress() {
+        $user = Session::get('user');
+        if ($user['email'] == '') {
+            return Redirect::to('/');
+        }
+        
         $Postdata = Input::all();
+       
         $id = $Postdata['configurationid']??0;
+        
+        $email = $user['email'];
+        
+        if($user['utype']!='admin'){
+            $noFtimes = User::select('no_of_times')->where(array('utype'=>'user','email'=>$email))->get()->first()->toArray();
+            $Limit = $noFtimes['no_of_times'];
+            // echo "<pre>";print_r($Limit);die;
+            $TotalRequest = Transactionmasterdetail::where('user_id',$email)->distinct('transaction_id')->count('transaction_id');
+            if( $TotalRequest >  $Limit  &&  $user['utype']!='admin'){
+                Session::flash('error', 'Limit Exceed. Please Contact Administrator');
+                return Redirect::intended('/consortium');
+                
+            } 
+        }
+        
         //get configuration Name
         $Configurationname = Consortium::where('id',$id)->get()->first()->toArray();
-        
+
         ini_set('max_execution_time', 0);
         ini_set('memory_limit', '2048M');
         $user = Session::get('user');
@@ -407,16 +639,23 @@ class ShowController extends Controller {
         $data['end_date'] = $Postdata['end_date'];
         $data['selectedReports'] = implode(",", $Postdata['reports']);
         $data['selectedProviders'] = implode(",", $Postdata['providers']);
+        $data['selectedMembers'] = implode(",", $Postdata['members']);
+        $data['selectedFormat'] =  $Postdata['format'];
         $data['success'] = 1;
         $data['uploaded_file'] = "a.zip";
         $data['configuration_name'] = $Configurationname['configuration_name'];
         //echo "<pre>";print_r($data);die;
         return view('show_consortium_progress', $data);
+        
     }
 
     //show current Record progress File
     function showConsortiumProgressForRecord($id = 0,$TransactionId='',$begin_date = '', $end_date = '',$selectedReports='') {
         //$TransactionId = $this->getTransctionId();
+        $user = Session::get('user');
+        if ($user['email'] == '') {
+            return Redirect::to('/');
+        }
         ini_set('max_execution_time', 0);
         ini_set('memory_limit', '2048M');
         $user = Session::get('user');
@@ -428,6 +667,7 @@ class ShowController extends Controller {
         foreach ($AllProvidersList as $providerSingle) {
             $allProvidersListValue[$providerSingle['id']] = $providerSingle['provider_name'];
         }
+        
         $TransactionDetail = Transactionmasterdetail::
                         select(array('transaction_id', 'provider_name', 'member_name'))
                         ->addSelect(DB::raw('count(ID) as count'))
@@ -436,15 +676,16 @@ class ShowController extends Controller {
                         ->groupBy('provider_name')
                         ->groupBy('member_name')
                         ->get()->toArray();
+             
         $dataToShow = array();
         $statusMaster = array('1' => 'Completed');
         $OutputString = "<table class='table table-striped table-bordered dataTable'  width='100%'>";
         $OutputString = $OutputString."<tr><th>Sl. No.</th><th>Provider Name</th><th>Member Name</th><th>Reports</th><th>Processed Report</th></tr>";
+        
         $i = 1;
         foreach ($TransactionDetail as $keyValue => $TransactionSingle) {
             $OutputString = $OutputString . "<tr>";
             $OutputString = $OutputString . "<td>" . $i++ . "</td>";
-            //$OutputString = $OutputString . "<td>" . $TransactionSingle['transaction_id'] . "</td>";
             $OutputString = $OutputString . "<td>" . $TransactionSingle['provider_name'] . "</td>";
             $OutputString = $OutputString . "<td>" . $TransactionSingle['member_name'] . "</td>";
             $OutputString = $OutputString . "<td>" . $selectedReports . "</td>";
@@ -457,12 +698,22 @@ class ShowController extends Controller {
     }
     
     // /////////Run Consortium///////////////////////////////
-    function runConsortium($id = 0,$TransactionId='', $begin_date = '', $end_date = '',$selectedReport = '',$selectedProviders='') {
+    function runConsortium($id = 0, $TransactionId = '', $begin_date = '', $end_date = '', $selectedReport = '', $selectedProviders = '', $selectedMembers = '', $selectedFormat = '')
+    {
+        $user = Session::get('user');
+        if ($user['email'] == '') {
+            return Redirect::to('/');
+        }
         ini_set('max_execution_time', 0);
         ini_set('memory_limit', '2048M');
-        $SelectedReport = explode(",",$selectedReport);
-        $SelectedProviders = explode(",",$selectedProviders);
-        $ConfigurationName = Consortium::where('id', $id)->get()->first()->toArray();
+        $SelectedReport = explode(",", $selectedReport);
+        $SelectedProviders = explode(",", $selectedProviders);
+        $SelectedMembers = explode(",", $selectedMembers);
+        
+        $ConfigurationName = Consortium::where('id', $id)->get()
+            ->first()
+            ->toArray();
+        
         $ConfigurationName = $ConfigurationName['configuration_name'] ?? '';
         $begin_date = explode("-", $begin_date);
         $begin_date = $begin_date[1] . "-" . $begin_date[0] . "-01";
@@ -474,33 +725,29 @@ class ShowController extends Controller {
         $user = Session::get('user');
         $startdatetimstamp = date('Y-m-d H:i:s');
         
-        
-        
-        
         if (Session::has('user')) {
             
             $data = Consortium::select('id', 'configuration_name', 'remarks')->where('id', $id)
-                    ->get()
-                    ->first()
-                    ->toArray();
+                ->get()
+                ->first()
+                ->toArray();
             $Remarks = $data['remarks'];
             $AllProvidersList = Provider::where(array(
-                        'configuration_id' => $data['id']
-                    ))->get()->toArray();
+                'configuration_id' => $data['id']
+            ))->get()->toArray();
             $userId = $user['id'];
             $ClientIp = $this->get_client_ip();
             $ConfigurationId = $AllProvidersList[0]['configuration_id'];
             // insert data in table and get ID = 1 folder with id-name
-            //generateTranasctionId
+            // generateTranasctionId
             
-            //$this->setTransctionId($TransactionId);
-            //Session::put('TransactionId',$TransactionId);
-            //die("Hello");
+            
             // log for unique Config Run ID
+            /* $progresstrack = array();
             foreach ($AllProvidersList as $ProviderDetail) {
-                if(!in_array($ProviderDetail['id'],$SelectedProviders ))
-                                            continue;
-                //echo "<pre>";print_r($ProviderDetail);die;
+                if (! in_array($ProviderDetail['id'], $SelectedProviders))
+                    continue;
+                // echo "<pre>";print_r($ProviderDetail);die;
                 extract($ProviderDetail);
                 $ProviderDetailID = $ProviderDetail['id'];
                 $mainURL = $provider_url;
@@ -508,19 +755,21 @@ class ShowController extends Controller {
                     'apikey' => $apikey,
                     'customer_id' => $customer_id
                 );
+                
                 $url = $mainURL . "/members?" . http_build_query($fields, '', "&");
-                if (!preg_match("~^(?:f|ht)tps?://~i", $url)) {
+                if (! preg_match("~^(?:f|ht)tps?://~i", $url)) {
                     $url = "https://" . $url;
                 }
+                
                 $file = time() . '_file.json';
                 $curl = curl_init($url);
                 curl_setopt($curl, CURLOPT_NOBODY, true);
                 $result = curl_exec($curl);
-                // echo "<pre>ssdsadd";print_r($result);die;
+              
                 if ($result !== false) {
                     $statusCode = curl_getinfo($curl, CURLINFO_HTTP_CODE);
                     if ($statusCode == 404) {
-                        //mark Shushi URL is incorrect and save in Database;
+                        // mark Shushi URL is incorrect and save in Database;
                     } else {
                         // $data = json_encode(['Text 1','Text 2','Text 3','Text 4','Text 5']);
                         $opts = [
@@ -531,172 +780,506 @@ class ShowController extends Controller {
                         ];
                         $context = stream_context_create($opts);
                         $AllReportCodes = Reportname::select(array(
-                                    'report_code'
-                                ))->orderBy('id', 'asc')
-                                ->get()
-                                ->toArray();
+                            'report_code'
+                        ))->orderBy('id', 'asc')
+                            ->get()
+                            ->toArray();
+                        
                         // Open the file using the HTTP headers set above
                         $data = file_get_contents($url, false, $context);
                         $json = json_decode(($data), true);
-                        //echo "<pre>";print_r($json);die;
-                        //member detail creating file
+                        
+                        // response()->download($destinationPath . $file);
+                        // Now Checking for each Report related to Member
+                        // try {
+                        foreach ($json as $Member) {
+                            $FileNameForSize = '';
+                            if (! in_array($Member['Customer_ID'], $SelectedMembers))
+                                continue;
+                            // loop for reprt code
+                            foreach ($AllReportCodes as $ReportCode) {
+                                if (! in_array($ReportCode['report_code'], $SelectedReport))
+                                    continue;
+                                // Config run ID, Config Name, Config ID, provider, Member, report , start Date_time stamp
+                                extract($Member);
+                                $Mfields = array(
+                                    'apikey' => $apikey,
+                                    'customer_id' => $Customer_ID,
+                                    'begin_date' => $begin_date,
+                                    'end_date' => $end_date
+                                );
+                                
+                                $startdatetimstamp = date('Y-m-d H:i:s');
+                                $SaveTransaction = array(
+                                    
+                                    'transaction_id' => $TransactionId,
+                                    'providers' => $provider_name,
+                                    'members' => $Name,
+                                    'reports' => $ReportCode['report_code'],
+                                    'begin_date' => $begin_date,
+                                    'end_date' => $end_date
+                                );
+                                
+                                $progresstrack[]=$SaveTransaction;
+                                
+                          
+                                   }
+                              }
+                         }
+                    } 
+               }
+               
+            $Savetemp = Transactiondetailtemp::insert($progresstrack);
+               
+             
+            $Counttemp = Transactiondetailtemp::where(array(
+                'transaction_id' => $TransactionId
+            ))->get()->count(); */
+            
+            //echo "<pre>";print_r($Counttemp);die;
+            
+                
+            foreach ($AllProvidersList as $ProviderDetail) {
+                if (! in_array($ProviderDetail['id'], $SelectedProviders))
+                    continue;
+                // echo "<pre>";print_r($ProviderDetail);die;
+                extract($ProviderDetail);
+                $ProviderDetailID = $ProviderDetail['id'];
+                $mainURL = $provider_url;
+                $fields = array(
+                    'apikey' => $apikey,
+                    'customer_id' => $customer_id
+                );
+                
+                $url = $mainURL . "/members?" . http_build_query($fields, '', "&");
+                if (! preg_match("~^(?:f|ht)tps?://~i", $url)) {
+                    $url = "https://" . $url;
+                }
+                
+                $file = time() . '_file.json';
+                $curl = curl_init($url);
+                curl_setopt($curl, CURLOPT_NOBODY, true);
+                $result = curl_exec($curl);
+                // echo "<pre>ssdsadd";print_r($result);die;
+                if ($result !== false) {
+                    $statusCode = curl_getinfo($curl, CURLINFO_HTTP_CODE);
+                    if ($statusCode == 404) {
+                        // mark Shushi URL is incorrect and save in Database;
+                    } else {
+                        // $data = json_encode(['Text 1','Text 2','Text 3','Text 4','Text 5']);
+                        $opts = [
+                            "http" => [
+                                "method" => "GET",
+                                "header" => "Accept-language: en\r\n"
+                            ]
+                        ];
+                        $context = stream_context_create($opts);
+                        $AllReportCodes = Reportname::select(array(
+                            'report_code'
+                        ))->orderBy('id', 'asc')
+                            ->get()
+                            ->toArray();
+                        // Open the file using the HTTP headers set above
+                        $data = file_get_contents($url, false, $context);
+                        $json = json_decode(($data), true);
+                        // echo "<pre>";print_r($json);die;
+                        
+                        
+                        
+                        // member detail creating file
                         $providerNameFolder = str_replace(" ", "_", $provider_name);
-                        //$destinationPath = public_path() . "/upload/json/" . $TransactionId . "/" . $providerNameFolder . "/";
+                        // $destinationPath = public_path() . "/upload/json/" . $TransactionId . "/" . $providerNameFolder . "/";
                         $destinationPath = public_path() . "/upload/json/" . $TransactionId . "/";
-                        //$destinationPathCopy = public_path() . "/upload/json/" . $TransactionId . "/" . $providerNameFolder . "/";
+                        // $destinationPathCopy = public_path() . "/upload/json/" . $TransactionId . "/" . $providerNameFolder . "/";
                         $destinationPathCopy = public_path() . "/upload/json/" . $TransactionId . "/";
                         $file = $providerNameFolder . "_members.json";
-                        if (!is_dir($destinationPath)) {
+                        if (! is_dir($destinationPath)) {
                             mkdir($destinationPath, 0777, true);
                         }
                         File::put($destinationPath . $file, $data);
-                        //response()->download($destinationPath . $file);
+                        
+                        $dataValue = json_decode($data, true);
+                        
+                        
+                        $filex = $providerNameFolder . "_members";
+                        
+                        
+                        if($selectedFormat==='JSON'){
+                            
+                            foreach ($dataValue as $keyofreport => $reportvalue) {
+                                $dataValue1[] = array(
+                                    $keyofreport
+                                );
+                            }
+                        }else if($selectedFormat==='XLSX'){
+                            
+                            Excel::create($filex, function ($excel) use ($dataValue) {
+                            
+                            $excel->setTitle('Error Report');
+                            $excel->setCreator('Laravel')->setCompany('Counter Project');
+                            $excel->setDescription('xlsx report file');
+                            
+                            // Build the spreadsheet, passing in the $dataValue
+                            $excel->sheet('sheet1', function ($sheet) use ($dataValue) {
+                                $sheet->fromArray($dataValue, null, 'A1', false, false);
+                            });
+                        })->store('xlsx', $destinationPath);
+                        
+                        //delete member json file
+                        if(file_exists($destinationPath.$file)){
+                            unlink($destinationPath.$file);
+                        }
+                        }
+                       
+                        else if($selectedFormat==='TSV'){
+                            // tsv creation start
+                            
+                            $filenametsv = $providerNameFolder . "_members.tsv";
+                            $FileNameForSize = $filenametsv;
+                            $filenametsv = $destinationPath . $filenametsv;
+                            $TsvContentValue = '';
+                            $myfile = fopen($filenametsv, "w") or die("Unable to open file!");
+                            $headerarray = array_keys($dataValue[0]);
+                            //echo "<pre>";print_r($dataValue);die;
+                            $TsvContentHeader = implode("\t", $headerarray) . "\n";
+                            fwrite($myfile, $TsvContentHeader);
+                            foreach ($dataValue as $KeyOfMember=>$ContentOfTSV) {
+                                $ContentOfTSV['Institution_ID'] = $ContentOfTSV['Institution_ID'][0]['Type'].':'.$ContentOfTSV['Institution_ID'][0]['Value'];
+                                $TsvContentValue = implode("\t", $ContentOfTSV) . "\n";
+                                fwrite($myfile, $TsvContentValue);
+                            }
+                            
+                            fclose($myfile);
+                            //deletion of member json
+                            if(file_exists($destinationPath.$file)){
+                                unlink($destinationPath.$file);
+                            }
+                        }
+                        
                         // Now Checking for each Report related to Member
-                        //try {
+                        // try {
                         foreach ($json as $Member) {
-                                // loop for reprt code
-                                foreach ($AllReportCodes as $ReportCode) {
-                                    if(!in_array($ReportCode['report_code'],$SelectedReport ))
-                                            continue;
-                                    // Config run ID, Config Name, Config ID, provider, Member, report , start Date_time stamp
-                                    extract($Member);
-                                    $Mfields = array(
-                                        'apikey' => $apikey,
-                                        'customer_id' => $Customer_ID,
-                                        'begin_date' => $begin_date,
-                                        'end_date' => $end_date
-                                    );
-                                    
-                                    $startdatetimstamp = date('Y-m-d H:i:s');
-                                    $SaveTransaction = array(
-                                        'user_id' => $user->email,
-                                        'transaction_id' => $TransactionId,
-                                        'config_name' => $ConfigurationName,
-                                        'client_ip' => $ClientIp,
-                                        'provider_name' => $provider_name,
-                                        'member_name' => $Name,
-                                        'report_id' => $ReportCode['report_code'],
-                                        'begin_date' => $begin_date,
-                                        'end_date' => $end_date,
-                                        'status' => 1,
-                                        'message' => 'started',
-                                        'remarks' => $Remarks,
-                                        'exception' => '',
-                                        'details' => 'Started:',
-                                        'file_name' => 'Test.json',
-                                        'file_size' => 0,
-                                        'start_date_time' => $startdatetimstamp
-                                    );
-                                    $SaveReort = Transactionmasterdetail::create($SaveTransaction);
-
-
-                                    $Murl = $mainURL . "/reports/" . strtolower($ReportCode['report_code']) . "?" . http_build_query($Mfields, '', "&");
-                                    if (!preg_match("~^(?:f|ht)tps?://~i", $Murl)) {
-                                        $Murl = "https://" . $Murl;
-                                    }
-                                    $Mfile = $customer_id . '_file.json';
-                                    $Mcurl = curl_init($Murl);
-                                    // echo "<pre>";print_r($curl);die;
-                                    curl_setopt($Mcurl, CURLOPT_NOBODY, true);
-
-                                    $Mresult = curl_exec($Mcurl);
-                                    // echo "<pre>ssdsadd";print_r($result);die;
-                                    if ($Mresult !== false) {
-                                        $statusCode = curl_getinfo($Mcurl, CURLINFO_HTTP_CODE);
-                                        if ($statusCode == 404) {
-                                            $Mresult = array(
-                                                "Member URL doest not exist"
-                                            );
-                                        } else {
-                                            // $data = json_encode(['Text 1','Text 2','Text 3','Text 4','Text 5']);
-                                            $opts = [
-                                                "http" => [
-                                                    "method" => "GET",
-                                                    "header" => "Accept-language: en\r\n"
-                                                ]
-                                            ];
-
-                                            $context = stream_context_create($opts);
-
-                                            // Open the file using the HTTP headers set above
-                                            $data = file_get_contents($Murl, false, $context);
-                                            //$Mjson = json_decode(($data), true);
-                                            //making directory
-                                            $startdatetimstampEnd = date('Y-m-d H:i:s');
-                                            $rundate = date('Y-m-d');
-                                            $file = $provider_name."_".$Member['Customer_ID'] . "_" . $ReportCode['report_code'] ."_5_".$begin_date."_".$end_date."_".$rundate.".json";
-                                            //$destinationPath = $destinationPathCopy . "/" . $Member['Customer_ID'] . "/";
-                                            $destinationPath = $destinationPathCopy;
-                                            //die($destinationPath);
-
-                                            if (!is_dir($destinationPath)) {
-                                                mkdir($destinationPath, 0777, true);
-                                            }
-
-                                            File::put($destinationPath . $file, $data);
-                                            $fileSize = filesize($destinationPath . $file);
-
-                                            //updating for file size and status
+                            $FileNameForSize = '';
+                            if (! in_array($Member['Customer_ID'], $SelectedMembers))
+                                continue;
+                            // loop for reprt code
+                            foreach ($AllReportCodes as $ReportCode) {
+                                if (! in_array($ReportCode['report_code'], $SelectedReport))
+                                    continue;
+                                 
+                                extract($Member);
+                                $Mfields = array(
+                                    'apikey' => $apikey,
+                                    'customer_id' => $Customer_ID,
+                                    'begin_date' => $begin_date,
+                                    'end_date' => $end_date
+                                );
+                                
+                                $startdatetimstamp = date('Y-m-d H:i:s');
+                                $SaveTransaction = array(
+                                    'user_id' => $user->email,
+                                    'transaction_id' => $TransactionId,
+                                    'config_name' => $ConfigurationName,
+                                    'client_ip' => $ClientIp,
+                                    'provider_name' => $provider_name,
+                                    'member_name' => $Name,
+                                    'report_id' => $ReportCode['report_code'],
+                                    'begin_date' => $begin_date,
+                                    'end_date' => $end_date,
+                                    'status' => 1,
+                                    'message' => 'failed',
+                                    'remarks' => $Remarks,
+                                    'exception' => '',
+                                    'details' => 'Incomplete:',
+                                    'file_name' => 'Test.json',
+                                    'file_size' => 0,
+                                    'start_date_time' => $startdatetimstamp
+                                );
+                                
+                                $SaveReort = Transactionmasterdetail::create($SaveTransaction);
+                                
+                                $Murl = $mainURL . "/reports/" . strtolower($ReportCode['report_code']) . "?" . http_build_query($Mfields, '', "&");
+                                if (! preg_match("~^(?:f|ht)tps?://~i", $Murl)) {
+                                    $Murl = "https://" . $Murl;
+                                }
+                                $Mfile = $customer_id . '_file.json';
+                                $Mcurl = curl_init($Murl);
+                                curl_setopt($Mcurl, CURLOPT_NOBODY, true);
+                                
+                                $Mresult = curl_exec($Mcurl);
+                                if ($Mresult !== false) {
+                                    $statusCode = curl_getinfo($Mcurl, CURLINFO_HTTP_CODE);
+                                    if ($statusCode == 404) {
+                                        $Mresult = array(
+                                            "Member URL doest not exist"
+                                        );
+                                    } else {
+                                        // $data = json_encode(['Text 1','Text 2','Text 3','Text 4','Text 5']);
+                                        $opts = [
+                                            "http" => [
+                                                "method" => "GET",
+                                                "header" => "Accept-language: en\r\n"
+                                            ]
+                                        ];
+                                        
+                                        $context = stream_context_create($opts);
+                                        
+                                        // Open the file using the HTTP headers set above
+                                        $data = file_get_contents($Murl, false, $context);
+                                        // $Mjson = json_decode(($data), true);
+                                        // making directory
+                                        $startdatetimstampEnd = date('Y-m-d H:i:s');
+                                        $rundate = date('Y-m-d');
+                                        $file = $provider_name . "_" . $Member['Customer_ID'] . "_" . $ReportCode['report_code'] . "_5_" . $begin_date . "_" . $end_date . "_" . $rundate . ".json";
+                                        // $destinationPath = $destinationPathCopy . "/" . $Member['Customer_ID'] . "/";
+                                        $destinationPath = $destinationPathCopy;
+                                        // die($destinationPath);
+                                        
+                                        if (! is_dir($destinationPath)) {
+                                            mkdir($destinationPath, 0777, true);
+                                        }
+                                        
+                                        File::put($destinationPath . $file, $data);
+                                        $dataValue = json_decode($data, true);
+                                       
+                                        // die($selectedFormat);
+                                        
+                                        if($selectedFormat!='JSON'){
                                             
-                                            $UpdateTransactionInfo = array(
-                                                'status' => 2,
-                                                'message' => 'success',
-                                                'remarks' => $Remarks,
-                                                'exception' => '',
-                                                'details' => 'Success:',
-                                                'file_name' => $file,
-                                                'file_size' => $fileSize,
-                                                'end_date_time' => $startdatetimstampEnd
-                                            );
-
-                                            Transactionmasterdetail::where(array(
-                                                        'transaction_id' => $TransactionId,
-                                                        'user_id' => $user->email,
-                                                        'member_name' => $Name,
-                                                        'report_id' => $ReportCode['report_code'],
-                                                    ))
-                                                    ->update(
-                                                            $UpdateTransactionInfo
+                                        if(isset($dataValue1) && is_array($dataValue1))
+                                            unset($dataValue1);
+                                       // excel start here 
+                                        
+                                        // $filename = $user['id'] . '_' . date('m-d-Y_hisa') . '_' . 'xlsx';
+                                        $filename = $provider_name . "_" . $Member['Customer_ID'] . "_" . $ReportCode['report_code'] . "_5_" . $begin_date . "_" . $end_date . "_" . $rundate . "";
+                                        $FileNameForSize = $filename;
+                                        // echo "<pre>";print_r ($filename);die;
+                                        $headerSection = $dataValue['Report_Header'];
+                                        
+                                        foreach ($headerSection as $keyofreport => $reportvalue) {
+                                            if (is_array($reportvalue)) {
+                                                if ($keyofreport == 'Institution_ID') {
+                                                    $reportvalueforexcel = $reportvalue[0]['Type'] . ':' . $reportvalue[0]['Value'];
+                                                } else if ($keyofreport == 'Report_Filters') {
+                                                    $reportvalueforexcel = $reportvalue[0]['Name'] . '=' . $reportvalue[0]['Value'] . ';' . $reportvalue[1]['Name'] . '=' . $reportvalue[1]['Value'];
+                                                } else if ($keyofreport == 'Report_Attributes') {
+                                                    $valuekey = $reportvalue[0]['Name'] ?? '';
+                                                    $valueofAttr = $reportvalue[0]['Value'] ?? '';
+                                                    if (empty($valuekey) && empty($valueofAttr)) {
+                                                        $reportvalueforexcel = '';
+                                                    } else {
+                                                        $reportvalueforexcel = $valuekey . ':' . $valueofAttr;
+                                                    }
+                                                } else if ($keyofreport == 'Exceptions') {
+                                                    $reportvalueforexcel = $reportvalue[0]['Code'] ?? '';
+                                                }
+                                            } else {
+                                                $reportvalueforexcel = $reportvalue;
+                                            }
+                                            // $dataValue1[] = array();
+                                            $dataValue1[] = array(
+                                                $keyofreport,
+                                                $reportvalueforexcel
                                             );
                                         }
+                                        
+                                        // setting header of report
+                                        $currentReportID = $headerSection['Report_ID'];
+                                        $ReportBody = $dataValue['Report_Items'];
+                                        // $ReportHeader = $datavalue['Report_Header'];
+                                        // echo "<pre>";print_r ($ReportBody);die;
+                                        if (empty($ReportBody)) {
+                                            $dataValue1[] = array();
+                                        } else if ($currentReportID == 'DR_D1' || $currentReportID == 'DR_D2' || $currentReportID == 'DR') {
+                                            $headerFixedValue = array_keys(($ReportBody[0]));
+                                            $newHeader = array_values($headerFixedValue);
+                                            $headerFixedValueAll = array_combine($newHeader, $headerFixedValue);
+                                            $dataValue1[] = $headerFixedValueAll;
+                                            
+                                            $bodyvalue = $ReportBody;
+                                            
+                                            foreach ($bodyvalue as $InnerValue) {
+                                                $NewSingleRow = array();
+                                                // for all inner value
+                                                foreach ($InnerValue as $KeyOfRow => $RowValue) {
+                                                    $finalString = '';
+                                                    if (is_array($RowValue)) {
+                                                        if ($KeyOfRow == 'Publisher_ID') {
+                                                            $finalString = $RowValue[0]['Type'] . ':' . $RowValue[0]['Value'];
+                                                        } else if ($KeyOfRow == 'Performance') {
+                                                            $finalString = $RowValue[0]['Period']['Begin_Date'] . '-' . $RowValue[0]['Period']['End_Date'] . ';' . $RowValue[0]['Instance'][0]['Metric_Type'] . '-' . $RowValue[0]['Instance'][0]['Count'];
+                                                        }
+                                                        $NewSingleRow[$headerFixedValueAll[$KeyOfRow]] = $finalString;
+                                                    } else {
+                                                        $NewSingleRow[$headerFixedValueAll[$KeyOfRow]] = $RowValue;
+                                                    }
+                                                }
+                                                $dataValue1[] = $NewSingleRow;
+                                            }
+                                        } else if ($currentReportID == 'PR_P1' || $currentReportID == 'PR') {
+                                            
+                                            $headerFixedValue = array_keys($ReportBody[0]);
+                                            $newHeader = array_values($headerFixedValue);
+                                            $headerFixedValueAll = array_combine($newHeader, $headerFixedValue);
+                                            $dataValue1[] = $headerFixedValueAll;
+                                            
+                                            $bodyvalue = $ReportBody;
+                                            
+                                            foreach ($bodyvalue as $InnerValue) {
+                                                $NewSingleRow = array();
+                                                // for all inner value
+                                                foreach ($InnerValue as $KeyOfRow => $RowValue) {
+                                                    $finalString = '';
+                                                    if (is_array($RowValue)) {
+                                                        if ($KeyOfRow == 'Performance') {
+                                                            $finalString = $RowValue[0]['Period']['Begin_Date'] . '&' . $RowValue[0]['Period']['End_Date'] . ';' . $RowValue[0]['Instance'][0]['Metric_Type'] . '-' . $RowValue[0]['Instance'][0]['Count'] . ';' . $RowValue[0]['Instance'][1]['Metric_Type'] . '-' . $RowValue[0]['Instance'][1]['Count'] . ';' . $RowValue[0]['Instance'][2]['Metric_Type'] . '-' . $RowValue[0]['Instance'][2]['Count'];
+                                                        }
+                                                        $NewSingleRow[$headerFixedValueAll[$KeyOfRow]] = $finalString;
+                                                    } else {
+                                                        $NewSingleRow[$headerFixedValueAll[$KeyOfRow]] = $RowValue;
+                                                    }
+                                                }
+                                                $dataValue1[] = $NewSingleRow;
+                                            }
+                                        } else if ($currentReportID == 'IR_A1' || $currentReportID == 'IR_M1' || $currentReportID == 'IR') {
+                                            
+                                            $headerFixedValue = array_keys($ReportBody[0]) ?? '';
+                                            $dataValue1[] = $headerFixedValue;
+                                        } else {
+                                            $headerFixedValue = array_keys($ReportBody[0]);
+                                            $newHeader = array_values($headerFixedValue);
+                                            $headerFixedValueAll = array_combine($newHeader, $headerFixedValue);
+                                            $dataValue1[] = $headerFixedValueAll;
+                                            
+                                            // echo "<pre>";print_r($dataValue1);die;
+                                            
+                                            $bodyvalue = $ReportBody;
+                                            // echo "<pre>";print_r($bodyvalue);die;
+                                            foreach ($bodyvalue as $InnerValue) {
+                                                $NewSingleRow = array();
+                                                // for all inner value
+                                                foreach ($InnerValue as $KeyOfRow => $RowValue) {
+                                                    $finalString = '';
+                                                    if (is_array($RowValue)) {
+                                                        if ($KeyOfRow == 'Item_ID') {
+                                                            // $finalString = $RowValue[0]['Type'].':'.$RowValue[0]['Value'].';'.$RowValue[1]['Type'].':'.$RowValue[1]['Value'];
+                                                            $finalString = 'Not Fixed';
+                                                        } else if ($KeyOfRow == 'Publisher_ID') {
+                                                            $finalString = $RowValue[0]['Type'] . ':' . $RowValue[0]['Value'];
+                                                        } else if ($KeyOfRow == 'Performance') {
+                                                            $finalString = $RowValue[0]['Period']['Begin_Date'] . '-' . $RowValue[0]['Period']['End_Date'] . ';' . $RowValue[0]['Instance'][0]['Metric_Type'] . '-' . $RowValue[0]['Instance'][0]['Count'] . ";" . $RowValue[0]['Instance'][1]['Metric_Type'] . '-' . $RowValue[0]['Instance'][1]['Count'];
+                                                        }
+                                                        $NewSingleRow[$headerFixedValueAll[$KeyOfRow]] = $finalString;
+                                                    } else {
+                                                        $NewSingleRow[$headerFixedValueAll[$KeyOfRow]] = $RowValue;
+                                                    }
+                                                }
+                                                $dataValue1[] = $NewSingleRow;
+                                            }
+                                        }
+                                        }else{
+                                            $dataValue1=array();
+                                        }
+                                        
+                                        if($selectedFormat==='XLSX'){
+                                        // xlsx creation
+                                        $FileNameForSize = $filename;
+                                        Excel::create($filename, function ($excel) use ($dataValue1) {
+                                            
+                                            // Set the spreadsheet title, creator, and description
+                                            $excel->setTitle('Error Report');
+                                            $excel->setCreator('Laravel')->setCompany('Counter Project');
+                                            $excel->setDescription('xlsx report file');
+                                            
+                                            // Build the spreadsheet, passing in the $dataValue
+                                            $excel->sheet('sheet1', function ($sheet) use ($dataValue1) {
+                                                $sheet->fromArray($dataValue1, null, 'A1', false, false);
+                                            });
+                                        })->store('xlsx', $destinationPath);
+                                        
+                                        unlink($destinationPath . $file);
+                                        //excel creation end
+                                        
+                                        }else if($selectedFormat==='TSV'){
+                                        
+                                        
+                                        // tsv creation start
+                                        $filenametsv = $provider_name . "_" . $Member['Customer_ID'] . "_" . $ReportCode['report_code'] . "_5_" . $begin_date . "_" . $end_date . "_" . $rundate . ".tsv";
+                                        $FileNameForSize = $filenametsv;
+                                        $filenametsv = $destinationPath . $filenametsv;
+                                        $TsvContentValue = '';
+                                        $myfile = fopen($filenametsv, "w") or die("Unable to open file!");
+                                        foreach ($dataValue1 as $ContentOfTSV) {
+                                            $TsvContentValue = implode("\t", $ContentOfTSV) . "\n";
+                                            fwrite($myfile, $TsvContentValue);
+                                        }
+                                        
+                                        fclose($myfile);
+                                        //deletion of json
+                                        unlink($destinationPath . $file);
+                                        }
+                                        // tsv creation end
+                                        
+                                        try{
+                                            $fileSize = filesize($destinationPath . $FileNameForSize);
+                                        }catch(Exception $e){
+                                            $fileSize=0;
+                                        }
+                                        
+                                        // updating for file size and status
+                                        $UpdateTransactionInfo = array(
+                                            'status' => 2,
+                                            'message' => 'success',
+                                            'remarks' => $Remarks,
+                                            'exception' => '',
+                                            'details' => 'Success:',
+                                            'file_name' => $file,
+                                            'file_size' => $fileSize,
+                                            'end_date_time' => $startdatetimstampEnd
+                                        );
+                                        
+                                        Transactionmasterdetail::where(array(
+                                            'transaction_id' => $TransactionId,
+                                            'user_id' => $user->email,
+                                            'member_name' => $Name,
+                                            'report_id' => $ReportCode['report_code']
+                                        ))->update($UpdateTransactionInfo);
+                                        
                                     }
-                                    // on SUCCESS operation
-                                    // update below with End Date_time_stamp along with rematks and status
-                                    // Config run ID, Config Name, Config ID, provider, Member, report , start Date_time_stamp
-                                    // on FAIL operation
-                                    // update below with End Date_time_stamp along with rematks, exception and status
-                                    // Config run ID, Config Name, Config ID, provider, Member, report , start Date_time_stamp
-                                } // tomorrow fiday 14 sep
+                                }
+                            }
                         }
-                        //} catch (Exception $e) {
-                        //capture Wrong Information
-                        //}
                     }
                 }
-                // echo "<pre>";print_r($TransactionId->id);die;
             }
-
-            //converting Zip File
-            //root Directory
-
+            
+            
+            
+            
+            
+            // converting Zip File
+            // root Directory
             $publicpathforzip = public_path() . '/upload/json/' . $TransactionId . "/";
             $publicpathforzipNew = public_path() . '/upload/json/';
-            //die($publicpathforzip);
             $ZipFileName = $TransactionId . ".zip";
-            $resonse = $this->convertZipFile($TransactionId,$publicpathforzip, $publicpathforzipNew . "/" . $ZipFileName);
-            //$resonse = $this->zipData($publicpathforzip, $publicpathforzipNew . "/" . $ZipFileName, $zip);
-            //$finalZipFileURL = $publicpathforzipNew . "/" . $ZipFileName;
-            //delete folder after zip finish
+            $resonse = $this->convertZipFile($TransactionId, $publicpathforzip, $publicpathforzipNew . "/" . $ZipFileName);
             $this->removeDirectory($publicpathforzip);
-            echo "/upload/json/" . $ZipFileName;die;
-            //return response()->download($publicpathforzipNew . "/" . $ZipFileName);
-            //return view('harvesting_report', $dataforpassing);
+            echo "/upload/json/" . $ZipFileName;
+            die();
+            // return response()->download($publicpathforzipNew . "/" . $ZipFileName);
+            // return view('harvesting_report', $dataforpassing);
         }
     }
-    
-    //remove directory
-    function removeDirectory($dir='') {
-        //$dir = 'samples' . DIRECTORY_SEPARATOR . 'sampledirtree';
+
+    // }
+    // remove directory
+    function removeDirectory($dir = '')
+    {
+        $user = Session::get('user');
+        if ($user['email'] == '') {
+            return Redirect::to('/');
+        }
+        // $dir = 'samples' . DIRECTORY_SEPARATOR . 'sampledirtree';
         $it = new RecursiveDirectoryIterator($dir, RecursiveDirectoryIterator::SKIP_DOTS);
         $files = new RecursiveIteratorIterator($it, RecursiveIteratorIterator::CHILD_FIRST);
         foreach ($files as $file) {
@@ -709,23 +1292,27 @@ class ShowController extends Controller {
         rmdir($dir);
     }
 
-    ///////////////////  creating a zip file for download/////////////////////////
+    // ///////////////// creating a zip file for download/////////////////////////
     // Here the magic happens :)
-    function zipData($source, $destination, $zip) {
-
+    function zipData($source, $destination, $zip)
+    {
+        $user = Session::get('user');
+        if ($user['email'] == '') {
+            return Redirect::to('/');
+        }
+        
         if (extension_loaded('zip')) {
             if (file_exists($source)) {
-
-
+                
                 if ($zip->open($destination, ZIPARCHIVE::CREATE)) {
                     $source = realpath($source);
                     if (is_dir($source) === true) {
                         $files = new RecursiveIteratorIterator(new RecursiveDirectoryIterator($source), RecursiveIteratorIterator::SELF_FIRST);
-                        //$files = scandir($source);
+                        // $files = scandir($source);
                         foreach ($files as $file) {
-
+                            
                             $file = realpath($file);
-
+                            
                             if (is_dir($file) === true) {
                                 $zip->addEmptyDir(str_replace($source . '\\', '', $file . '\\'));
                             } else if (is_file($file) === true) {
@@ -740,36 +1327,43 @@ class ShowController extends Controller {
                 return $zip;
             }
         }
-
+        
         return false;
     }
 
-    //public function zipFileDownload() {
-    public function convertZipFile($TransactionId='',$publicpathforzip='', $publicpathforzipNew='',$ZipFileName='') {
-
-        $zip = new ZipArchive;
-
-
-        if ($zip->open($publicpathforzipNew.$ZipFileName, ZipArchive::CREATE) === TRUE) {
+    // public function zipFileDownload() {
+    public function convertZipFile($TransactionId = '', $publicpathforzip = '', $publicpathforzipNew = '', $ZipFileName = '')
+    {
+        $user = Session::get('user');
+        if ($user['email'] == '') {
+            return Redirect::to('/');
+        }
+        
+        $zip = new ZipArchive();
+        
+        if ($zip->open($publicpathforzipNew . $ZipFileName, ZipArchive::CREATE) === TRUE) {
             $dir = preg_replace('/[\/]{2,}/', '/', $publicpathforzip . "/");
-                //$dh = opendir($dir);
-                $allFiles = scandir($dir);
-                $files = array_diff($allFiles, array('..', '.'));
-                //echo "<pre>";print_r($files);die;
-                foreach ($files as $value) {
-                    //echo $archive_folder."/".$value."===>".$value.'<hr>';
-                    $zip->addFile($publicpathforzip."/".$value,$TransactionId.'/'.$value);
-                }
-                //die;
+            // $dh = opendir($dir);
+            $allFiles = scandir($dir);
+            $files = array_diff($allFiles, array(
+                '..',
+                '.'
+            ));
+            // echo "<pre>";print_r($files);die;
+            foreach ($files as $value) {
+                // echo $archive_folder."/".$value."===>".$value.'<hr>';
+                $zip->addFile($publicpathforzip . "/" . $value, $TransactionId . '/' . $value);
+            }
+            // die;
             $zip->close();
             return true;
-        }
-        else {
+        } else {
             return false;
         }
     }
 
-    function get_client_ip() {
+    function get_client_ip()
+    {
         $ipaddress = '';
         if (isset($_SERVER['HTTP_CLIENT_IP']))
             $ipaddress = $_SERVER['HTTP_CLIENT_IP'];
@@ -788,33 +1382,9 @@ class ShowController extends Controller {
         return $ipaddress;
     }
 
-    /*
-     * function callCURL($url) {
-     * $ch = curl_init();
-     * curl_setopt($ch, CURLOPT_URL, $url);
-     * curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-     * $combined = curl_exec ($ch);
-     * curl_close ($ch);
-     * return $combined;
-     * }
-     *
-     *
-     * function getResult($urls) {
-     * $return = array();
-     *
-     * foreach ($urls as $url) {
-     * $response = callCURL($url);
-     * if (strlen($response) !== 0) {
-     * $return[] = $response;
-     * break;
-     * }
-     * }
-     * return $return;
-     * }
-     */
-
     // /////////delete uploaded report///////////////////////////////
-    function delete_upload_report($id) {
+    function delete_upload_report($id)
+    {
         // echo "2";die;
         if (Session::has('user')) {
             // $user = Session::get('user');
@@ -827,26 +1397,28 @@ class ShowController extends Controller {
     }
 
     // ///////////////////edit report//////////////////////////////////
-    function edit_report($id) {
-
+    function edit_report($id)
+    {
+        
         // echo "1".$id;die;
         if (Session::has('user')) {
             $user = Session::get('user');
             $Reportdetail = Reportname::select('id', 'report_name', 'report_code')->where('id', $id)->get();
-
+            
             $data['utype'] = $user['utype'];
             $data['report_detail'] = $Reportdetail;
             $data['userDisplayName'] = $user['display_name'];
-
+            
             // echo "<pre>";print_r($data);die;
-
+            
             return view('edit_report', $data);
         } else {
             return Redirect::to('login');
         }
     }
 
-    function update_report() {
+    function update_report()
+    {
         if (session::has('user')) {
 
             $data = Input::all();
@@ -867,8 +1439,13 @@ class ShowController extends Controller {
     }
 
     // update consortium configration update
-    function editConsortium() {
+    function editConsortium()
+    {
+        $user = Session::get('user');
         if (session::has('user')) {
+            if ($user['email'] == '') {
+                return Redirect::to('/');
+            }
 
             $data = Input::all();
             // echo "<pre>";print_r($data);die;
@@ -888,8 +1465,12 @@ class ShowController extends Controller {
     }
 
     // ///////////////////////// providers details /////////////////////////////
-    function providervalidate() {
+    function providervalidate()
+    {
         $user = Session::get('user');
+        if ($user['email'] == '') {
+            return Redirect::to('/');
+        }
 
         $Consortiums = Consortium::where(array())->orderBy('', 'asc')->get();
 
@@ -905,6 +1486,9 @@ class ShowController extends Controller {
     // ///////////////////////////////
     function addProvider($Configid = 0, $ProviderId = 0) {
         $user = Session::get('user');
+        if ($user['email'] == '') {
+            return Redirect::to('/');
+        }
         if ($Configid > 0 && $ProviderId > 0) {
             // get information
             $ProviderDetail = Provider::where(array(
@@ -932,6 +1516,10 @@ class ShowController extends Controller {
 
     // //////// saveproviders //////////
     function saveProvider() {
+        $user = Session::get('user');
+        if ($user['email'] == '') {
+            return Redirect::to('/');
+        }
         $data = Input::all();
         // echo "<pre>";print_r($data);die;
         $rules = array(
@@ -966,23 +1554,144 @@ class ShowController extends Controller {
             return Redirect::intended('/add_provider/' . $data['configuration_id']);
         } else {
             $newUser = Provider::create($data);
+            $InsertedIDOfProvider = $newUser->id;
             // echo "<pre>";print_r($newUser);die;
             if ($newUser) {
                 Session::flash('colupdatemsg', 'Provider Added Successfully');
+                
+                        $mainURL =$data['provider_url'];
+                        $fields = array(
+                            'apikey' => $data['apikey'],
+                            'customer_id' => $data['customer_id'] 
+                        );
+//                         echo "<pre>";print_r($fields);die;
+                        $url = $mainURL . "/members?" . http_build_query($fields, '', "&");
+//                         echo "<pre>";print_r($url);die;
+                        if (!preg_match("~^(?:f|ht)tps?://~i", $url)) {
+                            $url = "https://" . $url;
+                        }
+                        $file = time() . '_file.json';
+                        $curl = curl_init($url);
+                        curl_setopt($curl, CURLOPT_NOBODY, true);
+                        $result = curl_exec($curl);
+                      //  echo "<pre>";print_r($result);die;
+                        if ($result !== false) {
+                           
+                            $statusCode = curl_getinfo($curl, CURLINFO_HTTP_CODE);
+                            if ($statusCode == 404) {
+                                //mark Shushi URL is incorrect and save in Database;
+                            } else {
+                               
+                                // $data = json_encode(['Text 1','Text 2','Text 3','Text 4','Text 5']);
+                                $opts = [
+                                    "http" => [
+                                        "method" => "GET",
+                                        "header" => "Accept-language: en\r\n"
+                                    ]
+                                   
+                                ];
+                                $context = stream_context_create($opts);
+                                $dataValue = file_get_contents($url, false, $context);
+                                $MembersList = json_decode($dataValue);
+                                
+                                foreach($MembersList as $Member){
+                                    
+                                    
+                                     $CustomerId = $Member->Customer_ID??'';
+                                     $RequestorId = $Member->Requestor_ID??'';
+                                     $Name = $Member->Name??'';
+                                     $Notes = $Member->Notes??'';
+                                     $InstitutionIdType = $Member->Institution_ID[0]->Type??'';
+                                     //echo "<pre>";print_r($InstitutionIdType);die;
+                                     $InstitutionIdvalue = $Member->Institution_ID[0]->Value??'';
+                                     $ProviderId = $InsertedIDOfProvider;
+                                     //echo "<pre>";print_r($ProviderId);die;
+                                     //$InsertedIDOfProvider
+                                    
+                                     // echo "<pre>";print_r($CustomerId);die;
+                                   
+                                    $MembersValue= array(
+                                            'customer_id' => $CustomerId,
+                                            'requestor_id' => $RequestorId,
+                                            'name' => $Name,
+                                            'notes' => $Notes,
+                                            'institution_id_type' => $InstitutionIdType,
+                                            'institution_id_value' => $InstitutionIdvalue,
+                                            'provider_id' => $ProviderId,
+                                        
+                                        );
+                                    if(!empty($MembersValue['customer_id']))
+                                        $SaveMemberNew = Members::create($MembersValue);
+                                    // echo "<pre>";print_r($SaveMemberNew);die;
+//                                     $data['allmember'] = $SaveMemberNew;
+
+                            }
+                        }
+                
+                        }
                 return Redirect::to('add_provider/' . $data['configuration_id']);
                 // return view('provider', $data);
             }
         }
     }
-
-	//////////////////Creating New View page for Import configuration////////////////////////
-    public function importConfiguration(){
-    $user = Session::get('user');
     
-    $data['userDisplayName'] = $user['display_name'];
-    $data['utype'] = $user['utype'];
-   
-    return view('import_configuration', $data);
+    
+    ////////////// all sushi request download /////////////////
+    
+    public function sushiReportRequest($id=0) {
+        $user = Session::get('user');
+        
+        if (Session::has('user')) {
+            
+            
+            if($user['utype']=='admin'){
+                $AllMatricArray = Sushitransaction::where(array())->orderBy('id', 'desc')
+                ->get()
+                ->toArray();
+            }else{
+                
+                    $AllMatricArray = Sushitransaction::where(array('user_email'=>$user['email']))->orderBy('id', 'desc')
+                    ->get()
+                    ->toArray();
+            }
+            
+            
+            $sushiHeader[] = array_keys($AllMatricArray[0]);
+            
+            
+            $arr1 = array_merge($sushiHeader,$AllMatricArray);
+            
+            
+            $destinationPath = public_path() . "/upload/json/" ;
+            $file = time() . '_file';
+            
+            return Excel::create($file, function ($excel) use ($arr1) {
+                
+                // Build the spreadsheet, passing in the $dataValue
+                $excel->sheet('sheet1', function ($sheet) use ($arr1) {
+                    $sheet->fromArray($arr1, null, 'A1', false, false);
+                });
+            })->store('xlsx', $destinationPath)->download(); 
+            
+            // return \Redirect::to($destinationPath . $file);
+            
+        }else{
+            return Redirect::to('login');
+        }
+    }
+    // echo"<pre>";print_r($ConsortiumDetail);die;
+    
+    // ////////////////Creating New View page for Import configuration////////////////////////
+    public function importConfiguration()
+    {
+        $user = Session::get('user');
+        if ($user['email'] == '') {
+            return Redirect::to('/');
+        }
+        $data['userDisplayName'] = $user['display_name'];
+        $data['utype'] = $user['utype'];
+        
+        return view('import_configuration', $data);
     }
 
     /*
@@ -1001,4 +1710,171 @@ class ShowController extends Controller {
      * }
      * }
      */
+    public function readConfigurationFile()
+    {
+        // die('fgdf');
+        // $data = Input::all();
+        $user = Session::get('user');
+        if ($user['email'] == '') {
+            return Redirect::to('/');
+        }
+        
+        if (Input::hasFile('import_file')) {
+            
+            $extension = Input::File('import_file')->getClientOriginalExtension();
+            if ($extension == 'xlsx') {
+                
+                $path = Input::file('import_file')->getRealPath();
+            }
+            Excel::load($path, function ($reader) {
+                // $error = array();
+                $reader->calculate();
+                $objExcel = $reader->getExcel();
+                $sheet = $objExcel->getSheet(0);
+                $highestRow = $sheet->getHighestRow();
+                $highestColumn = $sheet->getHighestColumn();
+                $ConfigName = $sheet->rangeToArray('B1' . ':' . 'B1', NULL, TRUE, FALSE);
+                $ConfigName = $ConfigName[0][0] ?? '';
+                
+                $reportdta = new Consortium();
+                $ConsortiumDetail = Consortium::where(array(
+                    'configuration_name' => $ConfigName
+                ))->orderBy('id', 'asc')
+                    ->get()
+                    ->first();
+                // echo"<pre>hjg";print_r($ConsortiumDetail);die;
+                $Remarks = $sheet->rangeToArray('D1' . ':' . 'D1', NULL, TRUE, FALSE);
+                $Remarks = $Remarks[0][0] ?? '';
+                // ->toArray();
+                
+                if (empty($ConfigName)) {
+                    Session::flash('error', 'Invalid Configuration');
+                    ?>
+<script>
+						window.location.href='/consortium';
+                        </script>
+<?php
+                } else if (isset($ConsortiumDetail->id)) {
+                    
+                    Session::flash('error', 'Configuration Already Exist');
+                    ?>
+<script>
+						window.location.href='/consortium';
+                        </script>
+<?php
+                } else {
+                    // insert case for consortium
+                    $user = Session::get('user');
+                    $SaveData = array(
+                        'configuration_name' => $ConfigName,
+                        'remarks' => $Remarks,
+                        'created_by' => $user['email']
+                    );
+                    
+                    $SaveReort = Consortium::create($SaveData);
+                    $lastinsertedId = $SaveReort->id;
+                    $maxloopcount = $highestRow-1;
+                    $startColumn = 'A';
+                    $providerMaster = array('configuration_id','provider_name','provider_url','apikey','requestor_id','customer_id');
+                    //$highestColumn
+                    for($maxloopcount= 3;$maxloopcount<=$highestRow;$maxloopcount++){
+                        $providerDetail = array();
+                        $i=0;
+                       
+                        for ($startColumn = 'A';$startColumn<=$highestColumn;$startColumn++){
+                            
+                            $id = $sheet->rangeToArray($startColumn.$maxloopcount. ':' .$startColumn.$maxloopcount,NULL, TRUE, FALSE);
+                            if($i==0)
+                                $providerDetail[$providerMaster[$i]] =$lastinsertedId;
+                            else
+                                $providerDetail[$providerMaster[$i]] =$id[0][0];
+                            $i++;
+                        }
+                        //insert in to provider detail
+                       $provider = Provider::create($providerDetail);
+                       
+                       
+                       $ProviderDetailID = $provider['id'];
+                       
+                       $mainURL =$provider['provider_url'];
+                       $fields = array(
+                           'apikey' => $provider['apikey'],
+                           'customer_id' => $provider['customer_id']
+                       );
+                       //echo "<pre>";print_r($fields);die;
+                       $url = $mainURL . "/members?" . http_build_query($fields, '', "&");
+                       //                         echo "<pre>";print_r($url);die;
+                       if (!preg_match("~^(?:f|ht)tps?://~i", $url)) {
+                           $url = "https://" . $url;
+                       }
+                       $file = time() . '_file.json';
+                       $curl = curl_init($url);
+                       curl_setopt($curl, CURLOPT_NOBODY, true);
+                       $result = curl_exec($curl);
+                        // echo "<pre>";print_r($result);die;
+                       
+                       
+                       if ($result !== false) {
+                           
+                           $statusCode = curl_getinfo($curl, CURLINFO_HTTP_CODE);
+                           if ($statusCode == 404) {
+                               //mark Shushi URL is incorrect and save in Database;
+                           } else {
+                               
+                               // $data = json_encode(['Text 1','Text 2','Text 3','Text 4','Text 5']);
+                               $opts = [
+                               "http" => [
+                               "method" => "GET",
+                               "header" => "Accept-language: en\r\n"
+                                         ]
+                                       ];
+                               
+                               $context = stream_context_create($opts);
+                               $dataValue = file_get_contents($url, false, $context);
+                               $MembersList = json_decode($dataValue);
+                               foreach($MembersList as $Member){
+                                   
+                                   $CustomerId = $Member->Customer_ID??'';
+                                   $RequestorId = $Member->Requestor_ID??'';
+                                   $Name = $Member->Name??'';
+                                   $Notes = $Member->Notes??'';
+                                   $InstitutionIdType = $Member->Institution_ID[0]->Type??'';
+                                   // echo "<pre>";print_r($InstitutionIdType);die;
+                                   $InstitutionIdvalue = $Member->Institution_ID[0]->Value??'';
+                                   $ProviderId = $ProviderDetailID;
+                                   //echo "<pre>";print_r($ProviderId);die;
+                                   //$InsertedIDOfProvider
+                                   
+                                   // echo "<pre>";print_r($CustomerId);die;
+                                   
+                                   $MembersValue= array(
+                                   'customer_id' => $CustomerId,
+                                   'requestor_id' => $RequestorId,
+                                   'name' => $Name,
+                                   'notes' => $Notes,
+                                   'institution_id_type' => $InstitutionIdType,
+                                   'institution_id_value' => $InstitutionIdvalue,
+                                   'provider_id' => $ProviderId,
+                                   
+                                   );
+                                   if(!empty($MembersValue['customer_id'])){
+                                       $SaveMemberNew = Members::create($MembersValue);
+                                   }
+                               }
+                           }
+                           
+                       }
+                       
+                        Session::flash('colupdatemsg', 'Provider Imported Successfully');
+                        ?>
+                        <script>
+						window.location.href='/consortium';
+                        </script>
+                        <?php
+                    }
+                    }
+            }
+            );
+}
+    }
 }

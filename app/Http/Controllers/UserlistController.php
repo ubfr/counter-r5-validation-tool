@@ -7,7 +7,7 @@ use App\Http\Controllers\Auth\PasswordController;
 use App\User;
 use App\Filename;
 use App\Allreportsname;
-Use Session;
+use Illuminate\Support\Facades\Session;
 Use Exception;
 use Illuminate\Support\Facades\Input;
 use Illuminate\Support\Facades\Redirect;
@@ -34,7 +34,7 @@ class UserlistController extends Controller
         public function  userlist(){
             if (Session::has('user')){
                 $user = Session::get('user');
-                $Userdetail=User::select('id','first_name','display_name','last_name','utype','email','status','gender')
+                $Userdetail=User::select('id','first_name','display_name','last_name','utype','email','status')
                 ->orderBy('id','desc')->get();
                 $data['utype']=$user['utype'];
                 $data['userDisplayName']= $user['display_name'];
@@ -57,7 +57,6 @@ class UserlistController extends Controller
                 'first_name' => 'required|min:1',
                 'last_name' =>'required|min:1',
                 'display_name' =>'required|min:1',
-                'gender' => 'required|gender|select',
                 'email' => 'required|email|unique:users,email',
                 'password' => 'required|min:6|confirmed',
                 'password_confirmation' => 'required|min:6',
@@ -125,7 +124,7 @@ class UserlistController extends Controller
         function edit_user_display($id){
             if (Session::has('user')){
                 $user = Session::get('user');
-                $Userdetail=User::select('id','first_name','display_name','last_name','email','gender')
+                $Userdetail=User::select('id','first_name','display_name','last_name','email','no_of_times')
                 ->where('id',$id)->get();
                 $data['utype']=$user['utype'];
                 $data['userDisplayName']= $user['display_name'];
@@ -149,7 +148,7 @@ class UserlistController extends Controller
                     "first_name" => $data['first_name'],
                     "last_name" => $data['last_name'],
                     "display_name" => $data['display_name'],
-                    "gender" => $data['gender'],
+                    "no_of_times" => $data['no_of_times'],
                 );
                 if(!empty($newpassword)){
                     $newpasswordincoded = Hash::make($newpassword);
@@ -182,7 +181,7 @@ class UserlistController extends Controller
                 $user=session::get('user');
                 $data = Input::all();
                 
-                $Userdetail=User::select('id','first_name','last_name','display_name','utype','email','status','gender')
+                $Userdetail=User::select('id','first_name','last_name','display_name','utype','email','status','no_of_times')
                 ->where('id',$id)->get();
                 
                 

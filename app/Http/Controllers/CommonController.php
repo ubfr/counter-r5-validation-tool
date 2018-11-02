@@ -131,7 +131,11 @@ class CommonController extends Controller
         
         // Customer Id Validation
         $CustomerId = $jsonReportHeader['Customer_ID'] ?? '';
-        if (empty($CustomerId) || ! (is_numeric($CustomerId))) {
+        
+        
+        
+        
+        if (empty($CustomerId) || ! (preg_match('/[A-Za-z].*[0-9]|[0-9].*[A-Za-z]/', $CustomerId))) {
             $warning[$b]["data"] = $CustomerId;
             $warning[$b]["error"] = "Cusotmer Id is invalid in Report Header";
             $b ++;
@@ -177,7 +181,7 @@ class CommonController extends Controller
         
         // ISNI Value Validation
         $Value = $jsonReportHeader['Institution_ID'][0]['Value'] ?? '';
-        if (empty($Value) || ! (is_numeric($Value))) {
+        if (empty($Value) || ! (preg_match('/[A-Za-z].*[0-9]|[0-9].*[A-Za-z]/', $Value))) {
             $warning[$b]["data"] = $Value;
             $warning[$b]["error"] = "ISNI Value is invalid in Report Header";
             $b ++;
@@ -250,14 +254,14 @@ class CommonController extends Controller
                 $data_warning ++;
             }
             
-            $yopJson = $datavalue['YOP'] ?? '';
+            /* $yopJson = $datavalue['YOP'] ?? '';
             // echo "<pre>";print_r($yopJson); die;
             if (empty($yopJson)){
                 $warning[$b]["data"] = $yopJson;
                 $warning[$b]["error"] = "YOP is Empty in Report_Items Index[ ".$key." ]";
                 $b ++;
                 $data_warning ++;
-            }
+            } */
             
             // /////checking for performance
             $itemDetailPerformance = array();
@@ -349,7 +353,7 @@ class CommonController extends Controller
                 $data_warning ++;
             }
             
-          /*  $publisherId = $dataValue['Publisher_ID'][0]['Value']??'';
+           /* $publisherId = $dataValue['Publisher_ID'][0]['Value']??'';
            // $publisherId = explode(" ", $publisherIdd);
            // echo "<pre>";print_r($publisherId); die;
             if (empty($publisherId) || ! (is_numeric($publisherId))) {
@@ -357,16 +361,16 @@ class CommonController extends Controller
                 $warning[$b]["error"] = "Publisher Id is Empty in Report_Items Index[ ".$key." ]";
                 $b ++;
                 $data_warning ++;
-            }*/
-            
-            $yopJson = $datavalue['YOP']??'';
+            } */
+            ///// for yop /////
+            /* $yopJson = $datavalue['YOP']??'';
             // echo "<pre>";print_r($yopJson); die;
             if (empty($yopJson)){
                 $warning[$b]["data"] = $yopJson;
-                $warning[$b]["error"] = "YOP is Invalid in Report_Items Index[ ".$key." ]";
+                $warning[$b]["error"] = "YOP is Empty in Report_Items Index[ ".$key." ]";
                 $b ++;
                 $data_warning ++;
-            }
+            } */
             
             // /////checking for performance
             $itemDetailPerformance = array();
@@ -697,7 +701,7 @@ class CommonController extends Controller
                 $data_warning ++;
             }
             
-            $yopJson = $dataValue['YOP']??'';
+            /* $yopJson = $dataValue['YOP']??'';
             // echo "<pre>";print_r($yopJson);die;
             if (empty($yopJson)) {
                 $warning[$b]["data"] = $yopJson;
@@ -705,7 +709,7 @@ class CommonController extends Controller
                 $b ++;
                 $data_warning ++;
             }
-            
+ */            
            /*$publisherId = $dataValue['Publisher_ID'][0]['Value']??'';
             if (empty($publisherId) || ! (is_numeric($publisherId))) {
                 $warning[$b]["data"] = $publisherId;
@@ -772,7 +776,49 @@ class CommonController extends Controller
     // ////////////////////function for download file//////////////////////////
     function downloadfile($file_user_id, $filename)
     {
+        $user = Session::get('user');
+        // Execute the query used to retrieve the data. In this example
+        // we're joining hypothetical users and payments tables, retrieving
+        // the payments table's primary key, the user's first and last name,
+        // the user's e-mail address, the amount paid, and the payment
+        // timestamp.
+        $payments = Filename::join('validateerrors', 'validateerrors.file_id', '=', 'filenames.id')->select('validateerrors.type', 'validateerrors.error_data', 'validateerrors.error_remark', 'validateerrors.entry_time')
+            ->where('validateerrors.file_id', '=', $file_user_id)
+            ->get();
         
+        // Initialize the array which will be passed into the Excel
+        // generator.
+        $paymentsArray = [];
+        
+        // Define the Excel spreadsheet headers
+        $paymentsArray[] = [
+            'Error type',
+            'Error data',
+            'Error Remark',
+            'Validation Date & Time'
+        ];
+        
+        // Convert each member of the returned collection into an array,
+        // and append it to the payments array.
+        foreach ($payments as $payment) {
+            $paymentsArray[] = $payment->toArray();
+        }
+        // Generate and return the spreadsheet
+        Excel::create($filename, function ($excel) use ($paymentsArray) {
+            
+            // Set the spreadsheet title, creator, and description
+            $excel->setTitle('Error Report');
+            $excel->setCreator('Laravel')->setCompany('Counter Project');
+            $excel->setDescription('Error Report file');
+            
+            // Build the spreadsheet, passing in the payments array
+            $excel->sheet('sheet1', function ($sheet) use ($paymentsArray) {
+                $sheet->fromArray($paymentsArray, null, 'A1', false, false);
+            });
+        })->download('xlsx');
+    }
+    function downloadfileFront($file_user_id, $filename)
+    {
         $user = Session::get('user');
         // Execute the query used to retrieve the data. In this example
         // we're joining hypothetical users and payments tables, retrieving
@@ -917,14 +963,17 @@ class CommonController extends Controller
     // //////////////////////////////////////////////////////////////////
     
     // ////////////////////////Function for find extra space,lower case and value not match////////////////////////////
-    function checkstring($chk_input_field, $chk_format_field)
+    function checkstringMendatory($chk_input_field, $chk_format_field)
     {
-        $val = 0; // ///////////no error/////////////////
-        if ($chk_input_field == $chk_format_field) {
-            // echo "12";die;
-            // ##########do nothing#############
-        } else
-        
+        $val ='';
+        if(empty($chk_input_field)){
+            $val=2; 
+        }
+        else if(empty($chk_format_field)){
+            $val='';
+        }
+         // ///////////no error/////////////////
+        else
         {
             $str_input=strtolower($chk_input_field);
             $str_format=strtolower($chk_format_field);
@@ -932,21 +981,58 @@ class CommonController extends Controller
             $FirstString = str_replace(" ","",$str_input);
             $BufferString = $str_format;
             $SecondString = str_replace(" ","",$str_format);
-            if($FirstString==$SecondString && !empty($BufferString) )
+            if($FirstString===$SecondString)
             {
                 
-                $val=1;  ///////////////1 for warning/////////////
+                $val='';  ///////////////1 for warning/////////////
                 
             }
-            else if(!empty($BufferString))
-            {
-                
+            else {
                 $val=2;  ///////////////2 for error/////////////
             }
             
         }
         return $val;
     }
+    
+    function checkstring($chk_input_field,$chk_format_field)
+	{
+		$val=0;   /////////////no error/////////////////
+		if($chk_input_field==$chk_format_field)
+		{
+			//echo "12";die;
+			###########do nothing#############
+		}
+		else
+		{
+			$str_input=strtolower($chk_input_field);
+			$str_format=strtolower($chk_format_field);
+			if($str_input==$str_format)
+			{
+				//echo "34";die;
+				##########do nothing###########
+			}
+			else
+			{
+				//echo "56";die;
+				if(str_replace(" ","",$str_input)==str_replace(" ","",$str_format))
+				{
+					
+					$val=1;  ///////////////1 for warning/////////////
+					
+				}
+				else
+				{
+					
+					$val=2;  ///////////////2 for error/////////////
+				}
+				
+			}
+				
+		}
+		return $val;
+		
+	}
     
     // ///////////////////Function For Checking Minimum Cell In a Row//////////////////////////////////
     function checkminColumn($sheet, $get_row, $high_column, $id)
@@ -963,7 +1049,7 @@ class CommonController extends Controller
         $column = 'A';
         while ($column <= $high_column) {
             foreach ($abc as $detail) {
-                if ($detail[$i] != '') {
+                if ((isset($detail[$i])) && ($detail[$i] != '')) {
                     $count = $count + 1;
                     $i ++;
                 } else {
@@ -982,6 +1068,9 @@ class CommonController extends Controller
     // ///////////////////Function For Checking Cell value In a particaular Row//////////////////////////////////
     function checkmaxColumn($sheet, $get_row, $high_column)
     {
+        
+        if($get_row<=13)
+            return 'B';
         $abc = $sheet->rangeToArray('A' . $get_row . ':' . $high_column . $get_row, NULL, TRUE, FALSE);
         $arr1 = array_reverse($abc);
         $arr2 = $this->Reverse_Array($arr1);

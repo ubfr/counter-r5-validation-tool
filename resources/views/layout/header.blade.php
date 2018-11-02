@@ -35,7 +35,10 @@
     		<?php if($utype=='user'){?>
         		<nav class="navbar navbar-inverse">
         			<div class="container-fluid">
-        				
+        				<ul class="nav navbar-nav">
+        				    <li><a href="{{url('filelist')}}">File Validation</a></li>
+        				    <li><a href="{{url('consortium')}}">Consortium Tool</a></li>
+        				    </ul>
         				<ul class="nav navbar-nav pull-right" style="margin-top:15px;">
         			     <li><i class="fa fa-user" aria-hidden="true"></i> <?php  echo "Welcome ".$userDisplayName;?></li>
         			     <li style="margin:0 10px">|</li>

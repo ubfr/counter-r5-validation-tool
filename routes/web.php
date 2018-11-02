@@ -28,7 +28,7 @@ Route::post('register', 'UsersController@register');
 
 Route::post('/fileValidate', 'FilevalidateController@filevalidate');
 Route::get('logout', 'UsersController@logout');
-Route::post('/sushiValidate', 'FilevalidateController@sushiValiate');
+Route::post('sushiValidate', 'FilevalidateController@sushiValiate');
 // /////////////////////////////////////////forget password link///////////////////////////////////////////////////////////
 
 Route::get('forgetpassword', array(
@@ -40,6 +40,46 @@ Route::post('forgetpassword', array(
     'uses' => 'Auth\UserPasswordController@postEmail'
 ));
 
+Route::get('password/reset/{token}', 'Auth\ResetPasswordController@showResetForm')->name('password.reset');
+Route::post('reset/password/{token}', array('as' => 'reset', 'uses' => 'Auth\UserPasswordController@postReset'));
+Route::post('/password/reset/', array('as' => 'reset', 'uses' => 'Auth\UserPasswordController@postReset'));
+
+
+
+Route::get('consortium/{id}','ShowController@harvetsingvalidate');
+Route::get('delete_transaction/{id}', 'ShowController@delete_transaction');
+Route::get('consortium','ShowController@harvetsingvalidate');
+Route::post('saveconsortium', 'ShowController@saveConsortiumConfig');
+//Route::post('edit_consortium', 'ShowController@edit_consortium');
+Route::post('update_consortium', 'ShowController@update_consortium');
+
+
+// providers
+//Route::get('add_provider/{id}', 'ShowController@add_provider');
+Route::get('add_provider/{id}', 'ShowController@addProvider');
+Route::get('edit_consortium/{id}', 'ShowController@editConsortium');
+Route::get('delete_consortium/{id}', 'ShowController@deleteConsortium');
+Route::get('delete_provider/{id}/{configid}', 'ShowController@deleteProvider');
+Route::get('edit_provider/{id}/{configid}', 'ShowController@addProvider');
+Route::post('save_provider', 'ShowController@saveProvider');
+
+Route::get('runconsortium/{id}/{transactionId}/{begin_date}/{end_date}/{selectedreports}/{selectedproviders}/{selectedmembers}/{selectedformat}', 'ShowController@runConsortium');
+Route::post('showprogress/', 'ShowController@showConsortiumProgress');
+Route::get('showprogressnew/{configurationId}', 'ShowController@showConsortiumProgressNew');
+Route::get('showprogressrecord/{id}/{transactionId}/{begin_date}/{end_date}/{selectedreports}', 'ShowController@showConsortiumProgressForRecord');
+Route::get('downloadconfiguration/{id}','ShowController@downloadExcelConfig');
+Route::get('importconfiguration', 'ShowController@importConfiguration');
+Route::post('consortiumimport', 'ShowController@readConfigurationFile');
+Route::get('member/{provider_id}', 'ShowController@memberListing');
+Route::get('delete_members/{id}/{provider_id}', 'ShowController@deleteMembers');
+Route::get('refresh_members/{provider_id}', 'ShowController@refreshMembers');
+Route::get('/downloadfront/{file_id}/{filename}',  'CommonController@downloadfileFront');
+Route::get('sushirequest', 'FilevalidateController@sushiRequest');
+Route::get('delete_sushi_request/{id}', 'FilevalidateController@delete_sushi_request');
+
+Route::get('showshushiparameter/{Requestorurl}/{apikey}/{CustomerId}/{PlateformID}', 'FilevalidateController@sushiRequestParameter');
+Route::post('getsushireport', 'FilevalidateController@getSushiReport');
+Route::get('sushirequest/{id}', 'ShowController@sushiReportRequest');
 // ///////////////////////////////Login user information//////////////////////////////////////////////////////
 Route::group([
     'middleware' => [
@@ -47,9 +87,9 @@ Route::group([
         'normalusersauth'
     ]
 ], function () {
-
+   
     // now sushiValidate
-    Route::post('/sushiValidate', 'FilevalidateController@sushiValiate');
+    //Route::post('/sushiValidate', 'FilevalidateController@sushiValiate');
 
     // Route::get('/download','FilevalidateController@downloadfile');
     Route::get('/download/{file_id}/{filename}', [
@@ -61,7 +101,6 @@ Route::group([
         'uses' => 'FilevalidateController@emailfile'
     ]);
 });
-
 // Route::group(['middleware' => ['auth','admin']], function () {
 
 // /////////////////////////////Show admin Rule Management////////////////////////////////////////////////////
@@ -93,32 +132,10 @@ Route::group([
     Route::get('edit_report/{id}', 'ShowController@edit_report');
     Route::get('edituser/{user_id}', 'UserlistController@edit_user_display');
     // now sushiValidate
-    Route::post('/sushiValidate', 'FilevalidateController@sushiValiate');
+    //Route::post('/sushiValidate', 'FilevalidateController@sushiValiate');
     Route::get('uploadedreports','ShowController@uploaded_report');
     Route::get('delete_upload_report/{id}','ShowController@delete_upload_report');
-    Route::get('consortium/{id}','ShowController@harvetsingvalidate');
-    Route::get('consortium','ShowController@harvetsingvalidate');
-    Route::post('saveconsortium', 'ShowController@saveConsortiumConfig');
-    //Route::post('edit_consortium', 'ShowController@edit_consortium');
-    Route::post('update_consortium', 'ShowController@update_consortium');
     
-    
-    // providers
-    //Route::get('add_provider/{id}', 'ShowController@add_provider');
-    Route::get('add_provider/{id}', 'ShowController@addProvider');
-    Route::get('edit_consortium/{id}', 'ShowController@editConsortium');
-    Route::get('delete_consortium/{id}', 'ShowController@deleteConsortium');
-    Route::get('delete_provider/{id}/{configid}', 'ShowController@deleteProvider');
-    Route::get('edit_provider/{id}/{configid}', 'ShowController@addProvider');
-    Route::post('save_provider', 'ShowController@saveProvider');
-    
-    Route::get('runconsortium/{id}/{transactionId}/{begin_date}/{end_date}/{selectedreports}/{selectedproviders}', 'ShowController@runConsortium');
-    Route::post('showprogress/', 'ShowController@showConsortiumProgress');
-    Route::get('showprogressnew/{configurationId}', 'ShowController@showConsortiumProgressNew');
-    Route::get('showprogressrecord/{id}/{transactionId}/{begin_date}/{end_date}/{selectedreports}', 'ShowController@showConsortiumProgressForRecord');
-    Route::get('downloadconfiguration/{id}','ShowController@downloadExcelConfig');
-    Route::get('importconfiguration', 'ShowController@importConfiguration');
-    Route::post('readConfigfile', 'ShowController@readConfigurationFile');
    
     // Route::get('/download','FilevalidateController@downloadfile');
     Route::get('/download/{file_id}/{filename}', [

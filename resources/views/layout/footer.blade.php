@@ -12,7 +12,7 @@
 <li class="menu-item menu-item-type-custom menu-item-object-custom menu-item-has-children menu-item-535"><a href="#">About</a></li>
 <li class="menu-item menu-item-type-custom menu-item-object-custom menu-item-has-children menu-item-536"><a href="#">Code of Practice</a></li>
 <li class="menu-item menu-item-type-post_type menu-item-object-page menu-item-499"><a href="https://www.projectcounter.org/about/register/">Registries of Compliance</a></li>
-<li class="menu-item menu-item-type-custom menu-item-object-custom menu-item-has-children menu-item-537"><a href="#">Members’ Section</a></li>
+<li class="menu-item menu-item-type-custom menu-item-object-custom menu-item-has-children menu-item-537"><a href="#">Members' Section</a></li>
 <li class="menu-item menu-item-type-post_type menu-item-object-page menu-item-164"><a href="https://www.projectcounter.org/contact-counter/">Contact</a></li>
 </ul></div>			</div>
 
@@ -43,9 +43,23 @@
 </div>
 <!-- Latest compiled and minified JavaScripts -->
 <script src="{{URL::asset('assets/js/jquery.min.js')}}"></script>
-<!-- <script src="{{URL::asset('assets/js/popper.min.js')}}"></script> --> 
+
+<?php
+if($_SERVER['REQUEST_URI']==='/consortium' || $_SERVER['REQUEST_URI']==='/filelist'){
+?>
+<script type="text/javascript">
+var jQuery_1_3_2 = $.noConflict(true);
+</script>
+<?php 
+}
+?>
+<?php
+if($_SERVER['REQUEST_URI']==='/'){
+?>
+ <script src="{{URL::asset('assets/js/popper.min.js')}}"></script>  
 <script src="{{URL::asset('assets/js/bootstrap.min.js')}}"></script>
 <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-datepicker/1.4.1/js/bootstrap-datepicker.min.js"></script>
+<?php } ?>
 <script type="text/javascript">
 @if (count($errors->register) > 0)
     $('#myModal').modal('show');

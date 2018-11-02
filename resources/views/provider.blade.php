@@ -22,11 +22,6 @@
         <div class="container">
         <div class="row">
             <div class="col-xs-12 col-sm-12 col-lg-12 col-md-12">
-
-                <div class="tab-content">
-                    <div id="file1" class="tab-pane fade in active">
-
-                        <div class="col-md-12">
                             <div class="widget stacked widget-table action-table">
                                     <!-- Div for border -->
                                     <div class="col-md-12">
@@ -100,11 +95,11 @@
                                     <div class="col-md-12">
 
                                     @if (count($alllistofprovider) > 0)
-                                    
                                     <div class="col-md-12">
                                     <h3>Providers List</h3>
                                     <hr class="colorgraph">
                                     <div class="widget-content">
+                                    <div style="overflow-x:auto;">
                                     <table id="Providers_list" class="table table-striped table-bordered">
                                     <thead>
                                     <tr>
@@ -137,6 +132,7 @@
                                     </div>
 
                                     </div>
+                                    </div>
 
 
                                     
@@ -154,22 +150,13 @@
                             <!-- /widget-header -->
 
                             <!-- /widget-content -->
-                        </div>
+                       
                         <!-- /widget -->
-                    </div>
+                   
 
 
 
                     <div class="clearfix"></div>
-                </div>
-                <div id="menu1" class="tab-pane fade">
-                    <div class="col-xs-12 col-sm-12 col-md-12">
-
-                    </div>
-
-                    <div class="clearfix"></div>
-                </div>
-
             </div>
 
         </div>

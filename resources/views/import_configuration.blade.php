@@ -23,10 +23,10 @@
 				
 					<div class="col-md-6">
 					
-					<h3><strong>Import Counter Configuration</strong></h3>
+					<h3><strong>Import COUNTER Configuration</strong></h3>
 						<hr class="colorgraph">
 						<form name="importconfiguration" method="post" class="file-uploader"
-							action="readConfigurationFile" enctype="multipart/form-data">
+							action="/consortiumimport" enctype="multipart/form-data">
 							<input type="hidden" name="_token"
 								value="<?php echo csrf_token() ?>">
 								

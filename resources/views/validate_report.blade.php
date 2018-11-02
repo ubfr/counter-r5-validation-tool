@@ -39,7 +39,7 @@ $tot_data_warning=$tot_warning;
 				 
                 <p class="marTop20">
 					<a  href="email/{{$file_id}}" class="btn btn-primary btnBlockxs"><i class="fa fa-envelope" ></i> E-mail Report  </a>&nbsp;
-					<a href="download/{{$file_id}}/{{$uploaded_file}}" class="btn btn-primary btnBlockxs"><i class="fa fa-cloud-download"></i> Download Error Report</a>
+					<a href="downloadfront/{{$file_id}}/{{$uploaded_file}}" class="btn btn-primary btnBlockxs"><i class="fa fa-cloud-download"></i> Download Error Report</a>
 				</p>
                 @endif
 			   </div>

@@ -6,6 +6,7 @@
 @extends('layout.master')
 
 @section("content")
+<link href="{{URL::asset('assets/css/multiselect.css')}}" rel="stylesheet">
 <?php
 // makeing parent and child relationship
 /*$allgroup = array();
@@ -102,10 +103,12 @@ foreach ($reportsname as $reportDetails) {
 				</div>
 				<div id="menu1" class="tab-pane fade">
 					<div class="col-xs-12 col-sm-12 col-md-12">
-						<form name="sushi_validation" method="post" class="file-uploader1"
-							action="sushiValidate" enctype="multipart/form-data">
+						<form id='frmshushivalidate' name="sushi_validation" method="post" class="file-uploader1" action="/sushiValidate" enctype="multipart/form-data">
 							<fieldset>
-								<h3>Requestor</h3>
+                                                            <h3>Requestor</h3>
+                                                            <div class="col-xs-3 col-sm-3 col-md-3 pull-right">
+                                                                <a href="/sushirequest" class="btn btn-primary btn-block">View Requests</a>
+                                                            </div>
 								<hr class="colorgraph">
 
 								<div class="form-group">
@@ -116,93 +119,84 @@ foreach ($reportsname as $reportDetails) {
 										$errors->welcome->first('Requestorurl') }}</span>
 								</div>
 								
-								<div class="form-group col-md-4 noPaddingXS noLeftPadd">
-									<input value="{{ old('APIkey') }}" type="text" name="APIkey"
-										id="name" class="form-control input-lg"
-										placeholder="API Key*"> <span style="color: #ff0000">{{
-										$errors->welcome->first('APIkey')}}</span>
-								</div>
+                                                                
+                                                                <!-- tab section Start here -->
+								<div class="form-group">
+<!--                                                                    <div class="col-md-12">
+                                                                        <fieldset>
+                                                                        <div class="col-md-12" >
+                                                                        <input class="selection" type="radio" checked="checked" name="typeofrequest" value="customerandrequester"> Combination of customer ID and requestor ID
+                                                                        <input class="selection" type="radio" name="typeofrequest" value="ipaddress"> IP Address of the COUNTER_SUSHI client
+                                                                        <input class="selection" type="radio" name="typeofrequest" value="apikey"> APIKey
+                                                                        </div>
+                                                                        </fieldset>
+                                                                        <hr>
+                                                                    </div>-->
+                                                                            
+                                                                            <div id="apikeyCompbination" class="tab-pane">
+                                                                                <span id='CustomerId'>
+                                                                                <input value="{{ old('CustomerId') }}" type="text"
+                                                                                    name="CustomerId" id="CustomerIdInner"
+                                                                                    class="form-control input-lg" placeholder="Customer ID*"> <span
+                                                                                    style="color: #ff0000">{{
+                                                                                    $errors->welcome->first('CustomerId') }}</span>
+                                                                                <br/>
+                                                                                </span>
+                                                                                <span id='RequestorId'>
+                                                                                <input value="{{ old('RequestorId') }}" type="text"
+                                                                                    name="RequestorId" id="RequestorIdInner"
+                                                                                    class="form-control input-lg" placeholder="Requestor ID"> <span
+                                                                                    style="color: #ff0000">{{
+                                                                                    $errors->welcome->first('RequestorId') }}</span>
+                                                                                <br/>
+                                                                                </span>
+                                                                                <span id='APIkey'>
+                                                                                <input value="{{ old('APIkey') }}" type="text" name="APIkey" id="APIkeyInner"
+                                                                                    class="form-control input-lg"
+                                                                                    placeholder="API Key"> <span style="color: #ff0000">{{
+                                                                                    $errors->welcome->first('APIkey')}}</span>
+                                                                                <br/>
+                                                                                </span>
+                                                                                <span id='platform'>
+                                                                                <input value="{{ old('platform') }}" type="text"
+                                                                                     name="platform" id="platformInner"
+                                                                                    class="form-control input-lg" placeholder="Platform"> <span
+                                                                                    style="color: #ff0000">{{
+                                                                                    $errors->welcome->first('Platform') }}</span>
+                                                                                </span>
+                                                                            </div>
+                                                                <!-- tab section Start end -->
+                                                                </div>
+                                                                
+                                                                
 								
-								<div class="form-group col-md-4 noPaddingXS noLeftPadd">
-									<input value="{{ old('CustomerId') }}" type="text"
-										name="CustomerId" id="CustomerId"
-										class="form-control input-lg" placeholder="Customer ID*"> <span
-										style="color: #ff0000">{{
-										$errors->welcome->first('CustomerId') }}</span>
-								</div>
 								
-								<div class="form-group col-md-4 noPaddingXS noLeftPadd">
-									<input value="{{ old('CustomerId') }}" type="text"
-										name="RequestorId" id="RequestorId"
-										class="form-control input-lg" placeholder="Requestor ID*"> <span
-										style="color: #ff0000">{{
-										$errors->welcome->first('RequestorId') }}</span>
-								</div>
-								
-								<div class="form-group col-md-12 noPaddingXS noLeftPadd">
-									<input value="" type="text" name="remarks"
-										id="name" class="form-control input-lg"
-										placeholder="Remarks"> <span style="color: #ff0000"></span>
-								</div>
 								</fieldset>
-								<fieldset>
-								<h3>Report Definition</h3>
-								<hr class="colorgraph">
-								<div class="form-group col-md-6 noPaddingXS noLeftPadd">
-									<select name="ReportName" class="form-control input-lg">
-                                    <?php
-                                      if(isset($reportsname)){
-                                        foreach($reportsname as $filedetails){
-                                        ?>
-                                        <option value="<?php echo strtolower($filedetails['report_code']); ?>"><?php echo $filedetails['report_name']." (".$filedetails['report_code'].")" ?></option>
-                                        <?php
-                                        }
-                                      }
-                                     
-                                    
-                                    ?>
-                                   
-                                    
-                                <span style="color: #ff0000">{{
-											$errors->welcome->first('ReportName') }}</span>
-									</select>
-								</div>
-								<div class="form-group col-md-6 noPaddingXS noRightPadd">
-									<input value="{{ old('Release') }}" maxlength="1" type="text"
-										name="Release" id="Release" class="form-control input-lg"
-										placeholder="Release Number*"> <span style="color: #ff0000">{{
-										$errors->welcome->first('Release') }}</span>
-								</div>
-								<div class="form-group col-md-3 noPaddingXS noLeftPadd"
-									id="sandbox-container">
-									<input value="{{ old('month') }}" type="text" name="month"
-										id="month" class="date-picker form-control input-lg"
-										input-group placeholder="Select Month*"> <span
-										style="color: #ff0000">{{ $errors->welcome->first('month') }}</span>
-								</div>
-								<div class="form-group col-md-3 noPaddingXS noLeftPadd"
-									id="sandbox-container">
-									<input value="{{ old('endmonth') }}" type="text"
-										name="endmonth" id="month"
-										class="date-picker form-control input-lg" input-group
-										placeholder="Select Another Month*"> <span
-										style="color: #ff0000">{{ $errors->welcome->first('endmonth')
-										}}</span>
-								</div>
-								
-                                </div>
-								<div class="row">
-									<div class="col-xs-6 col-sm-4 col-md-3">
-										<input class="btn btn-lg btn-primary btn-block" type="submit"
-											value="Validate" />
+                                                                </div>
+								<div class="col-xs-12 col-sm-12 col-md-12">
+                                                                        <div class="col-xs-6 col-sm-4 col-md-2">
+                                                                            <a class="btn btn-primary getShushiValue" rel="getverify" href="#getverify">Verify Credential</a>
+									</div>
+                                                                        <div class="col-xs-6 col-sm-4 col-md-2">
+                                                                            <a class="btn btn-primary getShushiValue" rel="getstatus" href="#getstatus">Get Status</a>
+									</div>
+                                                                        
+                                                                        <div class="col-xs-6 col-sm-4 col-md-2">
+                                                                            <a class="btn btn-primary getShushiValue" rel="getmembers" href="#getmembers">Get Members</a>
+									</div>
+                                                                        <div class="col-xs-6 col-sm-4 col-md-3">
+                                                                            <a class="btn btn-primary getShushiValue" rel="getsupportedreports" href="#getsupportedreports">Get Supported Reports List</a>
+									</div>
+                                                                        <div class="col-xs-6 col-sm-4 col-md-3">
+                                                                            <button title="Get Report" rel="" type="button" class="btn btn-success openBtn" value="Get Report">Get Report</button>
 									</div>
 									<input type="hidden" name="_token" value="{{ csrf_token() }}">
+									<input type="hidden" id="requestButton" name="requestButton" value="">
 								</div>
 								<hr class="colorgraph">
 							</fieldset>
 						</form>
 					</div>
-					
 					<div class="clearfix"></div>
 				</div>
 
@@ -219,7 +213,104 @@ foreach ($reportsname as $reportDetails) {
 
 
 
+
+<!-- Modal -->
+<div class="modal fade" id="myModal" role="dialog">
+    <div class="modal-dialog">
+        <!-- Modal content-->
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal">&times;</button>
+                <h4 class="modal-title">Run configuration parameter</h4>
+            </div>
+            <div class="modal-body">
+            </div>
+        </div>
+     </div>
+  </div>
+
+
+
+
+
 @section("additionaljs")
+
+               <!-- Latest compiled and minified JavaScript -->
+		
+                <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/2.2.1/jquery.min.js"></script>
+                
+                <script src="{{URL::asset('assets/js/bootstrap.min.js')}}"></script>
+		<script src="{{URL::asset('assets/js/bootstrap-datepicker.min.js')}}"></script>
+		<script src="{{URL::asset('assets/js/jquery.multi-select.min.js')}}"></script>
+		<script type="text/javascript" language="javascript"
+			src="https://cdn.datatables.net/1.10.11/js/jquery.dataTables.min.js">
+	</script>
+		<script type="text/javascript" language="javascript"
+			src="https://cdn.datatables.net/1.10.11/js/dataTables.bootstrap.min.js">
+	</script>
+
+<script>
+    
+    
+        $("form input:radio").change(function () {
+            if ($(this).val() == "ipaddress") {
+            // Disable your roomnumber element here
+                $('#RequestorId').hide();
+                $('#RequestorId').val('');
+                $('#APIkey').hide();
+                $('#APIkey').val('');
+                $('#RequestorId').hide();
+            } else if($(this).val() == "apikey") {
+                
+            // Re-enable here I guess
+                $('#APIkey').show();
+                $('#platform').show();
+                $('#RequestorId').hide();
+            }else{
+                
+                $('#APIkey').val('');
+                $('#platform').show();
+                $('#RequestorId').show();
+                $('#APIkey').hide();
+            }
+        });
+    
+    
+        $('.openBtn').on('click',function(){
+        var Requestorurl = $('#Requestorurl').val();
+        var name = $('#APIkeyInner').val();
+        if(name==''){
+            name=0;
+        }
+        var checkedValue = $("input[name='typeofrequest']:checked").val();
+        var CustomerId = $('#CustomerIdInner').val();
+        var platform = $('#platformInner').val();
+        var RequestorIdInner = $('#RequestorIdInner').val();
+        if(platform==''){
+            platform=0;
+        }
+        //var RequestorId = $('#RequestorId').val());
+        if (!Requestorurl) {
+            alert("Please enter COUNTER SUSHI URL");
+            return false;
+        } else if ((!name) && (checkedValue=='apikey')) {
+            alert("Please enter API Key");
+            return false;
+        } else if (!CustomerId) {
+            alert("Please enter Customer Id");
+            return false;
+        }
+        
+        if((!RequestorIdInner) && (checkedValue=='customerandrequester')){
+            alert("Please enter Requester Id");
+            return false;
+        }
+        Requestorurl = Requestorurl.replace(new RegExp('/', 'g'), '_');
+        $('.modal-body').load('showshushiparameter/'+Requestorurl+'/'+name+'/'+CustomerId+'/'+platform,function(){
+        $('#myModal').modal({show:true});
+        });
+        });
+        </script>
 <script>
 	//jQuery plugin
 (function( $ ) {
@@ -331,24 +422,63 @@ $(document).ready(function(){
   $('.fileUploader').uploader({
     MessageAreaText: "Upload File Here"
   });
+  
+  
+  $('.getShushiValue').click(function(){
+      
+      
+        var Requestorurl = $('#Requestorurl').val();
+        var name = $('#APIkeyInner').val();
+        if(name==''){
+            name=0;
+        }
+        var checkedValue = $("input[name='typeofrequest']:checked").val();
+        var CustomerId = $('#CustomerIdInner').val();
+        var platform = $('#platform').val();
+        var RequestorIdInner = $('#RequestorIdInner').val();
+        if(platform==''){
+            platform=0;
+        }
+        //var RequestorId = $('#RequestorId').val());
+        if (!Requestorurl) {
+            alert("Please enter COUNTER SUSHI URL");
+            return false;
+        } else if ((!name) && (checkedValue=='apikey')) {
+            alert("Please enter API Key");
+            return false;
+        } else if (!CustomerId) {
+            alert("Please enter Customer Id");
+            return false;
+        }
+        
+        if((!RequestorIdInner) && (checkedValue=='customerandrequester')){
+            alert("Please enter Requester Id");
+            return false;
+        }
+      
+      
+      
+      $("#requestButton").val($(this).attr('rel'));
+      $('#frmshushivalidate').submit();
+  });
  
 });
-  /*$('#sandbox-container .input-daterange').datepicker({
- 	 changeMonth: true,
-        changeYear: true,
-      showButtonPanel: true,
-        dateFormat: 'MM yy',
-       onClose: function(dateText, inst) { 
-            $(this).datepicker('setDate', new Date(inst.selectedYear, inst.selectedMonth, 1));
-        }    
-    });  */ 
- $(function() {
-  $('.date-picker').datepicker( {
-    format: "yyyy-mm-dd",
-     //viewMode: "months", 
-     //minViewMode: "months"
+</script>
+
+<script>
+$(function () {
+    $('.date-picker').datepicker({
+        format: "yyyy-mm-dd",
     });
- });
+    
+    
+    $('#start_month').on('changeDate', function(){
+        $(this).datepicker('hide');
+    });
+    $('#end_month').on('changeDate', function(){
+        $(this).datepicker('hide');
+    });
+})
 </script>
 
 @if(count($errors->welcome)>0)
@@ -359,7 +489,7 @@ $(document).ready(function(){
 @endsection
 
 <script>
- function check()
+function check()
 {
  var aa = $("#file").val();
  
@@ -370,13 +500,11 @@ $(document).ready(function(){
   $("#pop1").html("<span style='color:#ff0000'>The File should be xls,xlsx,csv,tsv or json extensions</span>");
   return false;
  }
- 
- 
 }
 </script>
 
-</head>
-</html>
+
+
 
 <!---=======================javascripts comes in bottom============================-->
 

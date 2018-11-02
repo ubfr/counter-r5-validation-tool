@@ -6,32 +6,35 @@
 
 @section("content")
 
-<link href="https://code.jquery.com/ui/1.10.4/themes/ui-lightness/jquery-ui.css" rel="stylesheet">
+<!--<link href="https://code.jquery.com/ui/1.10.4/themes/ui-lightness/jquery-ui.css" rel="stylesheet">-->
 <link href="{{URL::asset('assets/css/multiselect.css')}}" rel="stylesheet">
-<script src="https://code.jquery.com/ui/1.10.4/jquery-ui.js"></script>
+<!--<script src="https://code.jquery.com/ui/1.10.4/jquery-ui.js"></script>-->
 
 
 <!--========================login form start here======================================-->
 
-
 @if (Session::has('error'))
-<div class="alert alert-success" style="color: red">
-	{{Session::get('error') }}</div>
-@endif @if (Session::has('colupdatemsg'))
+	<div class="alert alert-danger" >
+		{{ Session::get('error') }}
+	</div>
+@endif
+
+@if (Session::has('colupdatemsg'))
 <div class="alert alert-success" style="color: green">{{
 	Session::get('colupdatemsg') }}</div>
 @endif
+
 <div class="container">
 	<div class="row">
 		<div class="col-xs-12 col-sm-12 col-lg -12 col-md-12">
 			<ul class="nav nav-tabs ulTabs">
-				<li class="active"><a data-toggle="tab" href="#file1">Harvesting</a></li>
-				<li><a data-toggle="tab" href="#menu1">  Configuration</a></li>
-				<li><a data-toggle="tab" href="#menu2">Transaction</a></li>
+				<li id="first"><a data-toggle="tab" href="#file1">Harvesting</a></li>
+				<li id="second" class="active"><a data-toggle="tab" href="#menu1">Configuration</a></li>
+				<li id="third"><a data-toggle="tab" href="#menu2">Transaction</a></li>
 			</ul>
 			<div class="tab-content pull-left">
 
-				<div id="file1" class="tab-pane fade in active">
+				<div id="file1" class="tab-pane fade ">
 
 					<div class="clearfix"></div>
 
@@ -95,7 +98,7 @@
                                             <tr>
 										<td><?php echo $i++; ?></td>
 										<td><?php echo $filedetails['configuration_name']; ?></td>
-										<td><?php echo $filedetails['providers']==''?'<a href="add_provider/'.$filedetails['id'].'">Add Provider</a>':$filedetails['providers'].'<a href="add_provider/'.$filedetails['id'].'"> </a>';?></td>
+										<td><?php echo $filedetails['providers']==''?'&nbsp;<a class="btn btn-primary" href="add_provider/'.$filedetails['id'].'">Add Provider</a>':$filedetails['providers'].'&nbsp;<a class="btn btn-primary" href="add_provider/'.$filedetails['id'].'">Add/View Provider </a>';?></td>
 										<td><?php echo $filedetails['remarks']; ?></td>
 
 										<td class="td-actions">
@@ -123,7 +126,7 @@
 				</div>
 				
 				
-				<div id="menu1" class="tab-pane fade">
+				<div id="menu1" class="tab-pane fade in active">
 
 					<div class="col-md-12">
 						<div class="widget stacked widget-table action-table">
@@ -220,10 +223,7 @@
                                             <tr>
 										<td><?php echo $i++; ?></td>
 										<td><?php echo $filedetails['configuration_name']; ?></td>
-										<td>
-                                                    
-                                                    
-                                                    <?php echo $filedetails['providers']==''?'<a href="add_provider/'.$filedetails['id'].'">Add Provider</a>':$filedetails['providers'].'<a href="add_provider/'.$filedetails['id'].'"> Add More/View</a>';?></td>
+										<td><?php echo $filedetails['providers']==''?'&nbsp;<a class="btn btn-primary" href="add_provider/'.$filedetails['id'].'">Add Provider</a>':$filedetails['providers'].'&nbsp;<a class="btn btn-primary" href="add_provider/'.$filedetails['id'].'"> Add More/View</a>';?></td>
 										<td><?php echo $filedetails['remarks']; ?></td>
 										<td class="td-actions"><a
 											href="/consortium/<?php echo $filedetails['id']; ?>"><i
@@ -263,6 +263,7 @@
 						
 
 						<div class="widget-content">
+                                                    <?php if (count($alltransaction) > 0) { ?>
 						<table id="Transcation_list"
 								class="table table-striped table-bordered">
 								<thead>
@@ -275,14 +276,14 @@
 										<th>No.of Record Processed</th>
 										<th>No.of Record Completed</th>
 										<th>Message</th>
-										<th>Status</th>
 										<th>Download Zip File</th>
+										<th>Delete</th>
 									</tr>
 								</thead>
 								<tbody>
 								<?php
                                     $i = 1;
-                                    if (count($alltransaction) > 0) {
+                                    
                                         foreach ($alltransaction as  $TransactionSingle) {                                            
                                             ?>
                                             
@@ -295,9 +296,13 @@
 										<td><?php echo $TransactionSingle['count']; ?></td>
 										<td><?php echo $TransactionSingle['count']; ?></td>
 										<td><?php echo $TransactionSingle['message']; ?></td>
-										<td><?php echo $TransactionSingle['status']; ?></td>
+										
 										<td><a href="/upload/json/<?php echo $TransactionSingle['transaction_id']; ?>.zip"><i class="fa fa-download"
 												aria-hidden="true"></i>	</a></td>
+												
+												
+										<td class=""><a onclick="return confirm('Are you sure to delete this Transaction?')" 
+										href="delete_transaction/<?php echo $TransactionSingle['transaction_id'];?>"><i class="fa fa-trash-o trashIcon" style="font-size: 15px;padding-right: 10px;"></i></a></td>		
 							</tr>
 							
 							
@@ -305,8 +310,8 @@
                                         }
                                     } else {
                                         ?>
-                                            <tr>
-										<td colspan="5">No Record found!</td>
+                                                                        <tr>
+										<td colspan="9">No Record found!</td>
 									</tr> 
                                        <?php
                                     }
@@ -338,12 +343,10 @@
                                 <h4 class="modal-title">Run configuration parameter</h4>
                             </div>
                             <div class="modal-body">
-
                             </div>
-                            
                         </div>
-                    </div>
-                </div>
+                     </div>
+                  </div>
                 
                 
                 
@@ -353,8 +356,10 @@
 		
 		@section("additionaljs")
 		<!-- Latest compiled and minified JavaScript -->
-		<script src="{{URL::asset('assets/js/jquery.min.js')}}"></script>
-		<script src="{{URL::asset('assets/js/bootstrap.min.js')}}"></script>
+		
+                <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/2.2.1/jquery.min.js"></script>
+                
+                <script src="{{URL::asset('assets/js/bootstrap.min.js')}}"></script>
 		<script src="{{URL::asset('assets/js/bootstrap-datepicker.min.js')}}"></script>
 		<script src="{{URL::asset('assets/js/jquery.multi-select.min.js')}}"></script>
 		<script type="text/javascript" language="javascript"
@@ -366,7 +371,7 @@
         <script>
         $('.openBtn').on('click',function(){
         var CurrentConsortiumId = $(this).attr('rel');
-        $('.modal-body').load('showprogressnew/'+CurrentConsortiumId,function(){
+        $('.modal-body').load('\/showprogressnew/'+CurrentConsortiumId,function(){
         $('#myModal').modal({show:true});
         });
         });
@@ -478,11 +483,17 @@ $(document).ready(function() {
 
 	<script>
         jQuery(function(){
-        jQuery('#reports').multiSelect();
-        jQuery('#line-wrap-example').multiSelect({
+            var flag = '<?php echo Session::get('keyconsortium');?>'
+               if(flag=='delete'){
+                	$("#third a").trigger("click");
+                }
+                 <?php Session::put('keyconsortium', ''); ?>   
+        //jQuery('#reports').multiSelect();
+        /*jQuery('#line-wrap-example').multiSelect({
             selectAllValue: 'multiselect-all',
             positionMenuWithin: $('.position-menu-within')
-        });
+        });*/
+        
     }); 
     //jQuery plugin
     
