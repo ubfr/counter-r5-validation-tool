@@ -3,9 +3,7 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
-use App\Http\Controllers\Validatereportjr1Controller;
-use App\Http\Controllers\Validatereportjr1goaController;
-use App\Http\Controllers\Validatereportjr2Controller;
+use App\Http\Controllers\ValidatereportController;
 use App\Http\Requests;
 use App\Validateerror;
 use App\Filename;

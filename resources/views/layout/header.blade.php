@@ -22,11 +22,21 @@
     <header>
     	<div class="row">
     	<div class="col-md-3">
-        	<h1 class="logoBlock"><a href="{{url('/')}}"><img title="Project Counter" alt="Project Counter" src="{{asset('assets/image/logo.png')}}"></a></h1>
+        	<h1 class="logoBlock"><a href="http://counter5.mpstechnologies.com"><img title="Project Counter" alt="Project Counter" src="/assets/image/logo.png"></a></h1>
         </div>
-        <div class="col-md-3 pull-right">
-        	<h1 class="logoBlock text-right"><a href="{{url('/')}}"><img title="Project Counter" alt="Project Counter" src="{{asset('assets/image/logo2.png')}}"></a></h1>
-        	 
+        
+        <div class="col-md-3 pull-right pt-3" style="padding-top:25px">
+       <div class="row">
+        <div class="col-md-6" >
+        <a href="{{url('/')}}"> <img title="Project Counter" alt="Project Counter" src="/assets/image/OCLC_Logo.jpg" style="width: 100%;"></a>
+        </div>
+        
+       <div class="col-md-6" style="padding-top:7px">
+     	<a href="{{url('/')}}"><img title="Project Counter" alt="Project Counter" src="/assets/image/rel_logo.png" style=" width: 100%;"></a>
+        </div> 
+  
+        
+        </div>
         </div>
         </div>
        

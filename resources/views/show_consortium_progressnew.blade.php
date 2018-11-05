@@ -92,16 +92,19 @@
         $('#reports').multiselect({
             includeSelectAllOption: true,
             enableFiltering: true,
+            enableCaseInsensitiveFiltering: true,
             numberDisplayed: 1
         });
         $('#providers').multiselect({
             includeSelectAllOption: true,
             enableFiltering: true,
+            enableCaseInsensitiveFiltering: true,
             numberDisplayed: 1
         });
         $('#members').multiselect({
             includeSelectAllOption: true,
             enableFiltering: true,
+            enableCaseInsensitiveFiltering: true,
             numberDisplayed: 1
             
         });

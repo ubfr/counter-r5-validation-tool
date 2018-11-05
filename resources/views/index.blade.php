@@ -29,11 +29,11 @@
         	 <h3>Register now for <span class="text-success">FREE</span></h3>
              <hr class="colorgraph">
               <ul class="list-unstyled" style="line-height: 2">
-                  <li><span class="fa fa-check text-success"></span> Validate Your COUNTER5 Report</li>
-                  <li><span class="fa fa-check text-success"></span> Validate Your Tabular Report Format</li>
-                  <li><span class="fa fa-check text-success"></span> SUSHI Service Validation</li>
+                  <li><span class="fa fa-check text-success"></span> Validate Your COUNTER Release 5 Reports</li>
+                  <li><span class="fa fa-check text-success"></span> Validate Your Release 5 Tabular Report Format</li>
+                  <li><span class="fa fa-check text-success"></span> Release 5 SUSHI Service Validation</li>
                   <li><span class="fa fa-check text-success"></span> Fetch Your Old Test Report</li>
-                  <li><span class="fa fa-check text-success"></span> Test Development Enviroment</li>
+                  <li><span class="fa fa-check text-success"></span> Test Development Environment</li>
                                    <li><span class="fa fa-check text-success"></span> Get On-Screen Error Display and Email Report</li>
                                    </ul>
                <div class="col-xs-6 col-sm-6 col-md-6 noPadding marTop10">

@@ -2,9 +2,7 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
-use App\Http\Controllers\Validatereportjr1Controller;
-use App\Http\Controllers\Validatereportjr1goaController;
-use App\Http\Controllers\Validatereportjr2Controller;
+use App\Http\Controllers\ValidatereportController;
 use App\Http\Requests;
 use App\Validateerror;
 use App\Filename;
@@ -201,7 +199,7 @@ class FilevalidateController extends CommonController
                         $rowData = $sheet->rangeToArray('A' . $row . ':' . 'B' . $row, NULL, TRUE, FALSE);
                         
                         foreach ($rowData as $detail) {
-                            $test = new Validatereportjr1Controller();
+                            $test = new ValidatereportController();
                             $validatereport = $test->JournalReport1R4($sheet, $highestRow, $highestColumn, $err, $warning, $Reportname1, $getreportCode); 
                         }
                     }
