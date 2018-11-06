@@ -29,4 +29,12 @@ class ForgotPasswordController extends Controller
     {
         $this->middleware('guest');
     }
+    
+    public function getEmail()
+    {
+        return view('forgetpassword');
+    }
+    
+    
+    
 }
