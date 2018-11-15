@@ -62,12 +62,10 @@
 									<th class="sorting" tabindex="2" aria-controls="example" rowspan="1" colspan="1" aria-label="Position: activate to sort column ascending" style="width: 233px;">SUSHI URL</th>
 									<th class="sorting" tabindex="3" aria-controls="example" rowspan="1" colspan="1" aria-label="Office: activate to sort column ascending" style="width: 108px;">Request Name</th>
 									<th class="sorting" tabindex="4" aria-controls="example" rowspan="1" colspan="1" aria-label="Office: activate to sort column ascending" style="width: 108px;">Platform</th>
-									<th class="sorting" tabindex="5" aria-controls="example" rowspan="1" colspan="1" aria-label="Office: activate to sort column ascending" style="width: 108px;">Report ID</th>
-									<th class="sorting" tabindex="6" aria-controls="example" rowspan="1" colspan="1" aria-label="Office: activate to sort column ascending" style="width: 108px;">Report Format</th>
-									<th class="sorting" tabindex="7" aria-controls="example" rowspan="1" colspan="1" aria-label="Start date: activate to sort column ascending" style="width: 99px;">Success</th>
-								    <th class="sorting" tabindex="8" aria-controls="example" rowspan="1" colspan="1" aria-label="Start date: activate to sort column ascending" style="width: 99px;">#Errors</th>
-								    <th class="sorting" tabindex="9" aria-controls="example" rowspan="1" colspan="1" aria-label="Start date: activate to sort column ascending" style="width: 99px;">Date Time</th>
-								    <th class="sorting" tabindex="10" aria-controls="example" rowspan="1" colspan="1" aria-label="Start date: activate to sort column ascending" style="width: 99px;">Delete</th>
+									<th class="sorting" tabindex="5" aria-controls="example" rowspan="1" colspan="1" aria-label="Start date: activate to sort column ascending" style="width: 99px;">Success</th>
+								    <th class="sorting" tabindex="6" aria-controls="example" rowspan="1" colspan="1" aria-label="Start date: activate to sort column ascending" style="width: 99px;">#Errors</th>
+								    <th class="sorting" tabindex="7" aria-controls="example" rowspan="1" colspan="1" aria-label="Start date: activate to sort column ascending" style="width: 99px;">Date Time</th>
+								    <th class="sorting" tabindex="8" aria-controls="example" rowspan="1" colspan="1" aria-label="Start date: activate to sort column ascending" style="width: 99px;">Delete</th>
 								</tr>
 							
 							</thead>
@@ -78,8 +76,6 @@
 									<th rowspan="1" colspan="1">SUSHI URL</th>
 									<th rowspan="1" colspan="1">Request Name</th>
 									<th rowspan="1" colspan="1">Platform</th>
-									<th rowspan="1" colspan="1">Report ID</th>
-									<th rowspan="1" colspan="1">Report Format</th>
 									<th rowspan="1" colspan="1">Success</th>
 									<th rowspan="1" colspan="1">#Errors</th>
 									<th rowspan="1" colspan="1">Date Time</th>
@@ -106,8 +102,6 @@
 									<td class=""><?php echo $sushi_details->sushi_url;?></td>
 									<td class=""><?php echo $DisplayValueOfMethod[$sushi_details->request_name];?></td>
 									<td class=""><?php echo $DisplayValueOfMethod[$sushi_details->platform];?></td>
-									<td class=""><?php echo $sushi_details->report_id;?></td>
-									<td class=""><?php echo $sushi_details->report_format;?></td>
 									<td class=""><?php echo $sushi_details->success;?></td>
 									<td class=""><?php echo $sushi_details->number_of_errors;?></td>
 									<td class=""><?php echo $sushi_details->date_time;?></td>

@@ -49,7 +49,7 @@
                          <option selected="JSON">JSON</option>
                          <option value="TSV">TSV</option>
                          <option value="XLSX">XLSX</option>
-                         <option value="Consolidated TSV">Consolidated TSV</option>
+						 <option value="Consolidated TSV">Consolidated TSV</option>
                        
                     </select>
                     </div>

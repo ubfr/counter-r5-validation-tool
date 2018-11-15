@@ -10,8 +10,6 @@
  * | contains the "web" middleware group. Now create something great!
  * |
  */
-use Illuminate\Support\Facades\Route;
-
 Route::get('/', function () {
     return view('index');
 });
@@ -136,7 +134,6 @@ Route::group([
     // now sushiValidate
     //Route::post('/sushiValidate', 'FilevalidateController@sushiValiate');
     Route::get('uploadedreports','ShowController@uploaded_report');
-    Route::get('uploadedreports/id','ShowController@uploadReportsDownload');
     Route::get('delete_upload_report/{id}','ShowController@delete_upload_report');
     
    

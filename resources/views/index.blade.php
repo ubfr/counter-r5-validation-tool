@@ -157,6 +157,22 @@
 					 <p style="margin-top:10px; text-align:right">By clicking <strong class="label label-primary">Register</strong>, you agree to the <a href="https://www.projectcounter.org/terms-and-conditions/" target="_blank">Terms and Conditions</a>.</p>
 					
 				</div>
+				
+				<div class="col-xs-12 col-sm-12 col-md-12">
+                	 <span class="checkbox">
+                          <label><input type="checkbox" id="newsletter"  name="newsletter" value="1" > I Agree to my data being stored and used to receive the newsletter </label> 
+                        </span>
+ 
+				</div>
+				
+				<div class="col-xs-8 col-sm-9 col-md-9">
+                	 <span class="checkbox">
+                          <label> <input type="checkbox" id="commercial" name="commercial" value="1" >I Agree to receive information and commercial offers </label>
+                        </span>
+ 
+				</div>
+				
+				
 				<div id="show_error"></div>
 			</div>
 			
@@ -175,14 +191,6 @@
   </div>
 </div>
 
-<!--
-
-//-->
-</script>
-<!--
-
-//-->
-</script>
 <script type="text/javascript">
 	function get_action(div) 
 	{

@@ -10,16 +10,32 @@
 
 <!--========================login form start here======================================-->
 
+	
 	@if (Session::has('userdelmsg'))
 		<div class="alert alert-success" style="color:green">
 			{{ Session::get('userdelmsg') }}
 		</div>
 	@endif
+	
+	@if (Session::has('useralertmsg'))
+		<div class="alert alert-danger" style="color:red">
+			{{ Session::get('useralertmsg') }}
+		</div>
+	@endif
+	
 	@if (Session::has('userupdatemsg'))
 		<div class="alert alert-success" style="color:green">
 			{{ Session::get('userupdatemsg') }}
 		</div>
 	@endif
+	
+	 <div class="row">
+		
+	<div class="col-sm-12 text-right"  >
+       <a class="btn btn-primary file_details"  href="uploadedreports/id">Download</a>
+	</div>
+	</div>
+	
 	<div class="container">
 	<div class="row">
         <div class="col-sm-12">

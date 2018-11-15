@@ -6,12 +6,9 @@ use App\Http\Controllers\ValidatereportController;
 use App\Http\Requests;
 use App\Validateerror;
 use App\Filename;
-Use Session;
-Use Excel;
-Use Mail;
 use DateTime;
 use App\Http\Manager\SubscriptionManager;
-use Validator;
+use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\Input;
 use Illuminate\Support\Facades\Redirect;
 use Illuminate\Support\Facades\Auth;
@@ -23,8 +20,10 @@ use SimpleXMLElement;
 use App\Reportname;
 use App\Filtertype;
 use App\Http\Controllers\CommonController;
-use File;
+use Illuminate\Support\Facades\File;
 use App\Sushitransaction;
+use Illuminate\Support\Facades\Session;
+use Maatwebsite\Excel\Facades\Excel;
 
 // phpinfo();die;
 // set_error_handler(null);
@@ -367,6 +366,8 @@ class FilevalidateController extends CommonController
                     $DataForInsertion = array(
                                     'user_email'=>$user['email']??'',
                                     'session_id'=>$user['display_name']??'',
+                                    'report_id'=>$allRequstVarible['ReportName']??'',
+                                    'report_format'=>'json',
                                     'sushi_url'=>substr($mainURL, 0, -1)??'',
                                     'request_name'=>$allRequstVarible['requestButton']??'',
                                     'platform'=>$allRequstVarible['requestButton']??'',
@@ -428,6 +429,8 @@ class FilevalidateController extends CommonController
                         $DataForInsertion = array(
                                         'user_email'=>$user['email']??'',
                                         'session_id'=>$user['display_name']??'',
+                                        'report_id'=>$allRequstVarible['ReportName']??'',
+                                        'report_format'=>'json',
                                         'sushi_url'=>substr($mainURL, 0, -1)??'',
                                         'request_name'=>$allRequstVarible['requestButton']??'',
                                         'platform'=>$allRequstVarible['requestButton']??'',
@@ -635,6 +638,8 @@ class FilevalidateController extends CommonController
                         $DataForInsertion = array(
                             'user_email'=>$user['email']??'',
                             'session_id'=>$user['display_name']??'',
+                            'report_id'=>$allRequstVarible['ReportName']??'',
+                            'report_format'=>'json',
                             'sushi_url'=>str_replace("_","/", $allRequstVarible['Requestorurl']),
                             'request_name'=>'getreportrequest',
                             'platform'=>'getreport',
@@ -660,6 +665,8 @@ class FilevalidateController extends CommonController
                     $DataForInsertion = array(
                         'user_email'=>$user['email']??'',
                         'session_id'=>$user['display_name']??'',
+                        'report_id'=>$allRequstVarible['ReportName']??'',
+                        'report_format'=>'json',
                         'sushi_url'=>str_replace("_","/", $allRequstVarible['Requestorurl']),
                         'request_name'=>'getreportrequest',
                         'platform'=>'fail',

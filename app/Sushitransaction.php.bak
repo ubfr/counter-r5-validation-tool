@@ -16,7 +16,7 @@ class Sushitransaction extends Model
 	  protected $table = 'sushi_transaction';
 	  
 	  protected $fillable = [
-	      'id','user_email','session_id','sushi_url','request_name','platform','report_id','report_format','success','number_of_errors','date_time',
+	      'id','user_email','session_id','sushi_url','request_name','platform','success','number_of_errors','date_time',
 	  ];
 	  
 	  protected $hidden = [

@@ -44,8 +44,6 @@ class ShowController extends Controller {
         }
     }
 
-   
-    
     function checkview() {
 
         // dd('you are in after welcome');
@@ -471,7 +469,7 @@ class ShowController extends Controller {
         return view('report_history', $data);
     }
 
-    // ///////////////////////////////////////////////
+    // ///////////show file upload list/////////////
     function uploaded_report() {
         $user = Session::get('user');
         if ($user['email'] == '') {
@@ -488,7 +486,44 @@ class ShowController extends Controller {
         $data['file_detail'] = $filename;
         return view('Uploaded_report', $data);
     }
-
+	
+	 ///////////////downloading uploaded reports////////////
+    public function uploadReportsDownload($id=0) {
+        $user = Session::get('user');
+        if (Session::has('user')) {
+            if($user['utype']=='admin'){
+                $AllArray = Filename::where(array())->orderBy('upload_date', 'desc')
+                ->get()
+                ->toArray();
+                if($AllArray == array()){
+                    Session::flash('useralertmsg', 'No Reports Available');
+                    return Redirect::intended('/uploadedreports');  
+                }
+            }
+            
+            $reportHeader[] = array_keys($AllArray[0]);
+            // echo "<pre>";print_r($reportHeader);die;
+            
+            $arr1 = array_merge($reportHeader,$AllArray);
+            
+            
+            $destinationPath = public_path() . "/upload/uploaded/" ;
+            $file = time() . '_uploadedfile';
+            
+            return Excel::create($file, function ($excel) use ($arr1) {
+                
+                // Build the spreadsheet, passing in the $dataValue
+                $excel->sheet('sheet1', function ($sheet) use ($arr1) {
+                    $sheet->fromArray($arr1, null, 'A1', false, false);
+                });
+            })->store('xlsx', $destinationPath)->download();
+           
+            
+        }else{
+            return Redirect::to('login');
+        }
+    }
+    
     // ///////////show Rule Management Page////////////
     function show_rule_manage() {
         $user = Session::get('user');
@@ -1177,46 +1212,480 @@ class ShowController extends Controller {
                                                 $dataValue1[] = $NewSingleRow;
                                             }
                                         }
-                                        }else{
+                                        }else {
                                             $dataValue1=array();
                                         }
                                         
                                         if($selectedFormat==='XLSX'){
-                                        // xlsx creation
-                                        $FileNameForSize = $filename;
-                                        Excel::create($filename, function ($excel) use ($dataValue1) {
                                             
-                                            // Set the spreadsheet title, creator, and description
-                                            $excel->setTitle('Error Report');
-                                            $excel->setCreator('Laravel')->setCompany('Counter Project');
-                                            $excel->setDescription('xlsx report file');
+                                            $CorrectHeaderSequence = array(
+                                                'Report_Name',
+                                                'Report_ID',
+                                                'Release',
+                                                'Institution_Name',
+                                                'Institution_ID',
+                                                'Metric_Types',
+                                                'Report_Filters',
+                                                'Report_Attributes',
+                                                'Exceptions',
+                                                'Reporting_Period',
+                                                'Created',
+                                                'Created_By'
+                                            );
                                             
-                                            // Build the spreadsheet, passing in the $dataValue
-                                            $excel->sheet('sheet1', function ($sheet) use ($dataValue1) {
-                                                $sheet->fromArray($dataValue1, null, 'A1', false, false);
-                                            });
-                                        })->store('xlsx', $destinationPath);
-                                        
-                                        unlink($destinationPath . $file);
-                                        //excel creation end
-                                        
-                                        }else if($selectedFormat==='TSV'){
-                                        
-                                        
+                                            $Rid = $dataValue1[3][1];
+                                            
+                                            // getting array for header from JSON Data
+                                            $JsonHeaderValues = array();
+                                            for($i=0;$i<11;$i++){
+                                                $JsonHeaderValues[$dataValue1[$i][0]] = $dataValue1[$i][1];
+                                            }
+                                            
+                                            $orderDataValue = array();
+                                            foreach($CorrectHeaderSequence as $HeaderHeading){
+                                                $orderDataValue[] =  array($HeaderHeading,$JsonHeaderValues[$HeaderHeading]??'');
+                                            }
+                                            
+                                            $FileNameForSize = $filename;
+                                            
+                                            if($Rid === 'TR' || $Rid === 'TR_J1' || $Rid === 'TR_J2' || $Rid === 'TR_J3' || $Rid === 'TR_J4' || $Rid === 'TR_B1' || $Rid === 'TR_B2' || $Rid === 'TR_B3'){
+                                             
+                                               $orderDataValue[] = array();
+                                               $BodyReportHeading = array(
+                                                   'Title',
+                                                   'Publisher', 
+                                                   'Publisher_ID', 
+                                                   'Platform', 
+                                                   'DOI', 
+                                                   'Proprietary_ID', 
+                                                   'ISBN', 
+                                                   'Print_ISSN', 
+                                                   'Online_ISSN', 
+                                                   'Data_Type',
+                                                   'Section_Type',
+                                                   'YOP', 
+                                                   'Access_Type', 
+                                                   'Access_Method',
+                                                   'Metric_Type',  
+                                                   'Performance');
+                                                
+                                               $orderDataValue[] = $BodyReportHeading;
+                                               $LastIndexOfJsonReport = count($dataValue1);
+                                               for($iCount=12;$iCount<$LastIndexOfJsonReport;$iCount++)
+                                               {
+                                                   $SingleColumn = array();
+                                                   $CurrentRowValues = $dataValue1[$iCount];
+                                                   
+                                                   foreach($BodyReportHeading as $BodyHeader){
+                                                       $SingleColumn[$BodyHeader] = $CurrentRowValues[$BodyHeader]??'';
+                                                   }
+                                                   $orderDataValue[] = $SingleColumn;
+                                               }
+                                               
+                                            // xlsx creation
+                                            Excel::create($filename, function ($excel) use ($orderDataValue) {
+                                                // Set the spreadsheet title, creator, and description
+                                                $excel->setTitle('Error Report');
+                                                $excel->setCreator('Laravel')->setCompany('Counter Project');
+                                                $excel->setDescription('xlsx report file');
+                                                
+                                                // Build the spreadsheet, passing in the $dataValue
+                                                $excel->sheet('sheet1', function ($sheet) use ($orderDataValue) {
+                                                    $sheet->fromArray($orderDataValue, null, 'A1', false, false);
+                                                });
+                                            })->store('xlsx', $destinationPath);
+                                            
+                                            unlink($destinationPath . $file);
+                                            } else if($Rid === 'DR_D1' || $Rid === 'DR_D2' || $Rid === 'DR') {
+                                                
+                                                $orderDataValue[] = array();
+                                                $BodyReportHeading = array(
+                                                    'Database',
+                                                    'Publisher',
+                                                    'Publisher_ID',
+                                                    'Platform',
+                                                    'Proprietary_ID',
+                                                    'Data_Type',
+                                                    'YOP',
+                                                    'Access_Type',
+                                                    'Access_Method',
+                                                    'Metric_Type',
+                                                    'Performance');
+                                                
+                                                $orderDataValue[] = $BodyReportHeading;
+                                                $LastIndexOfJsonReport = count($dataValue1);
+                                                for($iCount=12;$iCount<$LastIndexOfJsonReport;$iCount++)
+                                                {
+                                                    $SingleColumn = array();
+                                                    $CurrentRowValues = $dataValue1[$iCount];
+                                                    
+                                                    foreach($BodyReportHeading as $BodyHeader){
+                                                        $SingleColumn[$BodyHeader] = $CurrentRowValues[$BodyHeader]??'';
+                                                    }
+                                                    $orderDataValue[] = $SingleColumn;
+                                                }
+                                                
+                                                Excel::create($filename, function ($excel) use ($orderDataValue) {
+                                                    // Set the spreadsheet title, creator, and description
+                                                    $excel->setTitle('Error Report');
+                                                    $excel->setCreator('Laravel')->setCompany('Counter Project');
+                                                    $excel->setDescription('xlsx report file');
+                                                    
+                                                    // Build the spreadsheet, passing in the $dataValue
+                                                    $excel->sheet('sheet1', function ($sheet) use ($orderDataValue) {
+                                                        $sheet->fromArray($orderDataValue, null, 'A1', false, false);
+                                                    });
+                                                })->store('xlsx', $destinationPath);
+                                                
+                                                unlink($destinationPath . $file);
+                                                
+                                                
+                                            } else if($Rid === 'PR' || $Rid === 'PR_P1') {
+                                                
+                                                $orderDataValue[] = array();
+                                                $BodyReportHeading = array(
+                                                    'Platform',
+                                                    'YOP',
+                                                    'Data_Type',
+                                                    'Access_Type',
+                                                    'Access_Method',
+                                                    'Metric_Type',
+                                                    'Performance'
+                                                    );
+                                                
+                                                $orderDataValue[] = $BodyReportHeading;
+                                                $LastIndexOfJsonReport = count($dataValue1);
+                                                for($iCount=12;$iCount<$LastIndexOfJsonReport;$iCount++)
+                                                {
+                                                    $SingleColumn = array();
+                                                    $CurrentRowValues = $dataValue1[$iCount];
+                                                    
+                                                    foreach($BodyReportHeading as $BodyHeader){
+                                                        $SingleColumn[$BodyHeader] = $CurrentRowValues[$BodyHeader]??'';
+                                                    }
+                                                    $orderDataValue[] = $SingleColumn;
+                                                }
+                                                
+                                               
+                                                
+                                                Excel::create($filename, function ($excel) use ($orderDataValue) {
+                                                    // Set the spreadsheet title, creator, and description
+                                                    $excel->setTitle('Error Report');
+                                                    $excel->setCreator('Laravel')->setCompany('Counter Project');
+                                                    $excel->setDescription('xlsx report file');
+                                                    
+                                                    // Build the spreadsheet, passing in the $dataValue
+                                                    $excel->sheet('sheet1', function ($sheet) use ($orderDataValue) {
+                                                        $sheet->fromArray($orderDataValue, null, 'A1', false, false);
+                                                    });
+                                                })->store('xlsx', $destinationPath);
+                                                
+                                                unlink($destinationPath . $file);
+                                                
+                                            } else if($Rid === 'IR_A1' || $Rid === 'IR_M1' || $Rid === 'IR'){
+                                                
+                                                $orderDataValue[] = array();
+                                                $BodyReportHeading = array(
+                                                    'Item',
+                                                    'Publisher',
+                                                    'Publisher_ID',
+                                                    'Platform',
+                                                    'Authors',
+                                                    'Publication_Date',
+                                                    'Article_Version',
+                                                    'DOI',
+                                                    'Proprietary_ID',
+                                                    'ISBN',
+                                                    'Print_ISSN',
+                                                    'Online_ISSN',
+                                                    'URI',
+                                                    'Parent_Title',
+                                                    'Parent_Data_Type',
+                                                    'Parent_DOI',
+                                                    'Parent_Proprietary_ID',
+                                                    'Parent_ISBN',
+                                                    'Parent_Print_ISSN',
+                                                    'Parent_Online_ISSN',
+                                                    'Parent_URI',
+                                                    'Component_Title',
+                                                    'Component_Data_Type',
+                                                    'Component_DOI',
+                                                    'Component_Proprietary_ID',
+                                                    'Component_ISBN',
+                                                    'Component_Print_ISSN',
+                                                    'Component_Online_ISSN',
+                                                    'Component_URI',
+                                                    'Data_Type',
+                                                    'Section_Type',
+                                                    'YOP',
+                                                    'Access_Type',
+                                                    'Access_Method',
+                                                    'Metric_Type',
+                                                    'Performance');
+                                                
+                                                $orderDataValue[] = $BodyReportHeading;
+                                                $LastIndexOfJsonReport = count($dataValue1);
+                                                for($iCount=12;$iCount<$LastIndexOfJsonReport;$iCount++)
+                                                {
+                                                    $SingleColumn = array();
+                                                    $CurrentRowValues = $dataValue1[$iCount];
+                                                    
+                                                    foreach($BodyReportHeading as $BodyHeader){
+                                                        $SingleColumn[$BodyHeader] = $CurrentRowValues[$BodyHeader]??'';
+                                                    }
+                                                    $orderDataValue[] = $SingleColumn;
+                                                }
+                                                
+                                                
+                                                Excel::create($filename, function ($excel) use ($orderDataValue) {
+                                                    // Set the spreadsheet title, creator, and description
+                                                    $excel->setTitle('Error Report');
+                                                    $excel->setCreator('Laravel')->setCompany('Counter Project');
+                                                    $excel->setDescription('xlsx report file');
+                                                    
+                                                    // Build the spreadsheet, passing in the $dataValue
+                                                    $excel->sheet('sheet1', function ($sheet) use ($orderDataValue) {
+                                                        $sheet->fromArray($orderDataValue, null, 'A1', false, false);
+                                                    });
+                                                })->store('xlsx', $destinationPath);
+                                                
+                                                unlink($destinationPath . $file);
+                                                
+                                            } else {
+                                                
+                                                $dataValue1=array();
+                                                
+                                            }
+                                            
+                                        } else if($selectedFormat==='TSV') {
+                                            
+                                            $CorrectHeaderSequence = array(
+                                                'Report_Name',
+                                                'Report_ID',
+                                                'Release',
+                                                'Institution_Name',
+                                                'Institution_ID',
+                                                'Metric_Types',
+                                                'Report_Filters',
+                                                'Report_Attributes',
+                                                'Exceptions',
+                                                'Reporting_Period',
+                                                'Created',
+                                                'Created_By'
+                                            );  
+                                            
+                                            $Rid = $dataValue1[3][1];
+                                            
+                                            // getting array for header from JSON Data
+                                            $JsonHeaderValues = array();
+                                            for($i=0;$i<11;$i++){
+                                                $JsonHeaderValues[$dataValue1[$i][0]] = $dataValue1[$i][1];
+                                            }
+                                            
+                                            $orderDataValue = array();
+                                            foreach($CorrectHeaderSequence as $HeaderHeading){
+                                                $orderDataValue[] =  array($HeaderHeading,$JsonHeaderValues[$HeaderHeading]??'');
+                                            }
+                                            
                                         // tsv creation start
                                         $filenametsv = $provider_name . "_" . $Member['Customer_ID'] . "_" . $ReportCode['report_code'] . "_5_" . $begin_date . "_" . $end_date . "_" . $rundate . ".tsv";
                                         $FileNameForSize = $filenametsv;
+                                        
                                         $filenametsv = $destinationPath . $filenametsv;
-                                        $TsvContentValue = '';
-                                        $myfile = fopen($filenametsv, "w") or die("Unable to open file!");
-                                        foreach ($dataValue1 as $ContentOfTSV) {
-                                            $TsvContentValue = implode("\t", $ContentOfTSV) . "\n";
-                                            fwrite($myfile, $TsvContentValue);
+                                        if($Rid === 'TR' || $Rid === 'TR_J1' || $Rid === 'TR_J2' || $Rid === 'TR_J3' || $Rid === 'TR_J4' || $Rid === 'TR_B1' || $Rid === 'TR_B2' || $Rid === 'TR_B3'){
+                                            
+                                            $orderDataValue[] = array();
+                                            $BodyReportHeading = array(
+                                                'Title',
+                                                'Publisher',
+                                                'Publisher_ID',
+                                                'Platform',
+                                                'DOI',
+                                                'Proprietary_ID',
+                                                'ISBN',
+                                                'Print_ISSN',
+                                                'Online_ISSN',
+                                                'Data_Type',
+                                                'Section_Type',
+                                                'YOP',
+                                                'Access_Type',
+                                                'Access_Method',
+                                                'Metric_Type',
+                                                'Performance');
+                                            
+                                            $orderDataValue[] = $BodyReportHeading;
+                                            $LastIndexOfJsonReport = count($dataValue1);
+                                            for($iCount=12;$iCount<$LastIndexOfJsonReport;$iCount++)
+                                            {
+                                                $SingleColumn = array();
+                                                $CurrentRowValues = $dataValue1[$iCount];
+                                                
+                                                foreach($BodyReportHeading as $BodyHeader){
+                                                    $SingleColumn[$BodyHeader] = $CurrentRowValues[$BodyHeader]??'';
+                                                }
+                                                $orderDataValue[] = $SingleColumn;
+                                            }
+                                            
+                                            // TSV creation
+                                            
+                                            $TsvContentValue = '';
+                                            $myfile = fopen($filenametsv, "w+") or die("Unable to open file!");
+                                            foreach ($orderDataValue as $ContentOfTSV) {
+                                                $TsvContentValue = implode("\t", $ContentOfTSV) . "\n";
+                                                fwrite($myfile, $TsvContentValue);
+                                            }
+                                            
+                                            fclose($myfile);
+                                            //deletion of json
+                                            unlink($destinationPath . $file);
+                                        }else if($Rid === 'DR_D1' || $Rid === 'DR_D2' || $Rid === 'DR') {
+                                            
+                                            $orderDataValue[] = array();
+                                            $BodyReportHeading = array(
+                                                'Database',
+                                                'Publisher',
+                                                'Publisher_ID',
+                                                'Platform',
+                                                'Proprietary_ID',
+                                                'Data_Type',
+                                                'YOP',
+                                                'Access_Type',
+                                                'Access_Method',
+                                                'Metric_Type',
+                                                'Performance');
+                                            
+                                            $orderDataValue[] = $BodyReportHeading;
+                                            $LastIndexOfJsonReport = count($dataValue1);
+                                            for($iCount=12;$iCount<$LastIndexOfJsonReport;$iCount++)
+                                            {
+                                                $SingleColumn = array();
+                                                $CurrentRowValues = $dataValue1[$iCount];
+                                                
+                                                foreach($BodyReportHeading as $BodyHeader){
+                                                    $SingleColumn[$BodyHeader] = $CurrentRowValues[$BodyHeader]??'';
+                                                }
+                                                $orderDataValue[] = $SingleColumn;
+                                            }
+                                            
+                                            $TsvContentValue = '';
+                                            $myfile = fopen($filenametsv, "w+") or die("Unable to open file!");
+                                            foreach ($orderDataValue as $ContentOfTSV) {
+                                                $TsvContentValue = implode("\t", $ContentOfTSV) . "\n";
+                                                fwrite($myfile, $TsvContentValue);
+                                            }
+                                            
+                                            fclose($myfile);
+                                            
+                                            unlink($destinationPath . $file);
+                                            
+                                        } else if($Rid === 'PR' || $Rid === 'PR_P1') {
+                                            
+                                            $orderDataValue[] = array();
+                                            $BodyReportHeading = array(
+                                                'Platform',
+                                                'YOP',
+                                                'Data_Type',
+                                                'Access_Type',
+                                                'Access_Method',
+                                                'Metric_Type',
+                                                'Performance'
+                                            );
+                                            
+                                            $orderDataValue[] = $BodyReportHeading;
+                                            $LastIndexOfJsonReport = count($dataValue1);
+                                            for($iCount=12;$iCount<$LastIndexOfJsonReport;$iCount++)
+                                            {
+                                                $SingleColumn = array();
+                                                $CurrentRowValues = $dataValue1[$iCount];
+                                                
+                                                foreach($BodyReportHeading as $BodyHeader){
+                                                    $SingleColumn[$BodyHeader] = $CurrentRowValues[$BodyHeader]??'';
+                                                }
+                                                $orderDataValue[] = $SingleColumn;
+                                            }
+                                            
+                                            $TsvContentValue = '';
+                                            $myfile = fopen($filenametsv, "w+") or die("Unable to open file!");
+                                            foreach ($orderDataValue as $ContentOfTSV) {
+                                                $TsvContentValue = implode("\t", $ContentOfTSV) . "\n";
+                                                fwrite($myfile, $TsvContentValue);
+                                            }
+                                            
+                                            fclose($myfile);
+                                            
+                                            unlink($destinationPath . $file);
+                                            
+                                        } else if($Rid === 'IR_A1' || $Rid === 'IR_M1' || $Rid === 'IR'){
+                                            
+                                            $orderDataValue[] = array();
+                                            $BodyReportHeading = array(
+                                                'Item',
+                                                'Publisher',
+                                                'Publisher_ID',
+                                                'Platform',
+                                                'Authors',
+                                                'Publication_Date',
+                                                'Article_Version',
+                                                'DOI',
+                                                'Proprietary_ID',
+                                                'ISBN',
+                                                'Print_ISSN',
+                                                'Online_ISSN',
+                                                'URI',
+                                                'Parent_Title',
+                                                'Parent_Data_Type',
+                                                'Parent_DOI',
+                                                'Parent_Proprietary_ID',
+                                                'Parent_ISBN',
+                                                'Parent_Print_ISSN',
+                                                'Parent_Online_ISSN',
+                                                'Parent_URI',
+                                                'Component_Title',
+                                                'Component_Data_Type',
+                                                'Component_DOI',
+                                                'Component_Proprietary_ID',
+                                                'Component_ISBN',
+                                                'Component_Print_ISSN',
+                                                'Component_Online_ISSN',
+                                                'Component_URI',
+                                                'Data_Type',
+                                                'Section_Type',
+                                                'YOP',
+                                                'Access_Type',
+                                                'Access_Method',
+                                                'Metric_Type',
+                                                'Performance');
+                                            
+                                            $orderDataValue[] = $BodyReportHeading;
+                                            $LastIndexOfJsonReport = count($dataValue1);
+                                            for($iCount=12;$iCount<$LastIndexOfJsonReport;$iCount++)
+                                            {
+                                                $SingleColumn = array();
+                                                $CurrentRowValues = $dataValue1[$iCount];
+                                                
+                                                foreach($BodyReportHeading as $BodyHeader){
+                                                    $SingleColumn[$BodyHeader] = $CurrentRowValues[$BodyHeader]??'';
+                                                }
+                                                $orderDataValue[] = $SingleColumn;
+                                            }
+                                            
+                                            $TsvContentValue = '';
+                                            $myfile = fopen($filenametsv, "w+") or die("Unable to open file!");
+                                            foreach ($orderDataValue as $ContentOfTSV) {
+                                                $TsvContentValue = implode("\t", $ContentOfTSV) . "\n";
+                                                fwrite($myfile, $TsvContentValue);
+                                            }
+                                            
+                                            fclose($myfile);
+                                            
+                                            unlink($destinationPath . $file);
+                                            
+                                        } else {
+                                            
+                                            $dataValue1=array();
+                                            
                                         }
                                         
-                                        fclose($myfile);
-                                        //deletion of json
-                                        unlink($destinationPath . $file);
                                         }
                                         // tsv creation end
                                         
@@ -1252,10 +1721,6 @@ class ShowController extends Controller {
                     }
                 }
             }
-            
-            
-            
-            
             
             // converting Zip File
             // root Directory
@@ -1643,17 +2108,30 @@ class ShowController extends Controller {
         
         if (Session::has('user')) {
             
-            
+             
             if($user['utype']=='admin'){
                 $AllMatricArray = Sushitransaction::where(array())->orderBy('id', 'desc')
                 ->get()
                 ->toArray();
-            }else{
                 
+                if($AllMatricArray == array()){
+                    
+                    Session::flash('useralertmsg', 'No Data Available');
+                    return Redirect::intended('/sushirequest');
+                    
+                }
+                
+            }else{
                     $AllMatricArray = Sushitransaction::where(array('user_email'=>$user['email']))->orderBy('id', 'desc')
                     ->get()
                     ->toArray();
+                    if($AllMatricArray == array()){
+                        
+                        Session::flash('useralertmsg', 'No Data Available');
+                        return Redirect::intended('/sushirequest'); 
+                    }    
             }
+            
             
             
             $sushiHeader[] = array_keys($AllMatricArray[0]);

@@ -81,6 +81,8 @@ class Userscontroller extends Controller
     
     public function register(){
         
+        
+        
         $data=Input::all();
         $data['utype']='user';
       
@@ -92,6 +94,8 @@ class Userscontroller extends Controller
             'email' =>'required|email|unique:users,email',
             'password' =>'required|min:6|confirmed',
             'password_confirmation' =>'required|min:6',
+            
+        
           // 'g-recaptcha' =>'required|GoogleRecaptcha',
         );
         
@@ -102,6 +106,9 @@ class Userscontroller extends Controller
             return Redirect::back()->withInput(Input::except('password'))->withErrors($validator,'register');
         }else{
             
+            
+            $data['newsletter'] = $data['newsletter']??0;
+            $data['commercial'] = $data['commercial']??0;
             $newUser = User::create($data);
             
             
