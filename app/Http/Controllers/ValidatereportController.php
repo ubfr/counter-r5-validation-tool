@@ -416,8 +416,19 @@ class ValidatereportController extends FilevalidateController {
                         if ($columnval['is_range'] == '1') {
                             $startcell = $coln;
                             $lastcell = $highestcoln;
+                            
+                            $arraystart = $this->createColumnsArray($lastcell);
+                            end($arraystart);         
+                            $CellValueInNumericEnd = key($arraystart);
+                            
+                            $arrayend = $this->createColumnsArray($startcell);
+                            end($arrayend);         
+                            $CellValueInNumericStart = key($arrayend);
+                            
+                            
                             //////////////////////looping start///////////////////////////////////
-                            while ($startcell <= $lastcell) {
+                            //while ($startcell <= $lastcell) {
+                            while ($CellValueInNumericStart < $CellValueInNumericEnd) {
                                 $cellval = $sheet->getcell($startcell . $i);
                                 if ($columnval['required'] == '0') {
                                     //////////////if rule type is ISSN////////////////
@@ -649,6 +660,7 @@ class ValidatereportController extends FilevalidateController {
                                     }
                                 }
                                 $startcell++;
+                                $CellValueInNumericStart++;
                             }
                             /////////////////////////////////////
                             break;
@@ -1066,8 +1078,17 @@ class ValidatereportController extends FilevalidateController {
                         if ($columnval['is_range'] == '1') {
                             $startcell = $coln;
                             $lastcell = $highestcoln;
+                            
+                            $arraystart = $this->createColumnsArray($lastcell);
+                            end($arraystart);         
+                            $CellValueInNumericEnd = key($arraystart);
+                            
+                            $arrayend = $this->createColumnsArray($startcell);
+                            end($arrayend);         
+                            $CellValueInNumericStart = key($arrayend);
                             //////////////////////looping start///////////////////////////////////
-                            while ($startcell <= $lastcell) {
+                            //while ($startcell <= $lastcell) {
+                            while ($CellValueInNumericStart < $CellValueInNumericEnd) {
                                 $cellval = $sheet->getcell($startcell . $i);
                                 //echo $startcell;
                                 if ($columnval['required'] == '0') {
@@ -1274,6 +1295,7 @@ class ValidatereportController extends FilevalidateController {
                                     }
                                 }
                                 $startcell++;
+                                $CellValueInNumericStart++;
                             }
                             /////////////////////////////////////
                             break;

@@ -6,8 +6,12 @@ use App\Http\Controllers\ValidatereportController;
 use App\Http\Requests;
 use App\Validateerror;
 use App\Filename;
+Use Illuminate\Support\Facades\Session;
+Use Excel;
+Use Mail;
 use DateTime;
 use App\Http\Manager\SubscriptionManager;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\Input;
 use Illuminate\Support\Facades\Redirect;
@@ -22,9 +26,7 @@ use App\Filtertype;
 use App\Http\Controllers\CommonController;
 use Illuminate\Support\Facades\File;
 use App\Sushitransaction;
-use Illuminate\Support\Facades\Session;
-use Maatwebsite\Excel\Facades\Excel;
-
+use Exception;
 // phpinfo();die;
 // set_error_handler(null);
 // set_exception_handler(null);
@@ -140,21 +142,23 @@ class FilevalidateController extends CommonController
                     $currentReportID = $jsonReportHeader['Report_ID'];
                     if ($currentReportID == 'DR_D1' || $currentReportID == 'DR_D2' || $currentReportID == 'DR') {
                         
+                        
                         $AllDrReport = $json['Report_Items'];
                         $bodyResult = CommonController::jsonDrValidate($AllDrReport);
-                    } 
-                    else if ($currentReportID == 'PR_P1' || $currentReportID == 'PR') {
-                        $AllPrReport = $json['Report_Items'];
-                        $bodyResult = CommonController::jsonPrValidate($AllPrReport);
-                    } 
-                    else if ($currentReportID == 'IR_A1' || $currentReportID == 'IR_M1' || $currentReportID == 'IR') {
-                        $AllIrReport = $json['Report_Items'];
-                        $bodyResult = CommonController::jsonIrValidate($AllIrReport);
-                    } 
-                    else {
                         
-                        $AllBodyReport = $json['Report_Items'];
-                        $bodyResult = CommonController::jsonBodyValidate($AllBodyReport);
+                    } else if ($currentReportID == 'PR_P1' || $currentReportID == 'PR') {
+                       
+                            $AllPrReport = $json['Report_Items'];
+                            $bodyResult = CommonController::jsonPrValidate($AllPrReport);
+                       
+                    } else if ($currentReportID == 'IR_A1' || $currentReportID == 'IR_M1' || $currentReportID == 'IR') {
+                        
+                            $AllIrReport = $json['Report_Items'];
+                            $bodyResult = CommonController::jsonIrValidate($AllIrReport);
+                        
+                    } else {
+                            $AllBodyReport = $json['Report_Items'];
+                            $bodyResult = CommonController::jsonBodyValidate($AllBodyReport);
                     }
                     
                     // /////////////////////////////// JSON FILE END //////////////////////////////
@@ -178,6 +182,7 @@ class FilevalidateController extends CommonController
             } else {
                 
                 if ($extension == 'tsv') {
+                    
                     $tsvpath = Input::file('import_file')->getRealPath();
                     $path = $this->tsvconverttoxls($tsvpath);
                 } // ///////////// special case for json ///////////////
@@ -185,8 +190,10 @@ class FilevalidateController extends CommonController
                 else {
                     $path = Input::file('import_file')->getRealPath();
                 }
-                // Excel processing start here
-                Excel::load($path, function ($reader) use (&$excel, &$err, &$warning, &$validatereport, &$Reportname1, &$getreportCode) {
+                
+                try {
+                    // Excel processing start here
+                    Excel::load($path, function ($reader) use (&$excel, &$err, &$warning, &$validatereport, &$Reportname1, &$getreportCode) {
                     $error = array();
                     $reader->calculate();
                     $objExcel = $reader->getExcel();
@@ -208,8 +215,12 @@ class FilevalidateController extends CommonController
                     $getreportcode=$sheet->rangeToArray('B2' . ':' .'B2',NULL, TRUE, FALSE);
                     $this->ReportCodeValue=$getreportcode[0][0]??'BLANK';
                 }
-            
             );
+                    
+            } catch (Exception $exception) {
+                report($exception);
+                return parent::render($request, $exception);
+            }
                 // //////////////////////////save file in public uploadfile folder//////////////
                 
                 $file = Input::file('import_file');
@@ -288,18 +299,9 @@ class FilevalidateController extends CommonController
             return Redirect::back()->withInput(array())->withErrors($validator, 'welcome');
         } else {
             if ($allRequstVarible['requestButton'] == 'getmembers' || $allRequstVarible['requestButton'] == 'getverify') {
-                //$members = 'https://c5beta.mpsinsight.com/insightc5api/services/members?apikey=rsc::94d66f4a0f51dcd8d68924dda75e9ad9&customer_id=mu-0000033';
+               
                 $mainURL = $allRequstVarible['Requestorurl'];
                 $mainURL = $mainURL . "/members" . "?";
-                $fields = array(
-                    'customer_id' => $allRequstVarible['CustomerId'],
-                    'apikey' => $allRequstVarible['APIkey']
-                );
-                $url = $mainURL . http_build_query($fields, '', "&");
-            }
-            else if($allRequstVarible['requestButton'] == 'getsupportedreports'){
-                $mainURL = $allRequstVarible['Requestorurl'];
-                $mainURL = $mainURL . "/reports" . "?";
                 $fields = array(
                     'customer_id' => $allRequstVarible['CustomerId'],
                     'apikey' => $allRequstVarible['APIkey']
@@ -309,6 +311,16 @@ class FilevalidateController extends CommonController
             else if($allRequstVarible['requestButton'] == 'getstatus'){
                 $mainURL = $allRequstVarible['Requestorurl'];
                 $mainURL = $mainURL . "/status" . "?";
+                $fields = array(
+                    'customer_id' => $allRequstVarible['CustomerId'],
+                    'apikey' => $allRequstVarible['APIkey']
+                );
+                $url = $mainURL . http_build_query($fields, '', "&");
+            }
+            
+            else if($allRequstVarible['requestButton'] == 'getsupportedreports'){
+                $mainURL = $allRequstVarible['Requestorurl'];
+                $mainURL = $mainURL . "/reports" . "?";
                 $fields = array(
                     'customer_id' => $allRequstVarible['CustomerId'],
                     'apikey' => $allRequstVarible['APIkey']
@@ -374,9 +386,14 @@ class FilevalidateController extends CommonController
                                     'success'=>'Y',
                                     'number_of_errors'=>0
                                 );
-                    //echo "<pre>ddd";print_r($DataForInsertion);die;
+                    
+                    DB::beginTransaction();
+                    try {
                     Sushitransaction::create($DataForInsertion);
-
+                    DB::commit();
+                    } catch(Exception $exception) {
+                        DB::rollback();
+                    }
 
                     $headers = ['Content-Type: application/json'];
                     $newName = $file;
@@ -437,17 +454,18 @@ class FilevalidateController extends CommonController
                                         'success'=>'Y',
                                         'number_of_errors'=>0
                                     );
-                        //echo "<pre>ddd";print_r($DataForInsertion);die;
+                    DB::beginTransaction();
+                    try {
                         Sushitransaction::create($DataForInsertion);
-                        
-                        
+                        DB::commit();
+                    } catch (Exception $exception) {
+                        DB::rollback();
+                    }
                         $headers = ['Content-Type: application/json'];
                         $newName = $file;
                         return response()->download($completePath, $file, $headers);
-                        
                     }
                 } else {
-                    //die;
                     $result = array("SUSHI URL seems to invalid");
                 }
                 //use App\Sushitransaction
@@ -496,9 +514,18 @@ class FilevalidateController extends CommonController
             $user = Session::get('user');
             $UserType = $user['utype'];
             if($UserType==='admin'){
+                
+                DB::beginTransaction();
+                try {
                 $alltransaction = Sushitransaction::where('id', $id)->delete();
+                DB::commit();
+                } catch(Exception $exception) {
+                    DB::rollback();
+                }
+                
             }else{
                 $alltransaction = Sushitransaction::where('id', $id)->delete();
+                
             }
             
             Session::flash('userdelmsg', 'Report successfully deleted');
@@ -506,8 +533,6 @@ class FilevalidateController extends CommonController
             
         }
     }
-    
-    
     
     //sushi parameter form
     public function sushiRequestParameter($Requestorurl='',$apikey='',$CustomerId='',$platform='') {
@@ -529,7 +554,6 @@ class FilevalidateController extends CommonController
         $data['allreports'] = $AllReportCodes;
         return view('sushi_parameter_view', $data);
     }
-    
     
     
     
@@ -582,6 +606,11 @@ class FilevalidateController extends CommonController
                 $statusCode = curl_getinfo($curl, CURLINFO_HTTP_CODE);
                 if ($statusCode == 404) {
                     $result = array("SUSHI URL does not exist");
+                    
+                    
+                    Session::flash('reportmsg', 'This URL is not compatible for selected report');
+                    Session::put('keyurl', 'display');
+                    return Redirect::intended('/filelist/');
                 } else {
                     $opts = [
                         "http" => [
@@ -600,7 +629,6 @@ class FilevalidateController extends CommonController
                     
                     
                     $jsonReportHeader = $json['Report_Header'];
-                    
                     $currentReportID = $jsonReportHeader['Report_ID'];
                     if ($currentReportID == 'DR_D1' || $currentReportID == 'DR_D2' || $currentReportID == 'DR') {
                         
@@ -616,7 +644,6 @@ class FilevalidateController extends CommonController
                         $bodyResult = CommonController::jsonIrValidate($AllIrReport);
                     }
                     else {
-                        
                         $AllBodyReport = $json['Report_Items'];
                         $bodyResult = CommonController::jsonBodyValidate($AllBodyReport);
                     }
@@ -630,7 +657,6 @@ class FilevalidateController extends CommonController
                         $destinationPath=public_path()."/upload/json/";
                         if (!is_dir($destinationPath)) {  mkdir($destinationPath,0777,true);  }
                         
-                      
                         File::put($destinationPath.$file,$data);
                         //response()->download($destinationPath.$file);
                         $completePath = $destinationPath.$file;
@@ -647,7 +673,13 @@ class FilevalidateController extends CommonController
                             'number_of_errors'=>0
                         );
                         
+                    DB::beginTransaction();
+                    try {
                         Sushitransaction::create($DataForInsertion);
+                        DB::commit();
+                    } catch (Exception $exception) {
+                        DB::rollback();
+                    }
                         
                         $headers = ['Content-Type: application/json'];
                         $newName = $file;
@@ -673,8 +705,13 @@ class FilevalidateController extends CommonController
                         'success'=>'N',
                         'number_of_errors'=>$dataIncludeHeader
                     );
-                    
-                    Sushitransaction::create($DataForInsertion);
+                    DB::beginTransaction();
+                    try {
+                        Sushitransaction::create($DataForInsertion);
+                        DB::commit();
+                    } catch (Exception $exception) {
+                        DB::rollback();
+                    }
                     
                     $headers = ['Content-Type: application/json'];
                     $newName = $file;

@@ -1,7 +1,20 @@
 <!DOCTYPE HTML>
 <html>
 <head>
-<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style>
+div {
+    margin-bottom: ;
+    padding: ;
+}
+.info {
+    background-color: #e7f3fe;
+    border-left: 6px solid #2196F3;
+}
+
+ border-left: 6px solid #ffeb3b;
+}
+</style>
 <title>Validation - Counter</title> @extends('layout.master')
 
 @section("content")
@@ -24,7 +37,12 @@
 	Session::get('colupdatemsg') }}</div>
 @endif
 
-<div class="container">
+
+
+<div class="info">
+  <p> The COUNTER Consortium Tool is made available through funding from OCLC and RedLink.</p>
+</div>
+
 	<div class="row">
 		<div class="col-xs-12 col-sm-12 col-lg -12 col-md-12">
 			<ul class="nav nav-tabs ulTabs">
@@ -32,53 +50,21 @@
 				<li id="second" class="active"><a data-toggle="tab" href="#menu1">Configuration</a></li>
 				<li id="third"><a data-toggle="tab" href="#menu2">Transaction</a></li>
 			</ul>
-			<div class="tab-content pull-left">
+			<div class="tab-content" style="width: 100%;float: left;">
 
 				<div id="file1" class="tab-pane fade ">
 
-					<div class="clearfix"></div>
-
+				
 					<div class="col-xs-12 col-sm-12 col-md-12">
-<!--                                                <form name="runconsortium" id="runconsortium" method="post" action="/showprogress" enctype="multipart/form-data">
-                                                <input type="hidden" name="_token" value="<?php echo csrf_token() ?>">
-                                                <input type="hidden" name="configurationid" id="configurationid" >-->
+					
+                                            
 						<h3>Harvesting Consortium Configuration List</h3>
                                                
-						<hr class="colorgraph">
+						<hr class="colorgraph"><hr>
 
-<!--						<div class="row">
-							<div class="col-md-4">
-								<h4>Please Provide Date Range:</h4>
-							</div>
-							<div class="col-md-4">
-								<p>
-									Begin Date: <input type="text" name="begin_date" id="datepicker-12" class="date-picker">
-								</p>
-							</div>
-							<div class="col-md-4">
-								<p>
-                                                                    End Date: <input type="text" name="end_date" id="datepicker-10" class="date-picker">
-								</p>
-							</div>
-						</div>-->
-                                                <!-- select Report for configuration -->
-<!--                                                <div class="row">
-                                                    <div class="col-md-12">
-                                                        
-                                                    <h4>Please Select Reports:</h4>
-                                                    <select id="reports" name="reports[]" multiple>
-                                                     @foreach($allreports as $report)
-                                                        <option selected="selected" value="{{$report['report_code']}}">{{$report['report_code']}}</option>
-                                                        @endforeach
-                                                    </select>
-                                                        
-                                                    </div>
-						</div>-->
-                                                <hr>
-                                                <div class="clearfix"></div>
 						<div class="widget-content">
 							<table id="Harvesting_list"
-								class="table table-striped table-bordered">
+								class="table table-striped table-bordered" style="width: 100%;float: left;">
 								<thead>
 									<tr>
 										<th>Id</th>
@@ -95,19 +81,16 @@
                                         foreach ($file_detail as $filedetails) {
                                             // echo "<pre>";print_r($filedetails);die;
                                             ?>
-                                            <tr>
+                                        <tr>
 										<td><?php echo $i++; ?></td>
 										<td><?php echo $filedetails['configuration_name']; ?></td>
 										<td><?php echo $filedetails['providers']==''?'&nbsp;<a class="btn btn-primary" href="add_provider/'.$filedetails['id'].'">Add Provider</a>':$filedetails['providers'].'&nbsp;<a class="btn btn-primary" href="add_provider/'.$filedetails['id'].'">Add/View Provider </a>';?></td>
 										<td><?php echo $filedetails['remarks']; ?></td>
 
 										<td class="td-actions">
-                                                                                    <!--<input onclick="validateDateNew('<?php echo $filedetails['id']; ?>')" type="button" value="Run"/>-->
-                                                                                    <!--<a	onclick="validateDate('/showprogress/<?php echo $filedetails['id']; ?>')" href="javascript:void(0)"><i class="fa fa-play" aria-hidden="true"></i></a>-->
-<!--                                                                                    <a	onclick="validateDateNew('<?php echo $filedetails['id']; ?>')" href="javascript:void(0)"><i class="fa fa-play" aria-hidden="true"></i></a>-->
-                                                                                    <button title="Run Configuration" rel="<?php echo $filedetails['id']; ?>" type="button" class="btn btn-success openBtn"><i class="fa fa-play" aria-hidden="true"></i></button>
-                                                                                </td>
-									</tr>
+                                        <button title="Run Configuration" rel="<?php echo $filedetails['id']; ?>" type="button" class="btn btn-success openBtn"><i class="fa fa-play" aria-hidden="true"></i></button>
+                                        </td>
+									    </tr>
                                             <?php
                                         }
                                     } else {
@@ -121,7 +104,6 @@
                                 </tbody>
 							</table>
 						</div>
-<!--                                            </form>-->
 					</div>
 				</div>
 				
@@ -188,15 +170,8 @@
 								</div>
 							</div>
 							</form>
-
-
 						</div>
-
-						<!-- /widget-header -->
-
-						<!-- /widget-content -->
 					</div>
-					<!-- /widget -->
 
 					<div class="col-md-12">
 						<h3>Consortium Configuration List</h3>
@@ -325,15 +300,8 @@
 			</div>
 		</div>
 		</div>
-		</div>
+@endsection
 
-		@endsection
-                
-                
-                
-                
-                
-                <!-- Modal -->
                 <div class="modal fade" id="myModal" role="dialog">
                     <div class="modal-dialog">
                         <!-- Modal content-->
@@ -393,23 +361,6 @@ function validateDate(url){
 	}
 		
 }
-//function validateDateNew(id){
-//    
-//    var date1 = $("#datepicker-12").val();
-//    var date2 = $("#datepicker-10").val();
-//    var reports = $("#reports").val();
-//    if(!reports){
-//        alert("Please select one report");
-//        return false;
-//    }
-//    if(date1 && date2){
-//        $('#configurationid').val(id);
-//        $( "#runconsortium" ).submit();	
-//    }else{
-//        alert("Please enter date first");
-//        return false;
-//    }
-//}
 $(document).ready(function() {
 	
 	$('#Consortium_list').DataTable( {
@@ -544,6 +495,5 @@ $(document).ready(function() {
 </head>
 </html>
 
-<!---=======================javascripts comes in bottom============================-->
 
 

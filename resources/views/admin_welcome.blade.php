@@ -10,7 +10,7 @@
 @section("content")
 
 <!--========================login form start here======================================-->
-<div class="container">   
+<div class="">   
 	@if (Session::has('userdelmsg'))
 		<div class="alert alert-success" style="color:green">
 			{{ Session::get('userdelmsg') }}
@@ -18,7 +18,7 @@
 	@endif
 	
 	
-	<div class="container">   
+	
 	@if (Session::has('userdelmsgwrong'))
 		<div class="alert alert-success" style="color:red">
 			{{ Session::get('userdelmsgwrong') }}
@@ -40,7 +40,7 @@
         <div class="col-sm-12">
 			<div id="example_wrapper" class="dataTables_wrapper form-inline dt-bootstrap">
 				<div class="row">
-					<div class="col-xs-3 col-sm-3 col-md-3 noPadding marTop10 pull-right">
+					<div class="col-xs-3 col-sm-3 col-md-3  pull-right">
                             <a  data-toggle="modal" data-target="#myModal" class="btn btn-primary btn-block">Add New Admin</a>
                         </div>
 					<div class="col-sm-12">
@@ -177,7 +177,7 @@
 
   </div>
 </div>
-</div>
+
 
 
 

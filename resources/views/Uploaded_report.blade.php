@@ -31,12 +31,12 @@
 	
 	 <div class="row">
 		
-	<div class="col-sm-12 text-right"  >
-       <a class="btn btn-primary file_details"  href="uploadedreports/id">Download</a>
+	<div class="col-xs-3 col-sm-3 col-md-3 pull-right"  >
+       <a class="btn btn-primary btn-block"  href="uploadedreports/id">Download</a>
 	</div>
 	</div>
 	
-	<div class="container">
+	
 	<div class="row">
         <div class="col-sm-12">
 			<div id="example_wrapper" class="dataTables_wrapper form-inline dt-bootstrap">

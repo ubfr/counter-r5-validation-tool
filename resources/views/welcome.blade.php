@@ -25,12 +25,24 @@ foreach ($reportsname as $reportDetails) {
 	<div class="alert alert-success" style="color: red">{{
 		Session::get('error') }}</div>
 	@endif
+	@if (Session::has('userupdatemsg'))
+		<div class="alert alert-success" style="color:green">
+			{{ Session::get('userupdatemsg') }}
+		</div>
+	@endif
+	
+	@if (Session::has('reportmsg'))
+		<div class="alert alert-danger" style="color:red">
+			{{ Session::get('reportmsg') }}
+		</div>
+	@endif
+	
 	<div class="row">
 		<div class="col-xs-12 col-sm-12 col-lg-12 col-md-12">
 			<ul class="nav nav-tabs ulTabs">
-				<li class="active"><a data-toggle="tab" href="#file1">File Validate
+				<li id="first" class="active"><a data-toggle="tab" href="#file1">File Validate
 				</a></li>
-				<li><a data-toggle="tab" href="#menu1">SUSHI Validate</a></li>
+				<li id="second"><a data-toggle="tab" href="#menu1">SUSHI Validate</a></li>
 			</ul>
 			<div class="tab-content">
 				<div id="file1" class="tab-pane fade in active">
@@ -235,23 +247,30 @@ foreach ($reportsname as $reportDetails) {
 
 @section("additionaljs")
 
-               <!-- Latest compiled and minified JavaScript -->
-		
-                <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/2.2.1/jquery.min.js"></script>
-                
-                <script src="{{URL::asset('assets/js/bootstrap.min.js')}}"></script>
-		<script src="{{URL::asset('assets/js/bootstrap-datepicker.min.js')}}"></script>
-		<script src="{{URL::asset('assets/js/jquery.multi-select.min.js')}}"></script>
-		<script type="text/javascript" language="javascript"
-			src="https://cdn.datatables.net/1.10.11/js/jquery.dataTables.min.js">
-	</script>
-		<script type="text/javascript" language="javascript"
-			src="https://cdn.datatables.net/1.10.11/js/dataTables.bootstrap.min.js">
-	</script>
+<!-- Latest compiled and minified JavaScript -->
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/2.2.1/jquery.min.js"></script>
+<script src="{{URL::asset('assets/js/bootstrap.min.js')}}"></script>
+<script src="{{URL::asset('assets/js/bootstrap-datepicker.min.js')}}"></script>
+<script src="{{URL::asset('assets/js/jquery.multi-select.min.js')}}"></script>
+<script type="text/javascript" language="javascript"
+src="https://cdn.datatables.net/1.10.11/js/jquery.dataTables.min.js">
+</script>
+<script type="text/javascript" language="javascript"
+src="https://cdn.datatables.net/1.10.11/js/dataTables.bootstrap.min.js">
+</script>
 
 <script>
-    
-    
+jQuery(function(){
+    var flag = '<?php echo Session::get('keyurl');?>'
+if(flag=='display'){
+	$("#second a").trigger("click");
+}
+ <?php Session::put('keyurl', ''); ?>   
+}); 
+</script>
+
+<script>
         $("form input:radio").change(function () {
             if ($(this).val() == "ipaddress") {
             // Disable your roomnumber element here

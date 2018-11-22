@@ -20,6 +20,7 @@ use PHPExcel_Cell_DataType;
 use Illuminate\Support\Facades\Storage;
 use App\Reportname;
 use App\Filtertype;
+use Exception;
 // use App\Http\Controllers\CommonController\emailfile;
 
 class CommonController extends Controller 
@@ -39,15 +40,24 @@ class CommonController extends Controller
     // //////////////////file upload////////////////////
     public function fileupload($file)
     {
+        
         ini_set('max_execution_time', 0);
         ini_set('memory_limit', '2048M');
         ini_set('max_memory', '2048M');
         $user = Session::get('user');
+        
+        try{
         // echo app_path();die;
         $destinationPath = app_path() . '/public/uploadfile/';
         $filename = $user['id'] . '_' . date('m-d-Y_hisa') . '_' . $file->getClientOriginalName();
         $uploadSuccess = $file->move($destinationPath, $filename);
         return $filename;
+        } catch (Exception $exception) {
+            report($exception);
+            
+            return parent::render($request, $exception);
+        }
+        
     }
 
     
@@ -66,7 +76,10 @@ class CommonController extends Controller
 
         $reportdataa = new Reportname();
         $ReportName = $reportdataa::select('id')->where('report_name', trim($reportname))->first();
+        
+        
         if (! isset($ReportName->id)) {
+            
             $warning[$b]["data"] = $reportname ?? '';
             if($reportname=='Structure error in JSON file')
                 $warning[$b]["error"] = "Structure error of JSON File";
@@ -77,16 +90,24 @@ class CommonController extends Controller
             return $warning;
         }
         
+        
         // Report Id validation
         $reportdata = new Reportname();
         $ReportId = $reportdata::select('id')->where('report_code', trim($reportid))->first();
+        
+        
         if (! isset($ReportId->id)) {
+            
+            
             $warning[$b]["data"] = $reportid ?? '';
             $warning[$b]["error"] = "Report id is invalid in Master Report Header";
             $b ++;
             $data_warning ++;
             return $warning;
-        } 
+           
+            
+           } 
+        
     }
 
     
@@ -129,9 +150,6 @@ class CommonController extends Controller
         
         // Customer Id Validation
         $CustomerId = $jsonReportHeader['Customer_ID'] ?? '';
-        
-        
-        
         
         if (empty($CustomerId) || ! (preg_match('/[A-Za-z].*[0-9]|[0-9].*[A-Za-z]/', $CustomerId))) {
             $warning[$b]["data"] = $CustomerId;
@@ -801,6 +819,8 @@ class CommonController extends Controller
         foreach ($payments as $payment) {
             $paymentsArray[] = $payment->toArray();
         }
+        
+        try {
         // Generate and return the spreadsheet
         Excel::create($filename, function ($excel) use ($paymentsArray) {
             
@@ -814,6 +834,11 @@ class CommonController extends Controller
                 $sheet->fromArray($paymentsArray, null, 'A1', false, false);
             });
         })->download('xlsx');
+        } catch (Exception $exception) {
+            report($exception);
+            
+            return parent::render($request, $exception);
+        }
     }
     function downloadfileFront($file_user_id, $filename)
     {
@@ -844,6 +869,9 @@ class CommonController extends Controller
         foreach ($payments as $payment) {
             $paymentsArray[] = $payment->toArray();
         }
+        
+        
+        try {
         // Generate and return the spreadsheet
         Excel::create($filename, function ($excel) use ($paymentsArray) {
             
@@ -857,6 +885,11 @@ class CommonController extends Controller
                 $sheet->fromArray($paymentsArray, null, 'A1', false, false);
             });
         })->download('xlsx');
+        } catch (Exception $exception) {
+            report($exception);
+            
+            return parent::render($request, $exception);
+        }
     }
 
     // /////////////////////////////////////////////////////////////////////
@@ -894,6 +927,8 @@ class CommonController extends Controller
         // Generate and Save the spreadsheet
         
         $filename = $user['id'] . '_' . date('m-d-Y_hisa') . '_' . 'Error_report';
+        
+        try {
         Excel::create($filename, function ($excel) use ($paymentsArray) {
             
             // Set the spreadsheet title, creator, and description
@@ -907,12 +942,19 @@ class CommonController extends Controller
             });
         })->store('xlsx', app_path() . '/public/downloadfile/');
         
+        } catch (Exception $exception) {
+            report($exception);
+            return parent::render($request, $exception);
+        }
+        
         chmod(app_path() . '/public/downloadfile/' . $filename . '.' . 'xlsx', 0777);
         // die(app_path().'/public/downloadfile/'.$filename.'.'.'xlsx');
         // ///////////////////Send Mail//////////////////////////////////////
         $title = "Hi $user[display_name],";
         $content = 'Please Find The Attachment Of Error Report';
         $email_to = $user['email'];
+        
+        try {
         Mail::send('emails.send', [
             'title' => $title,
             'content' => $content
@@ -925,6 +967,12 @@ class CommonController extends Controller
             $message->attach($attachfile);
             $message->to($email_to);
         });
+        
+        } catch (Exception $exception) {
+            report($exception);
+            return parent::render($request, $exception);
+        }
+        
         Session::flash('emailMsg', 'Email Sent Successfully');
         return Redirect::to('filelist');
     }
@@ -932,10 +980,11 @@ class CommonController extends Controller
     // /////////////////////////////////////////////////////////////////////
     // ///////////////For TSV File Reading//////////////////////////////
     public function tsvconverttoxls($filename)
-    {
+    {    
         $path = app_path() . '/public/tsvuploadfile/';
         $handle = fopen($filename, "r");
         $row = 1;
+        
         if (($handle = fopen($filename, "r")) !== FALSE) {
             $file_name = $path . 'file' . date('m-d-Y_hisa') . '.xls';
             while (($data = fgetcsv($handle, 1000, "\t")) !== FALSE) {
@@ -947,6 +996,7 @@ class CommonController extends Controller
                 
                 fclose($fp);
             }
+            
             //check file existence if not found create blank file
             if(!file_exists ($file_name )){
               $data = array();
@@ -955,6 +1005,7 @@ class CommonController extends Controller
             }
             fclose($handle);
         }
+        
         return $file_name;
     }
 
@@ -1201,10 +1252,6 @@ class CommonController extends Controller
                 }
             }
             
-        
-        
-        
-        
         
     }
 

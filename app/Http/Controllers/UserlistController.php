@@ -41,11 +41,64 @@ class UserlistController extends Controller
                 $data['user_detail']=$Userdetail;
                 
                 return view('admin_welcome',$data);
+            } else {
+                return Redirect::to('login');
+            }
+        }
+        
+        
+        public function  useredit(){
+            //echo "<pre>";print_r($id);die();
+           //  die("coming here");
+            if (Session::has('user')){
+                $user = Session::get('user')->toArray();
+                
+                // echo "<pre>";print_r($user);die();
+                
+                $Userdetail=User::select('id','first_name','display_name','last_name','email')
+                ->where('email',$user['email'])->get();
+                
+                
+                //$data['id']=$user['id'];
+                $data['utype']=$user['utype'];
+                $data['userDisplayName']= $user['display_name'];
+                $data['user_detail']=$Userdetail;
+                
+                return view('useredit',$data);
             }
             else{
                 return Redirect::to('login');
             }
         }
+        
+        
+        function user_edit(){
+            if (Session::has('user')){
+                $user = Session::get('user');
+                $data = Input::all();
+                
+                $updatearray = array(
+                    "first_name" => $data['first_name'],
+                    "last_name" => $data['last_name'],
+                    "display_name" => $data['display_name'],
+                );
+                
+                $Userdetail=User::where('email',$user['email'])
+                ->update(
+                    $updatearray
+                    );
+                
+            
+                Session::flash('userupdatemsg', 'Changes successfully updated');
+                return Redirect::intended('useredit');
+            }
+            else{
+                return Redirect::to('login');
+            }
+        }
+        
+        
+        
         
         
         
@@ -153,7 +206,6 @@ class UserlistController extends Controller
                 if(!empty($newpassword)){
                     $newpasswordincoded = Hash::make($newpassword);
                     $updatearray['password'] = $newpasswordincoded;
-                    
                 }
                 
                 $Userdetail=User::where('id',$id)
@@ -184,8 +236,6 @@ class UserlistController extends Controller
                 $Userdetail=User::select('id','first_name','last_name','display_name','utype','email','status','no_of_times')
                 ->where('id',$id)->get();
                 
-                
-                
                 $updatearray = array(  "status" => $status);
                 
                 $Userdetails=User::where('id',$id)
@@ -197,8 +247,6 @@ class UserlistController extends Controller
                 
                 return Redirect::intended('userlist');
                 
-                
             }
         }
-        
 }

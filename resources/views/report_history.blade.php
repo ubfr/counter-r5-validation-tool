@@ -22,7 +22,7 @@
 			{{ Session::get('userupdatemsg') }}
 		</div>
 	@endif
-	<div class="container">
+	
 	<div class="row">
         <div class="col-sm-12">
 			<div id="example_wrapper" class="dataTables_wrapper form-inline dt-bootstrap">

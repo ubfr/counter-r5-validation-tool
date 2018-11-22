@@ -15,6 +15,9 @@ use Illuminate\Support\Facades\Route;
 Route::get('/', function () {
     return view('index');
 });
+
+Route::post('user_edit/{id}', 'UserlistController@user_edit');
+Route::get('useredit', 'UserlistController@useredit');
 //Route::post('login', 'UsersController@postLogin');
 Route::get('welcome', 'ShowController@checkview');
 Route::get('home', 'UserlistController@userlist');
@@ -89,10 +92,6 @@ Route::group([
         'normalusersauth'
     ]
 ], function () {
-   
-    // now sushiValidate
-    //Route::post('/sushiValidate', 'FilevalidateController@sushiValiate');
-
     // Route::get('/download','FilevalidateController@downloadfile');
     Route::get('/download/{file_id}/{filename}', [
         'as' => 'admin.invoices.downloadfile',
@@ -103,7 +102,6 @@ Route::group([
         'uses' => 'FilevalidateController@emailfile'
     ]);
 });
-// Route::group(['middleware' => ['auth','admin']], function () {
 
 // /////////////////////////////Show admin Rule Management////////////////////////////////////////////////////
 Route::group([
@@ -111,8 +109,10 @@ Route::group([
         'auth',
         'administrator'
     ]
-], function () {
+], 
+    function () {
     Route::get('/userlist', 'UserlistController@userlist');
+    
     Route::get('reporthistory', 'ShowController@showreport');
     Route::get('rulemanagement', 'RulemanagementController@rulemanagement');
     Route::post('ajaxCall/{id}', 'RulemanagementController@ajaxCall');
@@ -133,6 +133,7 @@ Route::group([
     Route::post('edit_user/{user_id}', 'UserlistController@edit_user');
     Route::get('edit_report/{id}', 'ShowController@edit_report');
     Route::get('edituser/{user_id}', 'UserlistController@edit_user_display');
+   
     // now sushiValidate
     //Route::post('/sushiValidate', 'FilevalidateController@sushiValiate');
     Route::get('uploadedreports','ShowController@uploaded_report');

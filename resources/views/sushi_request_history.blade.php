@@ -10,7 +10,8 @@
 @section("content")
 
 <!--========================login form start here======================================-->
-<div class="container">   
+<div class="">   
+
 	@if (Session::has('userdelmsg'))
 		<div class="alert alert-success" style="color:green">
 			{{ Session::get('userdelmsg') }}
@@ -22,7 +23,6 @@
 		</div>
 	@endif
 	
-	<div class="container">   
 	@if (Session::has('userdelmsgwrong'))
 		<div class="alert alert-success" style="color:red">
 			{{ Session::get('userdelmsgwrong') }}
@@ -54,6 +54,7 @@
 	 
 				<div class="row">
 					<div class="col-sm-12" id="example_wrapper">
+					<div style="overflow-x:auto;">
 						<table  id="example" class="table table-striped table-bordered  " cellspacing="0" width="100%" role="grid" aria-describedby="example_info" style="width: 100%;">
 							<thead>
 								<tr role="row">
@@ -125,13 +126,14 @@
         
 
     
-    <!-- Modal Admin for registration -->
+   
 
+</div>
 </div>
 
 
 
-    <!-- Modal For deleting the user -->
+   
 
 
   

@@ -124,6 +124,10 @@ class ShowController extends Controller {
         $Configurations = array_merge($Newarray,$Configurations);
         // Generate and return the spreadsheet
         $filename="hc_".$Configurationname['configuration_name'];
+        
+        
+        
+        try{
         Excel::create($filename, function ($excel) use ($Configurations) {
             
             // Set the spreadsheet title, creator, and description
@@ -145,6 +149,12 @@ class ShowController extends Controller {
             });
            
         })->download('xlsx');
+        
+        } catch (Exception $exception) {
+            report($exception);
+            
+            return parent::render($request, $exception);
+        }
     }
 
     // ////////////// start for Consortium/////////////////
@@ -224,9 +234,21 @@ class ShowController extends Controller {
             $user = Session::get('user');
             $UserType = $user['utype'];
             if($UserType==='admin'){
+                DB::beginTransaction();
+                try {
                 $alltransaction = Transactionmasterdetail::where('transaction_id', $id)->delete();
-            }else{
+                DB::commit();
+                } catch(Exception $exception) {
+                    DB::rollback();
+                }
+            } else {
+                DB::beginTransaction();
+                try {
                 $alltransaction = Transactionmasterdetail::where('transaction_id', $id)->delete();
+                DB::commit();
+                } catch(Exception $exception) {
+                    DB::rollback();
+                }
             }
             
             Session::flash('colupdatemsg', 'Transaction successfully deleted');
@@ -245,17 +267,15 @@ class ShowController extends Controller {
         $ProviderDetail = Provider::where(array(
             'id' => $id
         ))->get()
-        ->first()
-       
-        ;
+        ->first();
                 
         $Allmembers = Members::select()
         ->where('provider_id', $id)
         ->get()->toArray();
-          //echo "<pre>";print_r($Allmembers);die;
+          
         $data['allmember'] = $Allmembers;
         $data['SingleProvder'] = $ProviderDetail;;
-        //echo "<pre>222";print_r($data);die;
+        
         return view('members', $data);
 
     }
@@ -267,10 +287,16 @@ class ShowController extends Controller {
         if ($user['email'] == '') {
             return Redirect::to('/');
         }
-        $Allmember= Members::where('id', $id)->delete();
+        DB::beginTransaction();
+        try {
+            $Allmember = Members::where('id', $id)->delete();
+            DB::commit();
+        } catch (Exception $exception) {
+            DB::rollback();
+        }
             Session::flash('memberdeletemsg', 'Member details successfully deleted');
             return Redirect::intended('/member/'.$provider);
-        //echo "<pre>";print_r($id);die;
+        
         }
     
         //////////////////Member Retrieving after deletion/////////////
@@ -281,7 +307,12 @@ class ShowController extends Controller {
                 return Redirect::to('/');
             }
             
+            DB::beginTransaction();
+            try {
             Members::where('provider_id', $provider)->delete();
+            } catch (Exception $exception) {
+                DB::rollback();
+            }
             
             $data=Provider::select()
             ->where('id',$provider)
@@ -294,9 +325,11 @@ class ShowController extends Controller {
                 'apikey' => $data['apikey'],
                 'customer_id' => $data['customer_id']
             );
-            //                         echo "<pre>";print_r($fields);die;
+           
+            
+            
             $url = $mainURL . "/members?" . http_build_query($fields, '', "&");
-            //                         echo "<pre>";print_r($url);die;
+            
             if (!preg_match("~^(?:f|ht)tps?://~i", $url)) {
                 $url = "https://" . $url;
             }
@@ -304,7 +337,7 @@ class ShowController extends Controller {
             $curl = curl_init($url);
             curl_setopt($curl, CURLOPT_NOBODY, true);
             $result = curl_exec($curl);
-            //  echo "<pre>";print_r($result);die;
+            
             if ($result !== false) {
                 
                 $statusCode = curl_getinfo($curl, CURLINFO_HTTP_CODE);
@@ -312,7 +345,6 @@ class ShowController extends Controller {
                     //mark Shushi URL is incorrect and save in Database;
                 } else {
                     
-                    // $data = json_encode(['Text 1','Text 2','Text 3','Text 4','Text 5']);
                     $opts = [
                         "http" => [
                             "method" => "GET",
@@ -330,14 +362,10 @@ class ShowController extends Controller {
                         $Name = $Member->Name??'';
                         $Notes = $Member->Notes??'';
                         $InstitutionIdType = $Member->Institution_ID[0]->Type??'';
-                        // echo "<pre>";print_r($InstitutionIdType);die;
+                        
                         $InstitutionIdvalue = $Member->Institution_ID[0]->Value??'';
                         $ProviderId = $provider;
-                        //echo "<pre>";print_r($ProviderId);die;
-                        //$InsertedIDOfProvider
-                        
-                        // echo "<pre>";print_r($CustomerId);die;
-                        
+                       
                         $MembersValue= array(
                             'customer_id' => $CustomerId,
                             'requestor_id' => $RequestorId,
@@ -346,10 +374,17 @@ class ShowController extends Controller {
                             'institution_id_type' => $InstitutionIdType,
                             'institution_id_value' => $InstitutionIdvalue,
                             'provider_id' => $ProviderId,
-                            
                         );
+                        
+                        
                         if(!empty($MembersValue['customer_id'])){
-                            $SaveMemberNew = Members::create($MembersValue);
+                            DB::beginTransaction();
+                            try {
+                                $SaveMemberNew = Members::create($MembersValue);
+                                DB::commit();
+                            } catch (Exception $exception) {
+                                DB::rollback();
+                            }
                         }
                     }
                 }
@@ -361,6 +396,9 @@ class ShowController extends Controller {
         }
     // ///////////////////////////////
     function saveConsortiumConfig() {
+        
+        // die('die here');
+        
         $user = Session::get('user');
         if ($user['email'] == '') {
             return Redirect::to('/');
@@ -385,11 +423,27 @@ class ShowController extends Controller {
             if (isset($data['currentId'])) {
                 $updatearray['configuration_name'] = $data['configuration_name'];
                 $updatearray['remarks'] = $data['remarks'];
+                
+                DB::beginTransaction();
+                try {
                 $Reportdetail = Consortium::where('id', $data['currentId'])->update($updatearray);
+                DB::commit();
+                } catch(Exception $exception) {
+                    DB::rollback();
+                }
+                
                 Session::flash('colupdatemsg', 'Configuration Updated Successfully');
                 return Redirect::intended('/consortium');
             } else {
+                
+                DB::beginTransaction();
+                try {
                 $newUser = Consortium::create($data);
+                DB::commit();
+                } catch(Exception $exception) {
+                    DB::rollback();
+                }
+                
             }
 
             if ($newUser) {
@@ -430,9 +484,15 @@ class ShowController extends Controller {
             $user = Session::get('user');
             $updatearray['configuration_name'] = $data['configuration_name'];
             $updatearray['remarks'] = $data['remarks'];
-
+            
+            DB::beginTransaction();
+            try {
             $Consortiums = Consortium::where('id', $data['Id'])->update($updatearray);
-
+            DB::commit();
+            } catch(Exception $exception) {
+                DB::rollback();
+            }
+            
             $data['utype'] = $user['utype'];
             $data['userDisplayName'] = $user['display_name'];
             $data['file_detail'] = $Consortiums;
@@ -502,13 +562,11 @@ class ShowController extends Controller {
             }
             
             $reportHeader[] = array_keys($AllArray[0]);
-            // echo "<pre>";print_r($reportHeader);die;
-            
             $arr1 = array_merge($reportHeader,$AllArray);
-            
-            
             $destinationPath = public_path() . "/upload/uploaded/" ;
             $file = time() . '_uploadedfile';
+            
+            try{
             
             return Excel::create($file, function ($excel) use ($arr1) {
                 
@@ -518,7 +576,10 @@ class ShowController extends Controller {
                 });
             })->store('xlsx', $destinationPath)->download();
            
-            
+            } catch (Exception $exception) {
+                report($exception);
+                return parent::render($request, $exception);
+            }
         }else{
             return Redirect::to('login');
         }
@@ -546,8 +607,22 @@ class ShowController extends Controller {
         // echo "1";die;
         if (Session::has('user')) {
 
+            DB::beginTransaction();
+            try {
             $AllSushiReports = Reportname::where('id', $id)->delete();
+                DB::commit();
+            } catch(Exception $exception) {
+                DB::rollback();
+            }
+            
+            DB::beginTransaction();
+            try {
             $Filedelete = Validateerror::where('id', $id)->delete();
+            DB::commit();
+            } catch(Exception $exception) {
+                DB::rollback();
+            }
+            
             Session::flash('userdelmsg', 'Report successfully deleted');
             return Redirect::intended('/reporthistory');
             // echo "<pre>";print_r($id);die;
@@ -562,8 +637,22 @@ class ShowController extends Controller {
         }
         if (Session::has('user')) {
 
+            DB::beginTransaction();
+            try {
             Consortium::where('id', $id)->delete();
+            DB::commit();
+            } catch(Exception $exception) {
+            DB::rollback();
+            }
+            
+            DB::beginTransaction();
+            try {
             Provider::where('configuration_id', $id)->delete();
+            DB::commit();
+            } catch(Exception $exception) {
+                DB::rollback();
+            }
+            
             Session::flash('colupdatemsg', 'Configuation successfully deleted');
             return Redirect::intended('/consortium');
             // echo "<pre>";print_r($id);die;
@@ -577,14 +666,27 @@ class ShowController extends Controller {
             return Redirect::to('/');
         }
         if (Session::has('user')) {
+            
+            DB::beginTransaction();
+            try {
             Provider::where(array(
                 'id' => $id,
                 'configuration_id' => $configid
             ))->delete();
+            DB::commit();
+            } catch(Exception $exception) {
+                DB::rollback();
+            }
             
+            DB::beginTransaction();
+            try {
             Members::where(array(
                 'provider_id'=> $id,
             ))->delete();
+            DB::commit();
+            } catch(Exception $exception) {
+            DB::rollback();
+            }
             
             Session::flash('colupdatemsg', 'Provider and its Member successfully deleted');
             return Redirect::intended('/add_provider/' . $configid);
@@ -773,105 +875,7 @@ class ShowController extends Controller {
             $userId = $user['id'];
             $ClientIp = $this->get_client_ip();
             $ConfigurationId = $AllProvidersList[0]['configuration_id'];
-            // insert data in table and get ID = 1 folder with id-name
-            // generateTranasctionId
             
-            
-            // log for unique Config Run ID
-            /* $progresstrack = array();
-            foreach ($AllProvidersList as $ProviderDetail) {
-                if (! in_array($ProviderDetail['id'], $SelectedProviders))
-                    continue;
-                // echo "<pre>";print_r($ProviderDetail);die;
-                extract($ProviderDetail);
-                $ProviderDetailID = $ProviderDetail['id'];
-                $mainURL = $provider_url;
-                $fields = array(
-                    'apikey' => $apikey,
-                    'customer_id' => $customer_id
-                );
-                
-                $url = $mainURL . "/members?" . http_build_query($fields, '', "&");
-                if (! preg_match("~^(?:f|ht)tps?://~i", $url)) {
-                    $url = "https://" . $url;
-                }
-                
-                $file = time() . '_file.json';
-                $curl = curl_init($url);
-                curl_setopt($curl, CURLOPT_NOBODY, true);
-                $result = curl_exec($curl);
-              
-                if ($result !== false) {
-                    $statusCode = curl_getinfo($curl, CURLINFO_HTTP_CODE);
-                    if ($statusCode == 404) {
-                        // mark Shushi URL is incorrect and save in Database;
-                    } else {
-                        // $data = json_encode(['Text 1','Text 2','Text 3','Text 4','Text 5']);
-                        $opts = [
-                            "http" => [
-                                "method" => "GET",
-                                "header" => "Accept-language: en\r\n"
-                            ]
-                        ];
-                        $context = stream_context_create($opts);
-                        $AllReportCodes = Reportname::select(array(
-                            'report_code'
-                        ))->orderBy('id', 'asc')
-                            ->get()
-                            ->toArray();
-                        
-                        // Open the file using the HTTP headers set above
-                        $data = file_get_contents($url, false, $context);
-                        $json = json_decode(($data), true);
-                        
-                        // response()->download($destinationPath . $file);
-                        // Now Checking for each Report related to Member
-                        // try {
-                        foreach ($json as $Member) {
-                            $FileNameForSize = '';
-                            if (! in_array($Member['Customer_ID'], $SelectedMembers))
-                                continue;
-                            // loop for reprt code
-                            foreach ($AllReportCodes as $ReportCode) {
-                                if (! in_array($ReportCode['report_code'], $SelectedReport))
-                                    continue;
-                                // Config run ID, Config Name, Config ID, provider, Member, report , start Date_time stamp
-                                extract($Member);
-                                $Mfields = array(
-                                    'apikey' => $apikey,
-                                    'customer_id' => $Customer_ID,
-                                    'begin_date' => $begin_date,
-                                    'end_date' => $end_date
-                                );
-                                
-                                $startdatetimstamp = date('Y-m-d H:i:s');
-                                $SaveTransaction = array(
-                                    
-                                    'transaction_id' => $TransactionId,
-                                    'providers' => $provider_name,
-                                    'members' => $Name,
-                                    'reports' => $ReportCode['report_code'],
-                                    'begin_date' => $begin_date,
-                                    'end_date' => $end_date
-                                );
-                                
-                                $progresstrack[]=$SaveTransaction;
-                                
-                          
-                                   }
-                              }
-                         }
-                    } 
-               }
-               
-            $Savetemp = Transactiondetailtemp::insert($progresstrack);
-               
-             
-            $Counttemp = Transactiondetailtemp::where(array(
-                'transaction_id' => $TransactionId
-            ))->get()->count(); */
-            
-            //echo "<pre>";print_r($Counttemp);die;
             
                 
             foreach ($AllProvidersList as $ProviderDetail) {
@@ -948,6 +952,7 @@ class ShowController extends Controller {
                             }
                         }else if($selectedFormat==='XLSX'){
                             
+                            try{
                             Excel::create($filex, function ($excel) use ($dataValue) {
                             
                             $excel->setTitle('Error Report');
@@ -959,6 +964,11 @@ class ShowController extends Controller {
                                 $sheet->fromArray($dataValue, null, 'A1', false, false);
                             });
                         })->store('xlsx', $destinationPath);
+                            } catch (Exception $exception) {
+                                report($exception);
+                                
+                                return parent::render($request, $exception);
+                            }
                         
                         //delete member json file
                         if(file_exists($destinationPath.$file)){
@@ -969,6 +979,7 @@ class ShowController extends Controller {
                         else if($selectedFormat==='TSV'){
                             // tsv creation start
                             
+                            try {
                             $filenametsv = $providerNameFolder . "_members.tsv";
                             $FileNameForSize = $filenametsv;
                             $filenametsv = $destinationPath . $filenametsv;
@@ -977,6 +988,7 @@ class ShowController extends Controller {
                             $headerarray = array_keys($dataValue[0]);
                             //echo "<pre>";print_r($dataValue);die;
                             $TsvContentHeader = implode("\t", $headerarray) . "\n";
+                            
                             fwrite($myfile, $TsvContentHeader);
                             foreach ($dataValue as $KeyOfMember=>$ContentOfTSV) {
                                 $ContentOfTSV['Institution_ID'] = $ContentOfTSV['Institution_ID'][0]['Type'].':'.$ContentOfTSV['Institution_ID'][0]['Value'];
@@ -988,6 +1000,12 @@ class ShowController extends Controller {
                             //deletion of member json
                             if(file_exists($destinationPath.$file)){
                                 unlink($destinationPath.$file);
+                            }
+                            
+                            } catch (Exception $exception) {
+                                report($exception);
+                                
+                                return parent::render($request, $exception);
                             }
                         }
                         
@@ -1031,7 +1049,13 @@ class ShowController extends Controller {
                                     'start_date_time' => $startdatetimstamp
                                 );
                                 
+                                DB::beginTransaction();
+                                try {
                                 $SaveReort = Transactionmasterdetail::create($SaveTransaction);
+                                DB::commit();
+                                } catch(Exception $exception) {
+                                DB::rollback();
+                                }
                                 
                                 $Murl = $mainURL . "/reports/" . strtolower($ReportCode['report_code']) . "?" . http_build_query($Mfields, '', "&");
                                 if (! preg_match("~^(?:f|ht)tps?://~i", $Murl)) {
@@ -1083,6 +1107,8 @@ class ShowController extends Controller {
                                             
                                         if(isset($dataValue1) && is_array($dataValue1))
                                             unset($dataValue1);
+                                        
+                                            
                                        // excel start here 
                                         
                                         // $filename = $user['id'] . '_' . date('m-d-Y_hisa') . '_' . 'xlsx';
@@ -1181,6 +1207,7 @@ class ShowController extends Controller {
                                             $headerFixedValue = array_keys($ReportBody[0]) ?? '';
                                             $dataValue1[] = $headerFixedValue;
                                         } else {
+                                            
                                             $headerFixedValue = array_keys($ReportBody[0]);
                                             $newHeader = array_values($headerFixedValue);
                                             $headerFixedValueAll = array_combine($newHeader, $headerFixedValue);
@@ -1282,6 +1309,7 @@ class ShowController extends Controller {
                                                    $orderDataValue[] = $SingleColumn;
                                                }
                                                
+                                               try{
                                             // xlsx creation
                                             Excel::create($filename, function ($excel) use ($orderDataValue) {
                                                 // Set the spreadsheet title, creator, and description
@@ -1294,7 +1322,11 @@ class ShowController extends Controller {
                                                     $sheet->fromArray($orderDataValue, null, 'A1', false, false);
                                                 });
                                             })->store('xlsx', $destinationPath);
-                                            
+                                               } catch (Exception $exception) {
+                                                   report($exception);
+                                                   
+                                                   return parent::render($request, $exception);
+                                               }
                                             unlink($destinationPath . $file);
                                             } else if($Rid === 'DR_D1' || $Rid === 'DR_D2' || $Rid === 'DR') {
                                                 
@@ -1314,6 +1346,8 @@ class ShowController extends Controller {
                                                 
                                                 $orderDataValue[] = $BodyReportHeading;
                                                 $LastIndexOfJsonReport = count($dataValue1);
+                                                
+                                                
                                                 for($iCount=12;$iCount<$LastIndexOfJsonReport;$iCount++)
                                                 {
                                                     $SingleColumn = array();
@@ -1324,7 +1358,9 @@ class ShowController extends Controller {
                                                     }
                                                     $orderDataValue[] = $SingleColumn;
                                                 }
-                                                
+                                            
+                                            
+                                                try{
                                                 Excel::create($filename, function ($excel) use ($orderDataValue) {
                                                     // Set the spreadsheet title, creator, and description
                                                     $excel->setTitle('Error Report');
@@ -1337,6 +1373,10 @@ class ShowController extends Controller {
                                                     });
                                                 })->store('xlsx', $destinationPath);
                                                 
+                                                } catch (Exception $exception) {
+                                                    report($exception);
+                                                    return parent::render($request, $exception);
+                                                }
                                                 unlink($destinationPath . $file);
                                                 
                                                 
@@ -1367,7 +1407,7 @@ class ShowController extends Controller {
                                                 }
                                                 
                                                
-                                                
+                                                try{
                                                 Excel::create($filename, function ($excel) use ($orderDataValue) {
                                                     // Set the spreadsheet title, creator, and description
                                                     $excel->setTitle('Error Report');
@@ -1380,6 +1420,10 @@ class ShowController extends Controller {
                                                     });
                                                 })->store('xlsx', $destinationPath);
                                                 
+                                                } catch (Exception $exception) {
+                                                    report($exception);
+                                                    return parent::render($request, $exception);
+                                                }
                                                 unlink($destinationPath . $file);
                                                 
                                             } else if($Rid === 'IR_A1' || $Rid === 'IR_M1' || $Rid === 'IR'){
@@ -1425,6 +1469,8 @@ class ShowController extends Controller {
                                                 
                                                 $orderDataValue[] = $BodyReportHeading;
                                                 $LastIndexOfJsonReport = count($dataValue1);
+                                                
+                                                
                                                 for($iCount=12;$iCount<$LastIndexOfJsonReport;$iCount++)
                                                 {
                                                     $SingleColumn = array();
@@ -1436,7 +1482,8 @@ class ShowController extends Controller {
                                                     $orderDataValue[] = $SingleColumn;
                                                 }
                                                 
-                                                
+						
+                                                try{
                                                 Excel::create($filename, function ($excel) use ($orderDataValue) {
                                                     // Set the spreadsheet title, creator, and description
                                                     $excel->setTitle('Error Report');
@@ -1449,6 +1496,10 @@ class ShowController extends Controller {
                                                     });
                                                 })->store('xlsx', $destinationPath);
                                                 
+                                                } catch (Exception $exception) {
+                                                    report($exception);
+                                                    return parent::render($request, $exception);
+                                                }
                                                 unlink($destinationPath . $file);
                                                 
                                             } else {
@@ -1457,6 +1508,7 @@ class ShowController extends Controller {
                                                 
                                             }
                                             
+                                        //} else if($selectedFormat==='TSV' || $selectedFormat==='ConsolidatedTSV') {
                                         } else if($selectedFormat==='TSV') {
                                             
                                             $CorrectHeaderSequence = array(
@@ -1478,13 +1530,24 @@ class ShowController extends Controller {
                                             
                                             // getting array for header from JSON Data
                                             $JsonHeaderValues = array();
+                                            
+                                            try {
                                             for($i=0;$i<11;$i++){
                                                 $JsonHeaderValues[$dataValue1[$i][0]] = $dataValue1[$i][1];
                                             }
+                                            } catch (Exception $exception) {
+                                                report($exception);
+                                                return parent::render($request, $exception);
+                                            }
                                             
                                             $orderDataValue = array();
+                                            try{
                                             foreach($CorrectHeaderSequence as $HeaderHeading){
                                                 $orderDataValue[] =  array($HeaderHeading,$JsonHeaderValues[$HeaderHeading]??'');
+                                            }
+                                            } catch (Exception $exception) {
+                                                report($exception);
+                                                return parent::render($request, $exception);
                                             }
                                             
                                         // tsv creation start
@@ -1527,7 +1590,7 @@ class ShowController extends Controller {
                                             }
                                             
                                             // TSV creation
-                                            
+                                            try {
                                             $TsvContentValue = '';
                                             $myfile = fopen($filenametsv, "w+") or die("Unable to open file!");
                                             foreach ($orderDataValue as $ContentOfTSV) {
@@ -1536,9 +1599,15 @@ class ShowController extends Controller {
                                             }
                                             
                                             fclose($myfile);
+                                            
+                                            } catch (Exception $exception) {
+                                                report($exception);
+                                                
+                                                return parent::render($request, $exception);
+                                            }
                                             //deletion of json
                                             unlink($destinationPath . $file);
-                                        }else if($Rid === 'DR_D1' || $Rid === 'DR_D2' || $Rid === 'DR') {
+                                        } else if($Rid === 'DR_D1' || $Rid === 'DR_D2' || $Rid === 'DR') {
                                             
                                             $orderDataValue[] = array();
                                             $BodyReportHeading = array(
@@ -1569,9 +1638,15 @@ class ShowController extends Controller {
                                             
                                             $TsvContentValue = '';
                                             $myfile = fopen($filenametsv, "w+") or die("Unable to open file!");
+                                            
+                                            try{
                                             foreach ($orderDataValue as $ContentOfTSV) {
                                                 $TsvContentValue = implode("\t", $ContentOfTSV) . "\n";
                                                 fwrite($myfile, $TsvContentValue);
+                                            }
+                                            } catch (Exception $exception) {
+                                                report($exception);
+                                                return parent::render($request, $exception);
                                             }
                                             
                                             fclose($myfile);
@@ -1593,6 +1668,203 @@ class ShowController extends Controller {
                                             
                                             $orderDataValue[] = $BodyReportHeading;
                                             $LastIndexOfJsonReport = count($dataValue1);
+                                            
+                                            try {
+                                            for($iCount=12;$iCount<$LastIndexOfJsonReport;$iCount++)
+                                            {
+                                                $SingleColumn = array();
+                                                $CurrentRowValues = $dataValue1[$iCount];
+                                                
+                                                try{
+                                                foreach($BodyReportHeading as $BodyHeader){
+                                                    $SingleColumn[$BodyHeader] = $CurrentRowValues[$BodyHeader]??'';
+                                                }
+                                                $orderDataValue[] = $SingleColumn;
+                                                } catch (Exception $exception) {
+                                                    report($exception);
+                                                    return parent::render($request, $exception);
+                                                }
+                                            }
+                                            } catch (Exception $exception) {
+                                                report($exception);
+                                                return parent::render($request, $exception);
+                                            }
+                                            
+                                            
+                                            
+                                            $TsvContentValue = '';
+                                            $myfile = fopen($filenametsv, "w+") or die("Unable to open file!");
+                                            
+                                            try {
+                                            foreach ($orderDataValue as $ContentOfTSV) {
+                                                $TsvContentValue = implode("\t", $ContentOfTSV) . "\n";
+                                                fwrite($myfile, $TsvContentValue);
+                                            }
+                                            } catch (Exception $exception) {
+                                                report($exception);
+                                                return parent::render($request, $exception);
+                                            }
+                                            
+                                            fclose($myfile);
+                                        
+                                            unlink($destinationPath . $file);
+                                            
+                                        } else if($Rid === 'IR_A1' || $Rid === 'IR_M1' || $Rid === 'IR'){
+                                            
+                                            $orderDataValue[] = array();
+                                            $BodyReportHeading = array(
+                                                'Item',
+                                                'Publisher',
+                                                'Publisher_ID',
+                                                'Platform',
+                                                'Authors',
+                                                'Publication_Date',
+                                                'Article_Version',
+                                                'DOI',
+                                                'Proprietary_ID',
+                                                'ISBN',
+                                                'Print_ISSN',
+                                                'Online_ISSN',
+                                                'URI',
+                                                'Parent_Title',
+                                                'Parent_Data_Type',
+                                                'Parent_DOI',
+                                                'Parent_Proprietary_ID',
+                                                'Parent_ISBN',
+                                                'Parent_Print_ISSN',
+                                                'Parent_Online_ISSN',
+                                                'Parent_URI',
+                                                'Component_Title',
+                                                'Component_Data_Type',
+                                                'Component_DOI',
+                                                'Component_Proprietary_ID',
+                                                'Component_ISBN',
+                                                'Component_Print_ISSN',
+                                                'Component_Online_ISSN',
+                                                'Component_URI',
+                                                'Data_Type',
+                                                'Section_Type',
+                                                'YOP',
+                                                'Access_Type',
+                                                'Access_Method',
+                                                'Metric_Type',
+                                                'Performance');
+                                            
+                                            $orderDataValue[] = $BodyReportHeading;
+                                            $LastIndexOfJsonReport = count($dataValue1);
+                                            
+                                            try {
+                                            for($iCount=12;$iCount<$LastIndexOfJsonReport;$iCount++)
+                                            {
+                                                $SingleColumn = array();
+                                                $CurrentRowValues = $dataValue1[$iCount];
+                                                
+                                                try{
+                                                foreach($BodyReportHeading as $BodyHeader){
+                                                    $SingleColumn[$BodyHeader] = $CurrentRowValues[$BodyHeader]??'';
+                                                }
+                                                $orderDataValue[] = $SingleColumn;
+                                                } catch (Exception $exception) {
+                                                    report($exception);
+                                                    return parent::render($request, $exception);
+                                                }
+                                            }
+                                            } catch (Exception $exception) {
+                                                report($exception);
+                                                return parent::render($request, $exception);
+                                            }
+                                            
+                                            
+                                            $TsvContentValue = '';
+                                            $myfile = fopen($filenametsv, "w+") or die("Unable to open file!");
+                                            
+                                            try {
+                                            foreach ($orderDataValue as $ContentOfTSV) {
+                                                $TsvContentValue = implode("\t", $ContentOfTSV) . "\n";
+                                                fwrite($myfile, $TsvContentValue);
+                                            }
+                                            } catch (Exception $exception) {
+                                                report($exception);
+                                                return parent::render($request, $exception);
+                                            }
+                                            fclose($myfile);
+                                            
+                                            unlink($destinationPath . $file);
+                                            
+                                        } else {
+                                            
+                                            $dataValue1=array();
+                                            
+                                        }
+                                        
+                                        }
+                                        
+                                        else if($selectedFormat==='ConsolidatedTSV')
+                                        {
+                                            $CorrectHeaderSequence = array(
+                                                'Report_Name',
+                                                'Report_ID',
+                                                'Release',
+                                                'Institution_Name',
+                                                'Institution_ID',
+                                                'Metric_Types',
+                                                'Report_Filters',
+                                                'Report_Attributes',
+                                                'Exceptions',
+                                                'Reporting_Period',
+                                                'Created',
+                                                'Created_By'
+                                            );  
+                                            
+                                            $Rid = $dataValue1[3][1];
+                                            
+                                            // getting array for header from JSON Data
+                                            $JsonHeaderValues = array();
+                                            
+                                            try {
+                                            for($i=0;$i<11;$i++){
+                                                $JsonHeaderValues[$dataValue1[$i][0]] = $dataValue1[$i][1];
+                                            }
+                                            } catch (Exception $exception) {
+                                                report($exception);
+                                                return parent::render($request, $exception);
+                                            }
+                                            
+                                            $orderDataValue = array();
+                                            foreach($CorrectHeaderSequence as $HeaderHeading){
+                                                $orderDataValue[] =  array($HeaderHeading,$JsonHeaderValues[$HeaderHeading]??'');
+                                            }
+                                            
+                                        // tsv creation start
+                                        $filenametsv = $provider_name . "_" . $Member['Customer_ID'] . "_" . $ReportCode['report_code'] . "_5_" . $begin_date . "_" . $end_date . "_" . $rundate . ".tsv";
+                                        $FileNameForSize = $filenametsv;
+                                        
+                                        $filenametsv = $destinationPath . $filenametsv;
+                                        if($Rid === 'TR' || $Rid === 'TR_J1' || $Rid === 'TR_J2' || $Rid === 'TR_J3' || $Rid === 'TR_J4' || $Rid === 'TR_B1' || $Rid === 'TR_B2' || $Rid === 'TR_B3'){
+                                            
+                                            $orderDataValue[] = array();
+                                            $BodyReportHeading = array(
+                                                'Institution_Name',
+                                                'Customer_ID',
+                                                'Title',
+                                                'Publisher',
+                                                'Publisher_ID',
+                                                'Platform',
+                                                'DOI',
+                                                'Proprietary_ID',
+                                                'ISBN',
+                                                'Print_ISSN',
+                                                'Online_ISSN',
+                                                'Data_Type',
+                                                'Section_Type',
+                                                'YOP',
+                                                'Access_Type',
+                                                'Access_Method',
+                                                'Metric_Type',
+                                                'Performance');
+                                            
+                                            $orderDataValue[] = $BodyReportHeading;
+                                            $LastIndexOfJsonReport = count($dataValue1);
                                             for($iCount=12;$iCount<$LastIndexOfJsonReport;$iCount++)
                                             {
                                                 $SingleColumn = array();
@@ -1601,24 +1873,124 @@ class ShowController extends Controller {
                                                 foreach($BodyReportHeading as $BodyHeader){
                                                     $SingleColumn[$BodyHeader] = $CurrentRowValues[$BodyHeader]??'';
                                                 }
+                                                $SingleColumn['Customer_ID'] = $Customer_ID??'' ;
+                                                $SingleColumn['Institution_Name'] = $JsonHeaderValues['Institution_Name']??'';
                                                 $orderDataValue[] = $SingleColumn;
                                             }
                                             
+                                            // TSV creation
+                                            try {
+                                            
                                             $TsvContentValue = '';
-                                            $myfile = fopen($filenametsv, "w+") or die("Unable to open file!");
-                                            foreach ($orderDataValue as $ContentOfTSV) {
-                                                $TsvContentValue = implode("\t", $ContentOfTSV) . "\n";
-                                                fwrite($myfile, $TsvContentValue);
+                                            $AllConsolidatedTSV[$Rid][]=$orderDataValue;
+                                            
+                                            } catch (Exception $exception) {
+                                                report($exception);
+                                                
+                                                return parent::render($request, $exception);
+                                            }
+                                            //deletion of json
+                                            unlink($destinationPath . $file);
+                                            
+                                        } else if($Rid === 'DR_D1' || $Rid === 'DR_D2' || $Rid === 'DR') {
+                                            
+                                            $orderDataValue[] = array();
+                                            $BodyReportHeading = array(
+                                                'Institution_Name',
+                                                'Customer_ID',
+                                                'Database',
+                                                'Publisher',
+                                                'Publisher_ID',
+                                                'Platform',
+                                                'Proprietary_ID',
+                                                'Data_Type',
+                                                'YOP',
+                                                'Access_Type',
+                                                'Access_Method',
+                                                'Metric_Type',
+                                                'Performance');
+                                            
+                                            $orderDataValue[] = $BodyReportHeading;
+                                            $LastIndexOfJsonReport = count($dataValue1);
+                                            for($iCount=12;$iCount<$LastIndexOfJsonReport;$iCount++)
+                                            {
+                                                $SingleColumn = array();
+                                                $CurrentRowValues = $dataValue1[$iCount];
+                                                
+                                                foreach($BodyReportHeading as $BodyHeader){
+                                                    $SingleColumn[$BodyHeader] = $CurrentRowValues[$BodyHeader]??'';
+                                                }
+                                                $SingleColumn['Customer_ID'] = $Customer_ID??'' ;
+                                                $SingleColumn['Institution_Name'] = $JsonHeaderValues['Institution_Name']??'';
+                                                $orderDataValue[] = $SingleColumn;
                                             }
                                             
-                                            fclose($myfile);
+                                            try {
+                                                
+                                            $TsvContentValue = '';
+                                            $AllConsolidatedTSV[$Rid][]=$orderDataValue;
                                             
+                                            } catch (Exception $exception) {
+                                                
+                                                report($exception);
+                                                
+                                                return parent::render($request, $exception);
+                                            }
+                                            
+                                            //deletion of json
+                                            unlink($destinationPath . $file);
+                                           
+                                        } else if($Rid === 'PR' || $Rid === 'PR_P1') {
+                                            
+                                            $orderDataValue[] = array();
+                                            $BodyReportHeading = array(
+                                                'Institution_Name',
+                                                'Customer_ID',
+                                                'Platform',
+                                                'YOP',
+                                                'Data_Type',
+                                                'Access_Type',
+                                                'Access_Method',
+                                                'Metric_Type',
+                                                'Performance'
+                                            );
+                                            
+                                            $orderDataValue[] = $BodyReportHeading;
+                                            $LastIndexOfJsonReport = count($dataValue1);
+                                            for($iCount=12;$iCount<$LastIndexOfJsonReport;$iCount++)
+                                            {
+                                                $SingleColumn = array();
+                                                $CurrentRowValues = $dataValue1[$iCount];
+                                                
+                                                foreach($BodyReportHeading as $BodyHeader){
+                                                    $SingleColumn[$BodyHeader] = $CurrentRowValues[$BodyHeader]??'';
+                                                }
+                                                $SingleColumn['Customer_ID'] = $Customer_ID??'' ;
+                                                $SingleColumn['Institution_Name'] = $JsonHeaderValues['Institution_Name']??'';
+                                                $orderDataValue[] = $SingleColumn;
+                                            }
+                                            
+                                            try {
+                                                
+                                                $TsvContentValue = '';
+                                                $AllConsolidatedTSV[$Rid][]=$orderDataValue;
+                                                
+                                            } catch (Exception $exception) {
+                                                
+                                                report($exception);
+                                                
+                                                return parent::render($request, $exception);
+                                            }
+                                            
+                                            //deletion of json
                                             unlink($destinationPath . $file);
                                             
                                         } else if($Rid === 'IR_A1' || $Rid === 'IR_M1' || $Rid === 'IR'){
                                             
                                             $orderDataValue[] = array();
                                             $BodyReportHeading = array(
+                                                'Institution_Name',
+                                                'Customer_ID',
                                                 'Item',
                                                 'Publisher',
                                                 'Publisher_ID',
@@ -1666,18 +2038,24 @@ class ShowController extends Controller {
                                                 foreach($BodyReportHeading as $BodyHeader){
                                                     $SingleColumn[$BodyHeader] = $CurrentRowValues[$BodyHeader]??'';
                                                 }
+                                                $SingleColumn['Customer_ID'] = $Customer_ID??'' ;
+                                                $SingleColumn['Institution_Name'] = $JsonHeaderValues['Institution_Name']??'';
                                                 $orderDataValue[] = $SingleColumn;
                                             }
                                             
-                                            $TsvContentValue = '';
-                                            $myfile = fopen($filenametsv, "w+") or die("Unable to open file!");
-                                            foreach ($orderDataValue as $ContentOfTSV) {
-                                                $TsvContentValue = implode("\t", $ContentOfTSV) . "\n";
-                                                fwrite($myfile, $TsvContentValue);
+                                            try {
+                                                
+                                                $TsvContentValue = '';
+                                                $AllConsolidatedTSV[$Rid][]=$orderDataValue;
+                                                
+                                            } catch (Exception $exception) {
+                                                
+                                                report($exception);
+                                                
+                                                return parent::render($request, $exception);
                                             }
                                             
-                                            fclose($myfile);
-                                            
+                                            //deletion of json
                                             unlink($destinationPath . $file);
                                             
                                         } else {
@@ -1687,11 +2065,13 @@ class ShowController extends Controller {
                                         }
                                         
                                         }
+                                        
+                                        
                                         // tsv creation end
                                         
                                         try{
                                             $fileSize = filesize($destinationPath . $FileNameForSize);
-                                        }catch(Exception $e){
+                                        }catch(Exception $exception){
                                             $fileSize=0;
                                         }
                                         
@@ -1707,13 +2087,19 @@ class ShowController extends Controller {
                                             'end_date_time' => $startdatetimstampEnd
                                         );
                                         
-                                        Transactionmasterdetail::where(array(
-                                            'transaction_id' => $TransactionId,
-                                            'user_id' => $user->email,
-                                            'member_name' => $Name,
-                                            'report_id' => $ReportCode['report_code']
-                                        ))->update($UpdateTransactionInfo);
-                                        
+                                        DB::beginTransaction();
+                                        try {
+                                            Transactionmasterdetail::where(array(
+                                                'transaction_id' => $TransactionId,
+                                                'user_id' => $user->email,
+                                                'member_name' => $Name,
+                                                'report_id' => $ReportCode['report_code']
+                                            ))->update($UpdateTransactionInfo);
+                                            DB::commit();
+                                        } catch (Exception $exception) {
+                                            DB::rollback();
+                                        }
+                                    
                                     }
                                 }
                             }
@@ -1724,6 +2110,66 @@ class ShowController extends Controller {
             
             // converting Zip File
             // root Directory
+            //echo "<pre>Root";print_r($AllConsolidatedTSV);die;
+            
+            if($selectedFormat==='ConsolidatedTSV'){
+                if(isset($AllDataValue))
+                    unset($AllDataValue);
+                $AllDataValue = array();
+                foreach($AllConsolidatedTSV as $ReportName=>$AllReportValues){
+                    $firsttimeheader = 0;
+                    if(isset($orderDataValueNew))
+                    unset($orderDataValueNew);
+                    $orderDataValueNew[] = array();
+                    foreach($AllReportValues as $keyOfIndex=>$ReportValue){
+                        //now Report Body
+                            
+                            if($firsttimeheader==0){
+                                for($irepotCount=0;$irepotCount<12;$irepotCount++){
+                                   $orderDataValueNew[] = $ReportValue[$irepotCount];
+                                }
+                                $orderDataValueNew[13] =  $ReportValue[13];
+                                $firsttimeheader = 1;
+                            }else{
+                                $orderDataValueNew[4][1] = $orderDataValueNew[4][1]??''.",".$ReportValue[4][1]??'';
+                            }
+                            $LastIndexOfJsonReport = count($ReportValue);
+                            
+                            for($iCount=14;$iCount<$LastIndexOfJsonReport;$iCount++)
+                            {
+                                $orderDataValueNew[] = $ReportValue[$iCount];
+                            }
+                            
+                    }
+                    //echo "<pre>MAHAN";print_r($orderDataValueNew);die;
+                    $AllDataValue[$ReportName] = $orderDataValueNew;
+                    //echo $LastIndexOfJsonReport."<pre>Test";print_r($AllDataValue);die;
+                }
+                
+                
+                //writting file
+                //echo "<pre>Yahoo";print_r($AllDataValue);die;
+                foreach($AllDataValue as $keyofReportName=>$valueOfReportFinal){
+                $filenametsv = $destinationPath . $keyofReportName.".tsv";
+                $TsvContentValue = '';
+                try {
+                    $myfile = fopen($filenametsv, "w+") or die("Unable to open file!");
+                    foreach ($valueOfReportFinal as $ContentOfTSV) {
+                        $TsvContentValue = implode("\t", $ContentOfTSV) . "\n";
+                        fwrite($myfile, $TsvContentValue);
+                    }
+                    //echo $myfile."<pre>2345";print_r($valueOfReportFinal);die;
+                } catch (Exception $exception) {
+                    report($exception);
+                    return parent::render($request, $exception);
+                }
+
+                fclose($myfile);
+                }
+               
+            }
+            
+            
             $publicpathforzip = public_path() . '/upload/json/' . $TransactionId . "/";
             $publicpathforzipNew = public_path() . '/upload/json/';
             $ZipFileName = $TransactionId . ".zip";
@@ -1815,12 +2261,19 @@ class ShowController extends Controller {
                 '.'
             ));
             // echo "<pre>";print_r($files);die;
+            try{
             foreach ($files as $value) {
                 // echo $archive_folder."/".$value."===>".$value.'<hr>';
                 $zip->addFile($publicpathforzip . "/" . $value, $TransactionId . '/' . $value);
             }
             // die;
             $zip->close();
+            
+            } catch (Exception $exception) {
+                report($exception);
+                
+                return parent::render($request, $exception);
+            }
             return true;
         } else {
             return false;
@@ -1853,8 +2306,23 @@ class ShowController extends Controller {
         // echo "2";die;
         if (Session::has('user')) {
             // $user = Session::get('user');
+            
+            
+            DB::beginTransaction();
+            try {
             $AlluploadReports = Filename::where('id', $id)->delete();
+            DB::commit();
+            } catch(Exception $exception) {
+                DB::rollback();
+            }
+            
+            DB::beginTransaction();
+            try {
             $Filedelete = Validateerror::where('id', $id)->delete();
+            DB::commit();
+            } catch(Exception $exception) {
+                DB::rollback();
+            }
             Session::flash('userupdatemsg', 'File successfully deleted');
             return Redirect::intended('/uploadedreports');
             // echo "<pre>";print_r($id);die;
@@ -1891,7 +2359,14 @@ class ShowController extends Controller {
             $user = Session::get('user');
             $updatearray['report_name'] = $data['report_name'];
             $updatearray['report_code'] = $data['report_code'];
-            $Reportdetail = Reportname::where('id', $data['Id'])->update($updatearray);
+            
+            DB::beginTransaction();
+            try {
+                $Reportdetail = Reportname::where('id', $data['Id'])->update($updatearray);
+                DB::commit();
+            } catch (Exception $exception) {
+                DB::rollback();
+            }
 
             $data['utype'] = $user['utype'];
             $data['userDisplayName'] = $user['display_name'];
@@ -1917,8 +2392,15 @@ class ShowController extends Controller {
             $user = Session::get('user');
             $updatearray['report_name'] = $data['report_name'];
             $updatearray['report_code'] = $data['report_code'];
+            
+            DB::beginTransaction();
+            try {
             $Reportdetail = Reportname::where('id', $data['Id'])->update($updatearray);
-
+            DB::commit();
+            } catch(Exception $exception) {
+                DB::rollback();
+            }
+            
             $data['utype'] = $user['utype'];
             $data['userDisplayName'] = $user['display_name'];
             $data['report_detail'] = $Reportdetail;
@@ -2010,15 +2492,28 @@ class ShowController extends Controller {
             $updatedataArray['customer_id'] = $data['customer_id'];
             $updatedataArray['requestor_id'] = $data['requestor_id'];
             $updatedataArray['remarks'] = $data['remarks'];
+            
+            DB::beginTransaction();
+            try {
             $Reportdetail = Provider::where(array(
                         'id' => $data['provider_id'],
                         'configuration_id' => $data['configuration_id']
                     ))->update($updatedataArray);
+        } catch (Exception $exception) {
+            DB::rollback();
+        }
 
             Session::flash('colupdatemsg', 'Provider Updated Successfully');
             return Redirect::intended('/add_provider/' . $data['configuration_id']);
         } else {
-            $newUser = Provider::create($data);
+            DB::beginTransaction();
+            try {
+                $newUser = Provider::create($data);
+                DB::commit();
+            } catch (Exception $exception) {
+                DB::rollback();
+            }
+            
             $InsertedIDOfProvider = $newUser->id;
             // echo "<pre>";print_r($newUser);die;
             if ($newUser) {
@@ -2061,20 +2556,15 @@ class ShowController extends Controller {
                                 
                                 foreach($MembersList as $Member){
                                     
-                                    
                                      $CustomerId = $Member->Customer_ID??'';
                                      $RequestorId = $Member->Requestor_ID??'';
                                      $Name = $Member->Name??'';
                                      $Notes = $Member->Notes??'';
                                      $InstitutionIdType = $Member->Institution_ID[0]->Type??'';
-                                     //echo "<pre>";print_r($InstitutionIdType);die;
+                                     
                                      $InstitutionIdvalue = $Member->Institution_ID[0]->Value??'';
                                      $ProviderId = $InsertedIDOfProvider;
-                                     //echo "<pre>";print_r($ProviderId);die;
-                                     //$InsertedIDOfProvider
-                                    
-                                     // echo "<pre>";print_r($CustomerId);die;
-                                   
+                                     
                                     $MembersValue= array(
                                             'customer_id' => $CustomerId,
                                             'requestor_id' => $RequestorId,
@@ -2083,10 +2573,15 @@ class ShowController extends Controller {
                                             'institution_id_type' => $InstitutionIdType,
                                             'institution_id_value' => $InstitutionIdvalue,
                                             'provider_id' => $ProviderId,
-                                        
                                         );
                                     if(!empty($MembersValue['customer_id']))
+                                        DB::beginTransaction();
+                                        try {
                                         $SaveMemberNew = Members::create($MembersValue);
+                                        DB::commit();
+                                        } catch(Exception $exception) {
+                                            DB::rollback();
+                                        }
                                     // echo "<pre>";print_r($SaveMemberNew);die;
 //                                     $data['allmember'] = $SaveMemberNew;
 
@@ -2143,6 +2638,7 @@ class ShowController extends Controller {
             $destinationPath = public_path() . "/upload/json/" ;
             $file = time() . '_file';
             
+            try{
             return Excel::create($file, function ($excel) use ($arr1) {
                 
                 // Build the spreadsheet, passing in the $dataValue
@@ -2150,8 +2646,12 @@ class ShowController extends Controller {
                     $sheet->fromArray($arr1, null, 'A1', false, false);
                 });
             })->store('xlsx', $destinationPath)->download(); 
-            
             // return \Redirect::to($destinationPath . $file);
+            } catch (Exception $exception) {
+                report($exception);
+                
+                return parent::render($request, $exception);
+            }
             
         }else{
             return Redirect::to('login');
@@ -2204,6 +2704,8 @@ class ShowController extends Controller {
                 
                 $path = Input::file('import_file')->getRealPath();
             }
+            
+            try{
             Excel::load($path, function ($reader) {
                 // $error = array();
                 $reader->calculate();
@@ -2228,18 +2730,18 @@ class ShowController extends Controller {
                 if (empty($ConfigName)) {
                     Session::flash('error', 'Invalid Configuration');
                     ?>
-<script>
+                   <script>
 						window.location.href='/consortium';
                         </script>
-<?php
+                 <?php
                 } else if (isset($ConsortiumDetail->id)) {
                     
                     Session::flash('error', 'Configuration Already Exist');
                     ?>
-<script>
+                  <script>
 						window.location.href='/consortium';
                         </script>
-<?php
+                    <?php
                 } else {
                     // insert case for consortium
                     $user = Session::get('user');
@@ -2249,7 +2751,14 @@ class ShowController extends Controller {
                         'created_by' => $user['email']
                     );
                     
+                    DB::beginTransaction();
+                    try {
                     $SaveReort = Consortium::create($SaveData);
+                    DB::commit();
+                    } catch(Exception $exception) {
+                        DB::rollback();
+                    }
+                    
                     $lastinsertedId = $SaveReort->id;
                     $maxloopcount = $highestRow-1;
                     $startColumn = 'A';
@@ -2268,9 +2777,15 @@ class ShowController extends Controller {
                                 $providerDetail[$providerMaster[$i]] =$id[0][0];
                             $i++;
                         }
+                        
                         //insert in to provider detail
+                        DB::beginTransaction();
+                        try {
                        $provider = Provider::create($providerDetail);
-                       
+                       DB::commit();
+                        } catch(Exception $exception) {
+                        DB::rollback();
+                         }
                        
                        $ProviderDetailID = $provider['id'];
                        
@@ -2310,6 +2825,9 @@ class ShowController extends Controller {
                                $context = stream_context_create($opts);
                                $dataValue = file_get_contents($url, false, $context);
                                $MembersList = json_decode($dataValue);
+                               
+                               
+                               
                                foreach($MembersList as $Member){
                                    
                                    $CustomerId = $Member->Customer_ID??'';
@@ -2336,7 +2854,15 @@ class ShowController extends Controller {
                                    
                                    );
                                    if(!empty($MembersValue['customer_id'])){
+                                       
+                                       DB::beginTransaction();
+                                       try {
                                        $SaveMemberNew = Members::create($MembersValue);
+                                       DB::commit();
+                                       } catch(Exception $exception) {
+                                           DB::rollback();
+                                       }
+                                       
                                    }
                                }
                            }
@@ -2353,6 +2879,11 @@ class ShowController extends Controller {
                     }
             }
             );
+            } catch (Exception $exception) {
+                report($exception);
+                
+                return parent::render($request, $exception);
+            }
 }
     }
 }

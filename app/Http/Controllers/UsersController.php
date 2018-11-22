@@ -47,8 +47,7 @@ class Userscontroller extends Controller
             // If validation fails redirect back to login.
             
             return Redirect::back()->withInput(Input::except('password'))->withErrors($validator,'login');
-        }
-        else {
+        } else {
             
             $userdata = array(
                 'email' => Input::get('email'),
@@ -62,14 +61,24 @@ class Userscontroller extends Controller
             
             if (Auth::validate($userdata)) {
                 $remember = (Input::has('remember')) ? true : false;
+                
+                try {
+                    
                 if (Auth::attempt($userdata,$remember)) {
                     $loggeddata=User::where('email',$userdata['email'])->first();
                     Session::put('user', $loggeddata);
                     //dd('shashi');
                     return Redirect::intended('welcome');
-                }
-            }
-            else {
+                     }
+                     
+                } catch (Exception $exception) {
+                    
+                    report($exception);
+                    
+                    return parent::render($request, $exception);
+                } 
+                
+            } else {
                 // if any error send back with message.
                 Session::flash('error', 'Email Address and password do not match');
                 return view('index');

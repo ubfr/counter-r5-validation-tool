@@ -49,10 +49,10 @@
         				    <li><a href="{{url('filelist')}}">File Validation</a></li>
         				    <li><a href="{{url('consortium')}}">Consortium Tool</a></li>
         				    </ul>
-        				<ul class="nav navbar-nav pull-right" style="margin-top:15px;">
-        			     <li><i class="fa fa-user" aria-hidden="true"></i> <?php  echo "Welcome ".$userDisplayName;?></li>
-        			     <li style="margin:0 10px">|</li>
-        			      <li> <a href="{{url('logout')}}" style="margin:0;padding:0;"> <i class="fa fa-sign-out" aria-hidden="true"></i> Logout</a> </li>
+        				<ul class="nav navbar-nav pull-right">
+        			     <li><a href="{{url('useredit')}}" ><i class="fa fa-user" aria-hidden="true"></i> <?php  echo "Welcome ".$userDisplayName?></a></li>
+        			     <li><a href="#">|</a></li>
+        			      <li> <a href="{{url('logout')}}" > <i class="fa fa-sign-out" aria-hidden="true"></i> Logout</a> </li>
         			    </ul>
         			</div>
         		</nav>
