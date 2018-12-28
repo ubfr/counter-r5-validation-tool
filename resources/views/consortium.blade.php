@@ -227,15 +227,21 @@ div {
 
 				</div>
 				
-				<div id="menu2" class="tab-pane fade">
+<div id="menu2" class="tab-pane fade">
 
-					
+	
 
-					<div class="col-xs-12 col-sm-12 col-md-12">
-						<h3>Harvesting Consortium Transaction Lists</h3>
-						<hr class="colorgraph">
+	<div class="col-xs-12 col-sm-12 col-md-12">
+		<h3>Harvesting Consortium Transaction Lists</h3>
+		
+		<hr class="colorgraph">
 
-						
+		<div class="row">
+		
+	<div class="col-xs-3 col-sm-3 col-md-3 pull-right"  >
+       <a class="btn btn-primary btn-block"  href="consortium/id">Download</a>
+	</div>
+	</div>
 
 						<div class="widget-content">
                                                     <?php if (count($alltransaction) > 0) { ?>
@@ -302,60 +308,61 @@ div {
 		</div>
 @endsection
 
-                <div class="modal fade" id="myModal" role="dialog">
-                    <div class="modal-dialog">
-                        <!-- Modal content-->
-                        <div class="modal-content">
-                            <div class="modal-header">
-                                <button type="button" class="close" data-dismiss="modal">&times;</button>
-                                <h4 class="modal-title">Run configuration parameter</h4>
-                            </div>
-                            <div class="modal-body">
-                            </div>
-                        </div>
-                     </div>
-                  </div>
+<div class="modal fade" id="myModal" role="dialog">
+    <div class="modal-dialog">
+        <!-- Modal content-->
+    <div class="modal-content">
+        <div class="modal-header">
+            <button type="button"  data-backdrop="static" data-keyboard="false" class="close" data-dismiss="modal">&times;</button>
+            <h4 class="modal-title">Run configuration parameter</h4>
+        </div>
+        <div class="modal-body">
+        </div>
+    </div>
+ </div>
+</div>
                 
                 
                 
                 
                 
 		<!--========================login form END here======================================-->
-		
-		@section("additionaljs")
-		<!-- Latest compiled and minified JavaScript -->
-		
-                <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/2.2.1/jquery.min.js"></script>
-                
-                <script src="{{URL::asset('assets/js/bootstrap.min.js')}}"></script>
-		<script src="{{URL::asset('assets/js/bootstrap-datepicker.min.js')}}"></script>
-		<script src="{{URL::asset('assets/js/jquery.multi-select.min.js')}}"></script>
-		<script type="text/javascript" language="javascript"
-			src="https://cdn.datatables.net/1.10.11/js/jquery.dataTables.min.js">
-	</script>
-		<script type="text/javascript" language="javascript"
-			src="https://cdn.datatables.net/1.10.11/js/dataTables.bootstrap.min.js">
-	</script>
-        <script>
-        $('.openBtn').on('click',function(){
-        var CurrentConsortiumId = $(this).attr('rel');
-        $('.modal-body').load('\/showprogressnew/'+CurrentConsortiumId,function(){
-        $('#myModal').modal({show:true});
-        });
-        });
-        </script>
-		<script type="text/javascript" class="init">
-	
 
+@section("additionaljs")
+<!-- Latest compiled and minified JavaScript -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/2.2.1/jquery.min.js"></script>
+<script src="{{URL::asset('assets/js/bootstrap.min.js')}}"></script>
+<script src="{{URL::asset('assets/js/bootstrap-datepicker.min.js')}}"></script>
+<script src="{{URL::asset('assets/js/jquery.multi-select.min.js')}}"></script>
+<script type="text/javascript" language="javascript"
+	    src="https://cdn.datatables.net/1.10.11/js/jquery.dataTables.min.js">
+</script>
+<script type="text/javascript" language="javascript"
+		src="https://cdn.datatables.net/1.10.11/js/dataTables.bootstrap.min.js">
+</script>
+<script>
+$('.openBtn').on('click',function(){
+var CurrentConsortiumId = $(this).attr('rel');
+$('.modal-body').load('\/showprogressnew/'+CurrentConsortiumId,function(){
+$('#myModal').modal({
+	
+	backdrop: 'static',
+    keyboard: false
+
+	});
+});
+});
+</script>
+<script type="text/javascript" class="init">
 function validateDate(url){
-	var date1 = $("#datepicker-12").val();
-	var date2 = $("#datepicker-10").val();
-	if(date1 && date2){
-		var NewConsotiumURL = url+'/'+date1+'/'+date2;
-		//alert(NewConsotiumURL);
-		//return false;
-		window.location.href = url+'/'+date1+'/'+date2; 	
-	}else{
+var date1 = $("#datepicker-12").val();
+var date2 = $("#datepicker-10").val();
+if(date1 && date2){
+	var NewConsotiumURL = url+'/'+date1+'/'+date2;
+	//alert(NewConsotiumURL);
+	//return false;
+	window.location.href = url+'/'+date1+'/'+date2; 	
+}else{
 		alert("Please enter date first");
 		return false;
 	}
@@ -416,34 +423,7 @@ $(document).ready(function() {
 	</script>
 
 		<!-- Javascript for date-picker -->
-		<script>
-                    
-            $(function() {
-                $('.date-picker').datepicker( {
-                    format: "mm-yyyy",
-                    viewMode: "months", 
-                    minViewMode: "months"
-                });
-                
-            });
-                    
-                    
-                    
-                    
-</script>
-
-	<script>
-        jQuery(function(){
-            var flag = '<?php echo Session::get('keyconsortium');?>'
-               if(flag=='delete'){
-                	$("#third a").trigger("click");
-                }
-                 <?php Session::put('keyconsortium', ''); ?>   
-        //jQuery('#reports').multiSelect();
-        /*jQuery('#line-wrap-example').multiSelect({
-            selectAllValue: 'multiselect-all',
-            positionMenuWithin: $('.position-menu-within')
-        });*/
+<script>
         
     }); 
     //jQuery plugin

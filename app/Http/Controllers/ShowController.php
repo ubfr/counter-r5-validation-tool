@@ -7,10 +7,8 @@ use App\User;
 use App\Reportname;
 use App\Validateerror;
 use App\Validationrule;
-use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Input;
 use Illuminate\Support\Facades\Redirect;
-use Illuminate\Support\Facades\Session;
 use Illuminate\Support\Facades\Validator;
 use App\Parentreport;
 use App\Filtertype;
@@ -32,6 +30,10 @@ use PHPExcel_Cell;
 use PHPExcel_Cell_DataType;
 use App\Sushitransaction;
 use App\Transactiondetailtemp;
+use Session;
+use DB;
+
+
 
 class ShowController extends Controller {
     
@@ -59,25 +61,35 @@ class ShowController extends Controller {
         }
     }
 
-    function showvalidate() {
-
-        // ///////////show file upload list/////////////
+    function showUser_Report() {
         $user = Session::get('user');
-
+        if ($user['email'] == '') {
+            return Redirect::to('/');
+        }
         $filename = Filename::where('user_id', $user['id'])->orderBy('id', 'desc')
                 ->take(10)
                 ->get();
-
+        $data['userDisplayName'] = $user['display_name'];
+        $data['utype'] = $user['utype'];
+        $data['file_detail'] = $filename;
+        return view('showreport', $data);
+    }
+    
+    // ///////////show file upload list/////////////
+    function showvalidate() {
+        // ///////////show file upload list/////////////
+        $user = Session::get('user');
+        
+        $filename = Filename::where('user_id', $user['id'])->orderBy('id', 'desc')
+        ->take(10)
+        ->get();
+        
         $AllReports = Reportname::where(array())->orderBy('report_name', 'asc')->get();
-        // echo "<pre>sdfdf";print_r($AllReports);die;
         $data['reportsname'] = $AllReports;
         $AllParents = Parentreport::get()->toArray();
-        // making sinle array for parent category
         foreach ($AllParents as $parentSingle) {
             $data['parentInfo'][$parentSingle['id']] = $parentSingle['name'];
         }
-
-        // //////////////////////////////////////////////
         $data['userDisplayName'] = $user['display_name'];
         $data['utype'] = $user['utype'];
         $data['file_detail'] = $filename;
@@ -128,6 +140,7 @@ class ShowController extends Controller {
         
         
         try{
+            
         Excel::create($filename, function ($excel) use ($Configurations) {
             
             // Set the spreadsheet title, creator, and description
@@ -183,7 +196,7 @@ class ShowController extends Controller {
             }
         }
 
-        $Consortiums = Consortium::where(array('created_by'=>$user['email']))->orderBy('configuration_name', 'asc')
+        $Consortiums = Consortium::where(array('created_by'=>$user['email']))->orderBy('id', 'desc')
                 ->get()
                 ->toArray();
         $providerMaster = array();
@@ -195,7 +208,7 @@ class ShowController extends Controller {
             // get providers name comma separted
             $newProvderList = array();
             foreach ($AllProvidersList as $Providerevalue) {
-                $newProvderList[] = '<a title="Cick for get members detail." href="member/'.$Providerevalue['id'].'">'.$Providerevalue['provider_name']."</a>";
+                $newProvderList[] = '<a title="Click here to get members detail." href="member/'.$Providerevalue['id'].'">'.$Providerevalue['provider_name']."</a>";
             }
             $providernamecommaseparted = implode(", ", $newProvderList);
             $providerMaster[$key]['providers'] = $providernamecommaseparted;
@@ -307,12 +320,7 @@ class ShowController extends Controller {
                 return Redirect::to('/');
             }
             
-            DB::beginTransaction();
-            try {
             Members::where('provider_id', $provider)->delete();
-            } catch (Exception $exception) {
-                DB::rollback();
-            }
             
             $data=Provider::select()
             ->where('id',$provider)
@@ -323,9 +331,12 @@ class ShowController extends Controller {
             $mainURL =$data['provider_url'];
             $fields = array(
                 'apikey' => $data['apikey'],
-                'customer_id' => $data['customer_id']
+                'customer_id' => $data['customer_id'],
+                'requestor_id' => $data['requestor_id']
             );
-           
+            $fields = array_filter($fields);
+            
+            
             
             
             $url = $mainURL . "/members?" . http_build_query($fields, '', "&");
@@ -377,14 +388,11 @@ class ShowController extends Controller {
                         );
                         
                         
-                        if(!empty($MembersValue['customer_id'])){
-                            DB::beginTransaction();
-                            try {
+                        if(!empty($MembersValue['customer_id']))
+                        {
+                            
                                 $SaveMemberNew = Members::create($MembersValue);
-                                DB::commit();
-                            } catch (Exception $exception) {
-                                DB::rollback();
-                            }
+                                
                         }
                     }
                 }
@@ -584,6 +592,49 @@ class ShowController extends Controller {
             return Redirect::to('login');
         }
     }
+    
+    ///////////////downloading Transaction Lists////////////
+    public function TransactionListsDownload($id=0) {
+        
+        $user = Session::get('user');
+        if (Session::has('user')) {
+            if($user['utype']=='admin'){
+                $AllArray = Transactionmasterdetail::where(array())->orderBy('time_stamp', 'desc')
+                ->get()
+                ->toArray();
+               
+                if($AllArray == array()){
+                    Session::flash('useralertmsg', 'No Reports Available');
+                    return Redirect::intended('/consortium');
+                }
+            }
+            
+            $reportHeader[] = array_keys($AllArray[0]);
+            $arr1 = array_merge($reportHeader,$AllArray);
+            $destinationPath = public_path() . "/upload/transaction_lists/" ;
+            $file = time() . '_transaction';
+            
+            try{
+                
+                return Excel::create($file, function ($excel) use ($arr1) {
+                    
+                    // Build the spreadsheet, passing in the $dataValue
+                    $excel->sheet('sheet1', function ($sheet) use ($arr1) {
+                        $sheet->fromArray($arr1, null, 'A1', false, false);
+                    });
+                })->store('xlsx', $destinationPath)->download();
+                
+            } catch (Exception $exception) {
+                report($exception);
+                return parent::render($request, $exception);
+            }
+        }else{
+            return Redirect::to('login');
+        }
+    }
+    
+    
+    
     
     // ///////////show Rule Management Page////////////
     function show_rule_manage() {
@@ -885,10 +936,20 @@ class ShowController extends Controller {
                 extract($ProviderDetail);
                 $ProviderDetailID = $ProviderDetail['id'];
                 $mainURL = $provider_url;
+//                 $fields = array(
+//                     'apikey' => $apikey,
+//                     'customer_id' => $customer_id
+//                 );
+                
+                
                 $fields = array(
                     'apikey' => $apikey,
-                    'customer_id' => $customer_id
+                    'customer_id' => $customer_id,
+                    'requestor_id' => $requestor_id
                 );
+                $fields = array_filter($fields);
+                
+                
                 
                 $url = $mainURL . "/members?" . http_build_query($fields, '', "&");
                 if (! preg_match("~^(?:f|ht)tps?://~i", $url)) {
@@ -950,7 +1011,7 @@ class ShowController extends Controller {
                                     $keyofreport
                                 );
                             }
-                        }else if($selectedFormat==='XLSX'){
+                        } else if($selectedFormat==='XLSX'){
                             
                             try{
                             Excel::create($filex, function ($excel) use ($dataValue) {
@@ -1025,9 +1086,10 @@ class ShowController extends Controller {
                                     'apikey' => $apikey,
                                     'customer_id' => $Customer_ID,
                                     'begin_date' => $begin_date,
+                                    'requestor_id' => $Requestor_ID,
                                     'end_date' => $end_date
                                 );
-                                
+                                $Mfields  =  array_filter($Mfields);
                                 $startdatetimstamp = date('Y-m-d H:i:s');
                                 $SaveTransaction = array(
                                     'user_id' => $user->email,
@@ -1070,7 +1132,7 @@ class ShowController extends Controller {
                                     $statusCode = curl_getinfo($Mcurl, CURLINFO_HTTP_CODE);
                                     if ($statusCode == 404) {
                                         $Mresult = array(
-                                            "Member URL doest not exist"
+                                            "Member URL does not exist"
                                         );
                                     } else {
                                         // $data = json_encode(['Text 1','Text 2','Text 3','Text 4','Text 5']);
@@ -1168,7 +1230,9 @@ class ShowController extends Controller {
                                                         if ($KeyOfRow == 'Publisher_ID') {
                                                             $finalString = $RowValue[0]['Type'] . ':' . $RowValue[0]['Value'];
                                                         } else if ($KeyOfRow == 'Performance') {
-                                                            $finalString = $RowValue[0]['Period']['Begin_Date'] . '-' . $RowValue[0]['Period']['End_Date'] . ';' . $RowValue[0]['Instance'][0]['Metric_Type'] . '-' . $RowValue[0]['Instance'][0]['Count'];
+                                                            //$finalString = $RowValue[0]['Period']['Begin_Date'] . '-' . $RowValue[0]['Period']['End_Date'] . ';' . $RowValue[0]['Instance'][0]['Metric_Type'] . '-' . $RowValue[0]['Instance'][0]['Count'];
+                                                            $PerformanceValue = $RowValue[0]??'';
+                                                            $finalString = serialize($PerformanceValue);
                                                         }
                                                         $NewSingleRow[$headerFixedValueAll[$KeyOfRow]] = $finalString;
                                                     } else {
@@ -1193,7 +1257,9 @@ class ShowController extends Controller {
                                                     $finalString = '';
                                                     if (is_array($RowValue)) {
                                                         if ($KeyOfRow == 'Performance') {
-                                                            $finalString = $RowValue[0]['Period']['Begin_Date'] . '&' . $RowValue[0]['Period']['End_Date'] . ';' . $RowValue[0]['Instance'][0]['Metric_Type'] . '-' . $RowValue[0]['Instance'][0]['Count'] . ';' . $RowValue[0]['Instance'][1]['Metric_Type'] . '-' . $RowValue[0]['Instance'][1]['Count'] . ';' . $RowValue[0]['Instance'][2]['Metric_Type'] . '-' . $RowValue[0]['Instance'][2]['Count'];
+                                                            //$finalString = $RowValue[0]['Period']['Begin_Date'] . '&' . $RowValue[0]['Period']['End_Date'] . ';' . $RowValue[0]['Instance'][0]['Metric_Type'] . '-' . $RowValue[0]['Instance'][0]['Count'] . ';' . $RowValue[0]['Instance'][1]['Metric_Type'] . '-' . $RowValue[0]['Instance'][1]['Count'] . ';' . $RowValue[0]['Instance'][2]['Metric_Type'] . '-' . $RowValue[0]['Instance'][2]['Count'];
+                                                            $PerformanceValue = $RowValue[0]??'';
+                                                            $finalString = serialize($PerformanceValue);
                                                         }
                                                         $NewSingleRow[$headerFixedValueAll[$KeyOfRow]] = $finalString;
                                                     } else {
@@ -1204,32 +1270,23 @@ class ShowController extends Controller {
                                             }
                                         } else if ($currentReportID == 'IR_A1' || $currentReportID == 'IR_M1' || $currentReportID == 'IR') {
                                             
-                                            $headerFixedValue = array_keys($ReportBody[0]) ?? '';
-                                            $dataValue1[] = $headerFixedValue;
-                                        } else {
-                                            
                                             $headerFixedValue = array_keys($ReportBody[0]);
                                             $newHeader = array_values($headerFixedValue);
                                             $headerFixedValueAll = array_combine($newHeader, $headerFixedValue);
                                             $dataValue1[] = $headerFixedValueAll;
                                             
-                                            // echo "<pre>";print_r($dataValue1);die;
-                                            
                                             $bodyvalue = $ReportBody;
-                                            // echo "<pre>";print_r($bodyvalue);die;
+                                            
                                             foreach ($bodyvalue as $InnerValue) {
                                                 $NewSingleRow = array();
                                                 // for all inner value
                                                 foreach ($InnerValue as $KeyOfRow => $RowValue) {
                                                     $finalString = '';
+                                                    $CopyFlag = 0;
                                                     if (is_array($RowValue)) {
-                                                        if ($KeyOfRow == 'Item_ID') {
-                                                            // $finalString = $RowValue[0]['Type'].':'.$RowValue[0]['Value'].';'.$RowValue[1]['Type'].':'.$RowValue[1]['Value'];
-                                                            $finalString = 'Not Fixed';
-                                                        } else if ($KeyOfRow == 'Publisher_ID') {
-                                                            $finalString = $RowValue[0]['Type'] . ':' . $RowValue[0]['Value'];
-                                                        } else if ($KeyOfRow == 'Performance') {
-                                                            $finalString = $RowValue[0]['Period']['Begin_Date'] . '-' . $RowValue[0]['Period']['End_Date'] . ';' . $RowValue[0]['Instance'][0]['Metric_Type'] . '-' . $RowValue[0]['Instance'][0]['Count'] . ";" . $RowValue[0]['Instance'][1]['Metric_Type'] . '-' . $RowValue[0]['Instance'][1]['Count'];
+                                                        if ($KeyOfRow == 'Performance') {
+                                                            $PerformanceValue = $RowValue[0]??'';
+                                                            $finalString = serialize($PerformanceValue);
                                                         }
                                                         $NewSingleRow[$headerFixedValueAll[$KeyOfRow]] = $finalString;
                                                     } else {
@@ -1238,11 +1295,48 @@ class ShowController extends Controller {
                                                 }
                                                 $dataValue1[] = $NewSingleRow;
                                             }
-                                        }
-                                        }else {
+                                        
+                                            
+                                        } else {
+                                            //TR all Reports
+                                            $headerFixedValue = array_keys($ReportBody[0]);
+                                            $newHeader = array_values($headerFixedValue);
+                                            $headerFixedValueAll = array_combine($newHeader, $headerFixedValue);
+                                            $dataValue1[] = $headerFixedValueAll;
+                                            
+                                            // echo "<pre>";print_r($dataValue1);die;
+                                            
+                                            $bodyvalue = $ReportBody;
+                                            //echo "<pre>MaiN";print_r($bodyvalue);die;
+                                            foreach ($bodyvalue as $InnerValue) {
+                                                $NewSingleRow = array();
+                                                // for all inner value
+                                                foreach ($InnerValue as $KeyOfRow => $RowValue) {
+                                                    $finalString = '';
+                                                    $CopyFlag = 0;
+                                                    if (is_array($RowValue)) {
+                                                        if ($KeyOfRow == 'Item_ID') {
+                                                            $finalString = serialize($RowValue);
+                                                        } else if ($KeyOfRow == 'Publisher_ID') {
+                                                            $finalString = $RowValue[0]['Type']??'' . ':' . $RowValue[0]['Value']??'';
+                                                        } else if ($KeyOfRow == 'Performance') {
+                                                            $PerformanceValue = $RowValue[0]??'';
+                                                            $finalString = serialize($PerformanceValue);
+                                                        }
+                                                        $NewSingleRow[$headerFixedValueAll[$KeyOfRow]] = $finalString;
+                                                    } else {
+                                                        $NewSingleRow[$headerFixedValueAll[$KeyOfRow]] = $RowValue;
+                                                    }
+                                                }
+                                                $dataValue1[] = $NewSingleRow;
+                                            }
+                                            
+                                          }
+                                          
+                                        } else {
                                             $dataValue1=array();
                                         }
-                                        
+                                        //echo "<pre>Serialiaz";print_r($dataValue1);die;
                                         if($selectedFormat==='XLSX'){
                                             
                                             $CorrectHeaderSequence = array(
@@ -1268,11 +1362,36 @@ class ShowController extends Controller {
                                                 $JsonHeaderValues[$dataValue1[$i][0]] = $dataValue1[$i][1];
                                             }
                                             
+                                            $rname = str_replace('"', '', $JsonHeaderValues['Report_Name']);
+                                            // echo "<pre>";print_r($rname);die;
                                             $orderDataValue = array();
-                                            foreach($CorrectHeaderSequence as $HeaderHeading){
-                                                $orderDataValue[] =  array($HeaderHeading,$JsonHeaderValues[$HeaderHeading]??'');
-                                            }
                                             
+                                            foreach($CorrectHeaderSequence as $HeaderHeading){
+                                                if($HeaderHeading=='Reporting_Period'){
+                                                    //echo "<pre>";print_r($JsonHeaderValues);die;
+                                                    $makecompatibleDate = explode(";",$JsonHeaderValues['Report_Filters']);
+                                                    $BeginDate = explode("=",$makecompatibleDate[0]);
+                                                    $EndDate = explode("=",$makecompatibleDate[1]);
+                                                    
+                                                    $start_date = $BeginDate[1];
+                                                    $end_date = $EndDate[1];
+                                                    $BeginDate[1] = date("Y-m-t", strtotime($start_date));
+                                                    $EndDate[1] = date("Y-m-t", strtotime($end_date));
+                                                    $FilterValueDate = implode('=',$BeginDate)."; ".implode('=',$EndDate);
+                                                    //$orderDataValue[] =  array($HeaderHeading,$JsonHeaderValues['Report_Filters']??'');
+                                                    $orderDataValue[] =  array($HeaderHeading,$FilterValueDate??'');
+                                                    
+                                                } else {
+                                                    if($HeaderHeading=='Report_Filters'){
+                                                        $orderDataValue[] =  array($HeaderHeading,'');
+                                                    } else if($HeaderHeading=='Report_Name') {
+                                                        $orderDataValue[] =  array($HeaderHeading,$rname);
+                                                    }else{
+                                                        $orderDataValue[] =  array($HeaderHeading,$JsonHeaderValues[$HeaderHeading]??'');
+                                                    }
+                                                }
+                                            }
+                                             
                                             $FileNameForSize = $filename;
                                             
                                             if($Rid === 'TR' || $Rid === 'TR_J1' || $Rid === 'TR_J2' || $Rid === 'TR_J3' || $Rid === 'TR_J4' || $Rid === 'TR_B1' || $Rid === 'TR_B2' || $Rid === 'TR_B3'){
@@ -1284,32 +1403,152 @@ class ShowController extends Controller {
                                                    'Publisher_ID', 
                                                    'Platform', 
                                                    'DOI', 
-                                                   'Proprietary_ID', 
-                                                   'ISBN', 
+                                                   'Online_ISSN',
                                                    'Print_ISSN', 
-                                                   'Online_ISSN', 
+                                                   'Proprietary_ID',
+                                                   'ISBN',
                                                    'Data_Type',
                                                    'Section_Type',
                                                    'YOP', 
                                                    'Access_Type', 
                                                    'Access_Method',
                                                    'Metric_Type',  
-                                                   'Performance');
+                                                   'Reporting_Period_Total'
+                                                   );
                                                 
                                                $orderDataValue[] = $BodyReportHeading;
+                                               
                                                $LastIndexOfJsonReport = count($dataValue1);
+                                              
+                                               $ReportingPeriodFlag = 0;
                                                for($iCount=12;$iCount<$LastIndexOfJsonReport;$iCount++)
                                                {
+                                                   $matricValueFlage = 0;
+                                                   
                                                    $SingleColumn = array();
                                                    $CurrentRowValues = $dataValue1[$iCount];
-                                                   
                                                    foreach($BodyReportHeading as $BodyHeader){
-                                                       $SingleColumn[$BodyHeader] = $CurrentRowValues[$BodyHeader]??'';
+                                                      if($BodyHeader==='Metric_Type' || $BodyHeader==='Reporting_Period_Total'){
+                                                        $AllMatricTypeValue = unserialize($CurrentRowValues['Performance']);
+                                                        // echo "<pre>ALL";print_r($AllMatricTypeValue);die;
+                                                        
+                                                        $ReportingPeriod = isset($AllMatricTypeValue['Period'])?$AllMatricTypeValue['Period']:'';
+                                                        
+                                                        $ReportingInstance = isset($AllMatricTypeValue['Instance'])?$AllMatricTypeValue['Instance']:'';
+                                                        //if(is_array($ReportingInstance) && (count($ReportingInstance))>1){
+                                                        if(is_array($ReportingInstance)){
+                                                            $matricValueFlage = 1;
+                                                            if(isset($instanceArray))
+                                                                unset($instanceArray);
+                                                            $instanceArray = array();
+                                                            foreach($ReportingInstance as $keyOfInstance=>$valueofInstance){
+                                                              $instanceArray[] = $valueofInstance;
+                                                              
+                                                            }  
+                                                        }
+                                                        
+                                                        
+                                                        $matric_type = array_column($instanceArray, 'Metric_Type');
+                                                        
+                                                        if($ReportingPeriodFlag === 0){
+                                                            $d1 = new DateTime($start_date);
+                                                            $d2 = new DateTime($end_date);
+                                                            $interval = $d2->diff($d1);
+                                                            $Differences = $interval->format('%m');
+                                                            //echo "<pre>"; print_r($Differences);die;
+                                                            for($Irp=0;$Irp<=$Differences;$Irp++){
+                                                                $nextMonth = date('Y-m', strtotime("+".$Irp." months", strtotime($start_date)));
+                                                                $orderDataValue[13][] = $nextMonth;
+                                                                //$d1->add(new DateInterval('P30D'));
+                                                            }
+                                                            
+                                                            $orderDataValue[5][1] = implode(";",$matric_type);
+                                                            $ReportingPeriodFlag = 1;
+                                                        }
+                                                        
+                                                        
+                                                        
+                                                        
+                                                      }
+                                                      else if($BodyHeader==='DOI'){
+                                                          $updateFlage = 0;
+                                                          $ItemIdValue = unserialize($CurrentRowValues['Item_ID']);
+                                                          foreach($ItemIdValue as $dataValueOfColumn){
+                                                              if($dataValueOfColumn['Type']=='DOI'){
+                                                                $SingleColumn[$dataValueOfColumn['Type']] = $dataValueOfColumn['Value']??'';
+                                                                $updateFlage = 1;
+                                                              }
+                                                              
+                                                          }
+                                                          if($updateFlage==0){
+                                                              $SingleColumn['DOI'] = '';
+                                                          }
+                                                          
+                                                      }
+                                                      
+                                                      else if($BodyHeader==='Online_ISSN'){
+                                                          $updateFlage = 0;
+                                                          $ItemIdValue = unserialize($CurrentRowValues['Item_ID']);
+                                                          foreach($ItemIdValue as $dataValueOfColumn){
+                                                              if($dataValueOfColumn['Type']=='Online_ISSN'){
+                                                                  $SingleColumn[$dataValueOfColumn['Type']] = $dataValueOfColumn['Value']??'';
+                                                                  $updateFlage = 1;
+                                                              }
+                                                              
+                                                          }
+                                                          if($updateFlage==0){
+                                                              $SingleColumn['Online_ISSN'] = '';
+                                                          }
+                                                          
+                                                      }
+                                                      
+                                                      else if($BodyHeader==='Print_ISSN'){
+                                                          $updateFlage = 0;
+                                                          $ItemIdValue = unserialize($CurrentRowValues['Item_ID']);
+                                                          foreach($ItemIdValue as $dataValueOfColumn){
+                                                              if($dataValueOfColumn['Type']=='Print_ISSN'){
+                                                                  $SingleColumn[$dataValueOfColumn['Type']] = $dataValueOfColumn['Value']??'';
+                                                                  $updateFlage = 1;
+                                                              }
+                                                              
+                                                          }
+                                                          if($updateFlage==0){
+                                                              $SingleColumn['Print_ISSN'] = '';
+                                                          }
+                                                          
+                                                      }
+                                                      
+                                                      else{
+                                                          $SingleColumn[$BodyHeader] = $CurrentRowValues[$BodyHeader]??'';
+                                                      }
                                                    }
-                                                   $orderDataValue[] = $SingleColumn;
+                                                   
+                                                   //making duplicate rows for Metric_Type
+                                                   if(isset($matricValueFlage) && $matricValueFlage==1){
+                                                       $lenghtOfColumn = count($orderDataValue[13]);
+                                                       foreach($instanceArray as $valueofInstanceValue){
+                                                         $SingleColumnCopy = $SingleColumn;
+                                                         $SingleColumnCopy['Metric_Type'] = $valueofInstanceValue['Metric_Type']??'';
+                                                         $SingleColumnCopy['Reporting_Period_Total'] = $valueofInstanceValue['Count']??'';
+                                                         $reportingPeriodTotal = 0;
+                                                            $countOfCurrentRow = count($SingleColumnCopy);
+                                                            if($countOfCurrentRow<$lenghtOfColumn){
+                                                                for(;$countOfCurrentRow<$lenghtOfColumn;$countOfCurrentRow++){
+                                                                    $currentDate = date('Y-m',strtotime($ReportingPeriod['Begin_Date']));
+                                                                    $ValueOfReporting = $orderDataValue[13][$countOfCurrentRow]==$currentDate?$valueofInstanceValue['Count']:'0';
+                                                                    $reportingPeriodTotal = $reportingPeriodTotal + (int)$ValueOfReporting;
+                                                                    $SingleColumnCopy[]= $ValueOfReporting;
+                                                                }
+                                                            }
+                                                         $orderDataValue[] = $SingleColumnCopy;
+                                                       }
+                                                   }else{
+                                                    $orderDataValue[] = $SingleColumn;
+                                                   }
                                                }
                                                
-                                               try{
+                                               try {
+                                            //echo "<pre>ALL".$matricValueFlage;print_r($orderDataValue);die;
                                             // xlsx creation
                                             Excel::create($filename, function ($excel) use ($orderDataValue) {
                                                 // Set the spreadsheet title, creator, and description
@@ -1327,7 +1566,9 @@ class ShowController extends Controller {
                                                    
                                                    return parent::render($request, $exception);
                                                }
+                                               
                                             unlink($destinationPath . $file);
+                                            
                                             } else if($Rid === 'DR_D1' || $Rid === 'DR_D2' || $Rid === 'DR') {
                                                 
                                                 $orderDataValue[] = array();
@@ -1342,43 +1583,102 @@ class ShowController extends Controller {
                                                     'Access_Type',
                                                     'Access_Method',
                                                     'Metric_Type',
-                                                    'Performance');
+                                                    'Reporting_Period_Total'
+                                                );
                                                 
                                                 $orderDataValue[] = $BodyReportHeading;
                                                 $LastIndexOfJsonReport = count($dataValue1);
                                                 
-                                                
+                                                $ReportingPeriodFlag = 0;
                                                 for($iCount=12;$iCount<$LastIndexOfJsonReport;$iCount++)
                                                 {
+                                                    $matricValueFlage = 0;
                                                     $SingleColumn = array();
                                                     $CurrentRowValues = $dataValue1[$iCount];
-                                                    
                                                     foreach($BodyReportHeading as $BodyHeader){
-                                                        $SingleColumn[$BodyHeader] = $CurrentRowValues[$BodyHeader]??'';
+                                                        if($BodyHeader==='Metric_Type' || $BodyHeader==='Reporting_Period_Total'){
+                                                            $AllMatricTypeValue = unserialize($CurrentRowValues['Performance']);
+                                                            // echo "<pre>";print_r($AllMatricTypeValue);die;
+                                                            
+                                                            $ReportingPeriod = isset($AllMatricTypeValue['Period'])?$AllMatricTypeValue['Period']:'';
+                                                            
+                                                            $ReportingInstance = isset($AllMatricTypeValue['Instance'])?$AllMatricTypeValue['Instance']:'';
+                                                            
+                                                            if(is_array($ReportingInstance)){
+                                                                $matricValueFlage = 1;
+                                                                if(isset($instanceArray))
+                                                                    unset($instanceArray);
+                                                                    $instanceArray = array();
+                                                                    foreach($ReportingInstance as $keyOfInstance=>$valueofInstance){
+                                                                        $instanceArray[] = $valueofInstance;
+                                                                        
+                                                                    }
+                                                            }
+                                                            $matric_type = array_column($instanceArray, 'Metric_Type');
+                                                            
+                                                            if($ReportingPeriodFlag === 0){
+                                                                $d1 = new DateTime($start_date);
+                                                                $d2 = new DateTime($end_date);
+                                                                $interval = $d2->diff($d1);
+                                                                $Differences = $interval->format('%m');
+                                                                //echo "<pre>"; print_r($Differences);die;
+                                                                for($Irp=0;$Irp<=$Differences;$Irp++){
+                                                                    $nextMonth = date('Y-m', strtotime("+".$Irp." months", strtotime($start_date)));
+                                                                    $orderDataValue[13][] = $nextMonth;
+                                                                    //$d1->add(new DateInterval('P30D'));
+                                                                }
+                                                                
+                                                                $orderDataValue[5][1] = implode(";",$matric_type);
+                                                                $ReportingPeriodFlag = 1;
+                                                            }
+                                                        }
+                                                        
+                                                        
+                                                        else{
+                                                            $SingleColumn[$BodyHeader] = $CurrentRowValues[$BodyHeader]??'';
+                                                        }
                                                     }
-                                                    $orderDataValue[] = $SingleColumn;
-                                                }
-                                            
-                                            
-                                                try{
-                                                Excel::create($filename, function ($excel) use ($orderDataValue) {
-                                                    // Set the spreadsheet title, creator, and description
-                                                    $excel->setTitle('Error Report');
-                                                    $excel->setCreator('Laravel')->setCompany('Counter Project');
-                                                    $excel->setDescription('xlsx report file');
                                                     
-                                                    // Build the spreadsheet, passing in the $dataValue
-                                                    $excel->sheet('sheet1', function ($sheet) use ($orderDataValue) {
-                                                        $sheet->fromArray($orderDataValue, null, 'A1', false, false);
-                                                    });
-                                                })->store('xlsx', $destinationPath);
-                                                
+                                                    if(isset($matricValueFlage) && $matricValueFlage==1){
+                                                        $lenghtOfColumn = count($orderDataValue[13]);
+                                                        foreach($instanceArray as $valueofInstanceValue){
+                                                            $SingleColumnCopy = $SingleColumn;
+                                                            $SingleColumnCopy['Metric_Type'] = $valueofInstanceValue['Metric_Type']??'';
+                                                            $SingleColumnCopy['Reporting_Period_Total'] = $valueofInstanceValue['Count']??'';
+                                                            $reportingPeriodTotal = 0;
+                                                            $countOfCurrentRow = count($SingleColumnCopy);
+                                                            if($countOfCurrentRow<$lenghtOfColumn){
+                                                                for(;$countOfCurrentRow<$lenghtOfColumn;$countOfCurrentRow++){
+                                                                    $currentDate = date('Y-m',strtotime($ReportingPeriod['Begin_Date']));
+                                                                    $ValueOfReporting = $orderDataValue[13][$countOfCurrentRow]==$currentDate?$valueofInstanceValue['Count']:'0';
+                                                                    $reportingPeriodTotal = $reportingPeriodTotal + (int)$ValueOfReporting;
+                                                                    $SingleColumnCopy[]= $ValueOfReporting;
+                                                                }
+                                                            }
+                                                            $orderDataValue[] = $SingleColumnCopy;
+                                                        }
+                                                    }else{
+                                                        $orderDataValue[] = $SingleColumn;
+                                                    }
+                                                }
+                                                try{
+                                                    Excel::create($filename, function ($excel) use ($orderDataValue) {
+                                                        // Set the spreadsheet title, creator, and description
+                                                        $excel->setTitle('Error Report');
+                                                        $excel->setCreator('Laravel')->setCompany('Counter Project');
+                                                        $excel->setDescription('xlsx report file');
+                                                        
+                                                        // Build the spreadsheet, passing in the $dataValue
+                                                        $excel->sheet('sheet1', function ($sheet) use ($orderDataValue) {
+                                                            $sheet->fromArray($orderDataValue, null, 'A1', false, false);
+                                                        });
+                                                    })->store('xlsx', $destinationPath);
+                                                    
                                                 } catch (Exception $exception) {
                                                     report($exception);
                                                     return parent::render($request, $exception);
                                                 }
                                                 unlink($destinationPath . $file);
-                                                
                                                 
                                             } else if($Rid === 'PR' || $Rid === 'PR_P1') {
                                                 
@@ -1390,36 +1690,87 @@ class ShowController extends Controller {
                                                     'Access_Type',
                                                     'Access_Method',
                                                     'Metric_Type',
-                                                    'Performance'
-                                                    );
-                                                
+                                                    'Reporting_Period_Total'
+                                                );
                                                 $orderDataValue[] = $BodyReportHeading;
                                                 $LastIndexOfJsonReport = count($dataValue1);
+                                                
+                                                $ReportingPeriodFlag = 0;
                                                 for($iCount=12;$iCount<$LastIndexOfJsonReport;$iCount++)
                                                 {
+                                                    $matricValueFlage = 0;
                                                     $SingleColumn = array();
                                                     $CurrentRowValues = $dataValue1[$iCount];
-                                                    
                                                     foreach($BodyReportHeading as $BodyHeader){
-                                                        $SingleColumn[$BodyHeader] = $CurrentRowValues[$BodyHeader]??'';
+                                                        
+                                                        if($BodyHeader==='Metric_Type' || $BodyHeader==='Reporting_Period_Total'){
+                                                            $AllMatricTypeValue = unserialize($CurrentRowValues['Performance']);
+                                                            $ReportingPeriod = isset($AllMatricTypeValue['Period'])?$AllMatricTypeValue['Period']:'';
+                                                            $ReportingInstance = isset($AllMatricTypeValue['Instance'])?$AllMatricTypeValue['Instance']:'';
+                                                            
+                                                            if(is_array($ReportingInstance)){
+                                                                $matricValueFlage = 1;
+                                                                if(isset($instanceArray))
+                                                                    unset($instanceArray);
+                                                                    $instanceArray = array();
+                                                                    foreach($ReportingInstance as $keyOfInstance=>$valueofInstance){
+                                                                        $instanceArray[] = $valueofInstance;
+                                                                    }
+                                                            }
+                                                            $matric_type = array_column($instanceArray, 'Metric_Type');
+                                                            
+                                                            if($ReportingPeriodFlag === 0){
+                                                                $d1 = new DateTime($start_date);
+                                                                $d2 = new DateTime($end_date);
+                                                                $interval = $d2->diff($d1);
+                                                                $Differences = $interval->format('%m');
+                                                                for($Irp=0;$Irp<=$Differences;$Irp++){
+                                                                    $nextMonth = date('Y-m', strtotime("+".$Irp." months", strtotime($start_date)));
+                                                                    $orderDataValue[13][] = $nextMonth;
+                                                                }
+                                                                $orderDataValue[5][1] = implode(";",$matric_type);
+                                                                $ReportingPeriodFlag = 1;
+                                                            }
+                                                        }
+                                                        else{
+                                                            $SingleColumn[$BodyHeader] = $CurrentRowValues[$BodyHeader]??'';
+                                                        }
                                                     }
-                                                    $orderDataValue[] = $SingleColumn;
+                                                    if(isset($matricValueFlage) && $matricValueFlage==1){
+                                                        $lenghtOfColumn = count($orderDataValue[13]);
+                                                        foreach($instanceArray as $valueofInstanceValue){
+                                                            $SingleColumnCopy = $SingleColumn;
+                                                            $SingleColumnCopy['Metric_Type'] = $valueofInstanceValue['Metric_Type']??'';
+                                                            $SingleColumnCopy['Reporting_Period_Total'] = $valueofInstanceValue['Count']??'';
+                                                            $reportingPeriodTotal = 0;
+                                                            $countOfCurrentRow = count($SingleColumnCopy);
+                                                            if($countOfCurrentRow<$lenghtOfColumn){
+                                                                for(;$countOfCurrentRow<$lenghtOfColumn;$countOfCurrentRow++){
+                                                                    $currentDate = date('Y-m',strtotime($ReportingPeriod['Begin_Date']));
+                                                                    $ValueOfReporting = $orderDataValue[13][$countOfCurrentRow]==$currentDate?$valueofInstanceValue['Count']:'0';
+                                                                    $reportingPeriodTotal = $reportingPeriodTotal + (int)$ValueOfReporting;
+                                                                    $SingleColumnCopy[]= $ValueOfReporting;
+                                                                }
+                                                            }
+                                                            $orderDataValue[] = $SingleColumnCopy;
+                                                        }
+                                                    }else{
+                                                        $orderDataValue[] = $SingleColumn;
+                                                    }
                                                 }
-                                                
-                                               
                                                 try{
-                                                Excel::create($filename, function ($excel) use ($orderDataValue) {
+                                                    Excel::create($filename, function ($excel) use ($orderDataValue) {
                                                     // Set the spreadsheet title, creator, and description
                                                     $excel->setTitle('Error Report');
                                                     $excel->setCreator('Laravel')->setCompany('Counter Project');
                                                     $excel->setDescription('xlsx report file');
-                                                    
+
                                                     // Build the spreadsheet, passing in the $dataValue
                                                     $excel->sheet('sheet1', function ($sheet) use ($orderDataValue) {
                                                         $sheet->fromArray($orderDataValue, null, 'A1', false, false);
                                                     });
-                                                })->store('xlsx', $destinationPath);
-                                                
+                                                    })->store('xlsx', $destinationPath);
+                                                    
                                                 } catch (Exception $exception) {
                                                     report($exception);
                                                     return parent::render($request, $exception);
@@ -1465,41 +1816,159 @@ class ShowController extends Controller {
                                                     'Access_Type',
                                                     'Access_Method',
                                                     'Metric_Type',
-                                                    'Performance');
+                                                    'Reporting_Period_Total');
                                                 
                                                 $orderDataValue[] = $BodyReportHeading;
+                                                
                                                 $LastIndexOfJsonReport = count($dataValue1);
                                                 
-                                                
+                                                $ReportingPeriodFlag = 0;
                                                 for($iCount=12;$iCount<$LastIndexOfJsonReport;$iCount++)
                                                 {
+                                                    $matricValueFlage = 0;
+                                                    
                                                     $SingleColumn = array();
                                                     $CurrentRowValues = $dataValue1[$iCount];
-                                                    
                                                     foreach($BodyReportHeading as $BodyHeader){
-                                                        $SingleColumn[$BodyHeader] = $CurrentRowValues[$BodyHeader]??'';
+                                                        if($BodyHeader==='Metric_Type' || $BodyHeader==='Reporting_Period_Total'){
+                                                            $AllMatricTypeValue = unserialize($CurrentRowValues['Performance']);
+                                                            // echo "<pre>ALL";print_r($AllMatricTypeValue);die;
+                                                            
+                                                            $ReportingPeriod = isset($AllMatricTypeValue['Period'])?$AllMatricTypeValue['Period']:'';
+                                                            
+                                                            $ReportingInstance = isset($AllMatricTypeValue['Instance'])?$AllMatricTypeValue['Instance']:'';
+                                                            //if(is_array($ReportingInstance) && (count($ReportingInstance))>1){
+                                                            if(is_array($ReportingInstance)){
+                                                                $matricValueFlage = 1;
+                                                                if(isset($instanceArray))
+                                                                    unset($instanceArray);
+                                                                    $instanceArray = array();
+                                                                    foreach($ReportingInstance as $keyOfInstance=>$valueofInstance){
+                                                                        $instanceArray[] = $valueofInstance;
+                                                                        
+                                                                    }
+                                                            }
+                                                            
+                                                            
+                                                            $matric_type = array_column($instanceArray, 'Metric_Type');
+                                                            
+                                                            if($ReportingPeriodFlag === 0){
+                                                                $d1 = new DateTime($start_date);
+                                                                $d2 = new DateTime($end_date);
+                                                                $interval = $d2->diff($d1);
+                                                                $Differences = $interval->format('%m');
+                                                                //echo "<pre>"; print_r($Differences);die;
+                                                                for($Irp=0;$Irp<=$Differences;$Irp++){
+                                                                    $nextMonth = date('Y-m', strtotime("+".$Irp." months", strtotime($start_date)));
+                                                                    $orderDataValue[13][] = $nextMonth;
+                                                                    //$d1->add(new DateInterval('P30D'));
+                                                                }
+                                                                
+                                                                $orderDataValue[5][1] = implode(";",$matric_type);
+                                                                $ReportingPeriodFlag = 1;
+                                                            }
+                                                            
+                                                            
+                                                            
+                                                            
+                                                        }
+                                                        else if($BodyHeader==='DOI'){
+                                                            $updateFlage = 0;
+                                                            $ItemIdValue = unserialize($CurrentRowValues['Item_ID']);
+                                                            foreach($ItemIdValue as $dataValueOfColumn){
+                                                                if($dataValueOfColumn['Type']=='DOI'){
+                                                                    $SingleColumn[$dataValueOfColumn['Type']] = $dataValueOfColumn['Value']??'';
+                                                                    $updateFlage = 1;
+                                                                }
+                                                                
+                                                            }
+                                                            if($updateFlage==0){
+                                                                $SingleColumn['DOI'] = '';
+                                                            }
+                                                            
+                                                        }
+                                                        
+                                                        else if($BodyHeader==='Online_ISSN'){
+                                                            $updateFlage = 0;
+                                                            $ItemIdValue = unserialize($CurrentRowValues['Item_ID']);
+                                                            foreach($ItemIdValue as $dataValueOfColumn){
+                                                                if($dataValueOfColumn['Type']=='Online_ISSN'){
+                                                                    $SingleColumn[$dataValueOfColumn['Type']] = $dataValueOfColumn['Value']??'';
+                                                                    $updateFlage = 1;
+                                                                }
+                                                                
+                                                            }
+                                                            if($updateFlage==0){
+                                                                $SingleColumn['Online_ISSN'] = '';
+                                                            }
+                                                            
+                                                        }
+                                                        
+                                                        else if($BodyHeader==='Print_ISSN'){
+                                                            $updateFlage = 0;
+                                                            $ItemIdValue = unserialize($CurrentRowValues['Item_ID']);
+                                                            foreach($ItemIdValue as $dataValueOfColumn){
+                                                                if($dataValueOfColumn['Type']=='Print_ISSN'){
+                                                                    $SingleColumn[$dataValueOfColumn['Type']] = $dataValueOfColumn['Value']??'';
+                                                                    $updateFlage = 1;
+                                                                }
+                                                                
+                                                            }
+                                                            if($updateFlage==0){
+                                                                $SingleColumn['Print_ISSN'] = '';
+                                                            }
+                                                            
+                                                        }
+                                                        
+                                                        else{
+                                                            $SingleColumn[$BodyHeader] = $CurrentRowValues[$BodyHeader]??'';
+                                                        }
                                                     }
-                                                    $orderDataValue[] = $SingleColumn;
+                                                    
+                                                    //making duplicate rows for Metric_Type
+                                                    if(isset($matricValueFlage) && $matricValueFlage==1){
+                                                        $lenghtOfColumn = count($orderDataValue[13]);
+                                                        foreach($instanceArray as $valueofInstanceValue){
+                                                            $SingleColumnCopy = $SingleColumn;
+                                                            $SingleColumnCopy['Metric_Type'] = $valueofInstanceValue['Metric_Type']??'';
+                                                            $SingleColumnCopy['Reporting_Period_Total'] = $valueofInstanceValue['Count']??'';
+                                                            $reportingPeriodTotal = 0;
+                                                            $countOfCurrentRow = count($SingleColumnCopy);
+                                                            if($countOfCurrentRow<$lenghtOfColumn){
+                                                                for(;$countOfCurrentRow<$lenghtOfColumn;$countOfCurrentRow++){
+                                                                    $currentDate = date('Y-m',strtotime($ReportingPeriod['Begin_Date']));
+                                                                    $ValueOfReporting = $orderDataValue[13][$countOfCurrentRow]==$currentDate?$valueofInstanceValue['Count']:'0';
+                                                                    $reportingPeriodTotal = $reportingPeriodTotal + (int)$ValueOfReporting;
+                                                                    $SingleColumnCopy[]= $ValueOfReporting;
+                                                                }
+                                                            }
+                                                            $orderDataValue[] = $SingleColumnCopy;
+                                                        }
+                                                    }else{
+                                                        $orderDataValue[] = $SingleColumn;
+                                                    }
                                                 }
                                                 
-						
-                                                try{
-                                                Excel::create($filename, function ($excel) use ($orderDataValue) {
-                                                    // Set the spreadsheet title, creator, and description
-                                                    $excel->setTitle('Error Report');
-                                                    $excel->setCreator('Laravel')->setCompany('Counter Project');
-                                                    $excel->setDescription('xlsx report file');
-                                                    
-                                                    // Build the spreadsheet, passing in the $dataValue
-                                                    $excel->sheet('sheet1', function ($sheet) use ($orderDataValue) {
-                                                        $sheet->fromArray($orderDataValue, null, 'A1', false, false);
-                                                    });
-                                                })->store('xlsx', $destinationPath);
-                                                
+                                                try {
+                                                    //echo "<pre>ALL".$matricValueFlage;print_r($orderDataValue);die;
+                                                    // xlsx creation
+                                                    Excel::create($filename, function ($excel) use ($orderDataValue) {
+                                                        // Set the spreadsheet title, creator, and description
+                                                        $excel->setTitle('Error Report');
+                                                        $excel->setCreator('Laravel')->setCompany('Counter Project');
+                                                        $excel->setDescription('xlsx report file');
+                                                        
+                                                        // Build the spreadsheet, passing in the $dataValue
+                                                        $excel->sheet('sheet1', function ($sheet) use ($orderDataValue) {
+                                                            $sheet->fromArray($orderDataValue, null, 'A1', false, false);
+                                                        });
+                                                    })->store('xlsx', $destinationPath);
                                                 } catch (Exception $exception) {
                                                     report($exception);
+                                                    
                                                     return parent::render($request, $exception);
                                                 }
+                                                
                                                 unlink($destinationPath . $file);
                                                 
                                             } else {
@@ -1530,25 +1999,39 @@ class ShowController extends Controller {
                                             
                                             // getting array for header from JSON Data
                                             $JsonHeaderValues = array();
-                                            
-                                            try {
                                             for($i=0;$i<11;$i++){
                                                 $JsonHeaderValues[$dataValue1[$i][0]] = $dataValue1[$i][1];
                                             }
-                                            } catch (Exception $exception) {
-                                                report($exception);
-                                                return parent::render($request, $exception);
-                                            }
                                             
                                             $orderDataValue = array();
-                                            try{
+                                            $rname = str_replace('"', '', $JsonHeaderValues['Report_Name']);
+                                         
                                             foreach($CorrectHeaderSequence as $HeaderHeading){
-                                                $orderDataValue[] =  array($HeaderHeading,$JsonHeaderValues[$HeaderHeading]??'');
+                                                if($HeaderHeading=='Reporting_Period'){
+                                                    //echo "<pre>";print_r($JsonHeaderValues);die;
+                                                    $makecompatibleDate = explode(";",$JsonHeaderValues['Report_Filters']);
+                                                    $BeginDate = explode("=",$makecompatibleDate[0]);
+                                                    $EndDate = explode("=",$makecompatibleDate[1]);
+                                                    
+                                                    $start_date = $BeginDate[1];
+                                                    $end_date = $EndDate[1];
+                                                    $BeginDate[1] = date("Y-m-t", strtotime($start_date));
+                                                    $EndDate[1] = date("Y-m-t", strtotime($end_date));
+                                                    $FilterValueDate = implode('=',$BeginDate)."; ".implode('=',$EndDate);
+                                                    //$orderDataValue[] =  array($HeaderHeading,$JsonHeaderValues['Report_Filters']??'');
+                                                    $orderDataValue[] =  array($HeaderHeading,$FilterValueDate??'');
+                                                    
+                                                } else {
+                                                    if($HeaderHeading=='Report_Filters'){
+                                                        $orderDataValue[] =  array($HeaderHeading,'');
+                                                    } else if($HeaderHeading=='Report_Name') {
+                                                        $orderDataValue[] =  array($HeaderHeading,$rname);
+                                                    }else{
+                                                        $orderDataValue[] =  array($HeaderHeading,$JsonHeaderValues[$HeaderHeading]??'');
+                                                    }
+                                                }
                                             }
-                                            } catch (Exception $exception) {
-                                                report($exception);
-                                                return parent::render($request, $exception);
-                                            }
+                                            
                                             
                                         // tsv creation start
                                         $filenametsv = $provider_name . "_" . $Member['Customer_ID'] . "_" . $ReportCode['report_code'] . "_5_" . $begin_date . "_" . $end_date . "_" . $rundate . ".tsv";
@@ -1564,30 +2047,148 @@ class ShowController extends Controller {
                                                 'Publisher_ID',
                                                 'Platform',
                                                 'DOI',
+                                                'Online_ISSN',
+                                                'Print_ISSN',
                                                 'Proprietary_ID',
                                                 'ISBN',
-                                                'Print_ISSN',
-                                                'Online_ISSN',
                                                 'Data_Type',
                                                 'Section_Type',
                                                 'YOP',
                                                 'Access_Type',
                                                 'Access_Method',
                                                 'Metric_Type',
-                                                'Performance');
+                                                'Reporting_Period_Total'
+                                            );
                                             
                                             $orderDataValue[] = $BodyReportHeading;
+                                            
                                             $LastIndexOfJsonReport = count($dataValue1);
+                                            
+                                            $ReportingPeriodFlag = 0;
                                             for($iCount=12;$iCount<$LastIndexOfJsonReport;$iCount++)
                                             {
-                                                $SingleColumn = array();
-                                                $CurrentRowValues = $dataValue1[$iCount];
+                                                $matricValueFlage = 0;
                                                 
+                                                $SingleColumn = array();
+                                                $CurrentRowValues = $dataValue1[$iCount]??'';
                                                 foreach($BodyReportHeading as $BodyHeader){
-                                                    $SingleColumn[$BodyHeader] = $CurrentRowValues[$BodyHeader]??'';
+                                                    if($BodyHeader==='Metric_Type'  || $BodyHeader==='Reporting_Period_Total'){
+                                                        $AllMatricTypeValue = unserialize($CurrentRowValues['Performance']);
+                                                        // echo "<pre>ALL";print_r($AllMatricTypeValue);die;
+                                                        
+                                                        $ReportingPeriod = isset($AllMatricTypeValue['Period'])?$AllMatricTypeValue['Period']:'';
+                                                        
+                                                        $ReportingInstance = isset($AllMatricTypeValue['Instance'])?$AllMatricTypeValue['Instance']:'';
+                                                        //if(is_array($ReportingInstance) && (count($ReportingInstance))>1){
+                                                        if(is_array($ReportingInstance)){
+                                                            $matricValueFlage = 1;
+                                                            if(isset($instanceArray))
+                                                                unset($instanceArray);
+                                                                $instanceArray = array();
+                                                                foreach($ReportingInstance as $keyOfInstance=>$valueofInstance){
+                                                                    $instanceArray[] = $valueofInstance??'';
+                                                                    
+                                                                }
+                                                        }
+                                            
+                                                        $matric_type = array_column($instanceArray, 'Metric_Type');
+                                                        
+                                                        if($ReportingPeriodFlag === 0){
+                                                            $d1 = new DateTime($start_date);
+                                                            $d2 = new DateTime($end_date);
+                                                            $interval = $d2->diff($d1);
+                                                            $Differences = $interval->format('%m');
+                                                            //echo "<pre>"; print_r($Differences);die;
+                                                            for($Irp=0;$Irp<=$Differences;$Irp++){
+                                                                $nextMonth = date('Y-m', strtotime("+".$Irp." months", strtotime($start_date)));
+                                                                $orderDataValue[13][] = $nextMonth;
+                                                                //$d1->add(new DateInterval('P30D'));
+                                                            }
+                                                            
+                                                            $orderDataValue[5][1] = implode(";",$matric_type);
+                                                            $ReportingPeriodFlag = 1;
+                                                        } 
+                                                    }
+                                                        else if($BodyHeader==='DOI'){
+                                                            $updateFlage = 0;
+                                                            $ItemIdValue = unserialize($CurrentRowValues['Item_ID']);
+                                                            foreach($ItemIdValue as $dataValueOfColumn){
+                                                                if($dataValueOfColumn['Type']=='DOI'){
+                                                                    $SingleColumn[$dataValueOfColumn['Type']] = $dataValueOfColumn['Value']??'';
+                                                                    $updateFlage = 1;
+                                                                }
+                                                                
+                                                            }
+                                                            if($updateFlage==0){
+                                                                $SingleColumn['DOI'] = '';
+                                                            }
+                                                            
+                                                        }
+                                                        
+                                                        else if($BodyHeader==='Online_ISSN'){
+                                                            $updateFlage = 0;
+                                                            $ItemIdValue = unserialize($CurrentRowValues['Item_ID']);
+                                                            foreach($ItemIdValue as $dataValueOfColumn){
+                                                                if($dataValueOfColumn['Type']=='Online_ISSN'){
+                                                                    $SingleColumn[$dataValueOfColumn['Type']] = $dataValueOfColumn['Value']??'';
+                                                                    $updateFlage = 1;
+                                                                }
+                                                                
+                                                            }
+                                                            if($updateFlage==0){
+                                                                $SingleColumn['Online_ISSN'] = '';
+                                                            }
+                                                            
+                                                        }
+                                                        
+                                                        else if($BodyHeader==='Print_ISSN'){
+                                                            $updateFlage = 0;
+                                                            $ItemIdValue = unserialize($CurrentRowValues['Item_ID']);
+                                                            foreach($ItemIdValue as $dataValueOfColumn){
+                                                                if($dataValueOfColumn['Type']=='Print_ISSN'){
+                                                                    $SingleColumn[$dataValueOfColumn['Type']] = $dataValueOfColumn['Value']??'';
+                                                                    $updateFlage = 1;
+                                                                }
+                                                                
+                                                            }
+                                                            if($updateFlage==0){
+                                                                $SingleColumn['Print_ISSN'] = '';
+                                                            }
+                                                            
+                                                        }
+                                                        
+                                                        else{
+                                                            $SingleColumn[$BodyHeader] = $CurrentRowValues[$BodyHeader]??'';
+                                                        }
                                                 }
-                                                $orderDataValue[] = $SingleColumn;
+                                                
+                                                //making duplicate rows for Metric_Type
+                                                if(isset($matricValueFlage) && $matricValueFlage==1){
+                                                    $lenghtOfColumn = count($orderDataValue[13]);
+                                                    foreach($instanceArray as $valueofInstanceValue){
+                                                        $SingleColumnCopy = $SingleColumn??'';
+                                                        $SingleColumnCopy['Metric_Type'] = $valueofInstanceValue['Metric_Type']??'';
+                                                        $SingleColumnCopy['Reporting_Period_Total'] = $valueofInstanceValue['Count']??'';
+                                                        $reportingPeriodTotal = 0;
+                                                            $countOfCurrentRow = count($SingleColumnCopy);
+                                                            if($countOfCurrentRow<$lenghtOfColumn){
+                                                                for(;$countOfCurrentRow<$lenghtOfColumn;$countOfCurrentRow++){
+                                                                    $currentDate = date('Y-m',strtotime($ReportingPeriod['Begin_Date']));
+                                                                    $ValueOfReporting = $orderDataValue[13][$countOfCurrentRow]==$currentDate?$valueofInstanceValue['Count']:'0';
+                                                                    $reportingPeriodTotal = $reportingPeriodTotal + (int)$ValueOfReporting;
+                                                                    $SingleColumnCopy[]= $ValueOfReporting??'';
+                                                                }
+                                                            }
+                                                        $orderDataValue[] = $SingleColumnCopy??'';
+                                                    }
+                                                }else{
+                                                    $orderDataValue[] = $SingleColumn??'';
+                                                }
                                             }
+                                            
+                                            array_walk_recursive($orderDataValue, function (&$value) {
+                                                $value = '"'. addslashes($value).'"';
+                                            });
                                             
                                             // TSV creation
                                             try {
@@ -1621,36 +2222,111 @@ class ShowController extends Controller {
                                                 'Access_Type',
                                                 'Access_Method',
                                                 'Metric_Type',
-                                                'Performance');
+                                                'Reporting_Period_Total');
                                             
                                             $orderDataValue[] = $BodyReportHeading;
                                             $LastIndexOfJsonReport = count($dataValue1);
+                                            
+                                            $ReportingPeriodFlag = 0;
                                             for($iCount=12;$iCount<$LastIndexOfJsonReport;$iCount++)
                                             {
+                                                $matricValueFlage = 0;
+                                                
                                                 $SingleColumn = array();
                                                 $CurrentRowValues = $dataValue1[$iCount];
                                                 
+                                                
                                                 foreach($BodyReportHeading as $BodyHeader){
-                                                    $SingleColumn[$BodyHeader] = $CurrentRowValues[$BodyHeader]??'';
+                                                    
+                                                    if($BodyHeader==='Metric_Type' || $BodyHeader==='Reporting_Period_Total'){
+                                                        $AllMatricTypeValue = unserialize($CurrentRowValues['Performance']);
+                                                        // echo "<pre>";print_r($AllMatricTypeValue);die;
+                                                        
+                                                        $ReportingPeriod = isset($AllMatricTypeValue['Period'])?$AllMatricTypeValue['Period']:'';
+                                                        
+                                                        
+                                                        $d1 = new DateTime($ReportingPeriod['Begin_Date']);
+                                                        $d2 = new DateTime($ReportingPeriod['End_Date']);
+                                                        
+                                                        $interval = $d2->diff($d1);
+                                                        
+                                                        // echo "<pre>";print_r($interval);die;
+                                                        
+                                                        $Differences = $interval->format('%m');
+                                                        /* if($ReportingPeriodFlag === 0){
+                                                         for($Irp=0;$Irp<=$Differences;$Irp++){
+                                                         $orderDataValue[13+$Irp][] = $d1->format('Y-m');
+                                                         //$d1->add(new DateInterval('P30D'));
+                                                         }
+                                                         $ReportingPeriodFlag = 1;
+                                                         } */
+                                                        
+                                                        // die('fhfg');
+                                                        
+                                                        $ReportingInstance = isset($AllMatricTypeValue['Instance'])?$AllMatricTypeValue['Instance']:'';
+                                                        
+                                                        
+                                                        //if(is_array($ReportingInstance) && (count($ReportingInstance))>1){
+                                                        if(is_array($ReportingInstance)){
+                                                            $matricValueFlage = 1;
+                                                            if (isset($instanceArray))
+                                                                unset($instanceArray);
+                                                                $instanceArray = array();
+                                                                foreach($ReportingInstance as $keyOfInstance=>$valueofInstance){
+                                                                    $instanceArray[] = $valueofInstance;
+                                                                }
+                                                        }
+                                                    } else {
+                                                        $SingleColumn[$BodyHeader] = $CurrentRowValues[$BodyHeader]??'';
+                                                    }
                                                 }
-                                                $orderDataValue[] = $SingleColumn;
+                                                //making duplicate rows for Metric_Type
+                                                if(isset($matricValueFlage) && $matricValueFlage==1){
+                                                    $lenghtOfColumn = count($orderDataValue[13]);
+                                                    foreach($instanceArray as $valueofInstanceValue){
+                                                        $SingleColumnCopy = $SingleColumn;
+                                                        $SingleColumnCopy['Metric_Type'] = $valueofInstanceValue['Metric_Type']??'';
+                                                        $SingleColumnCopy['Reporting_Period_Total'] = $valueofInstanceValue['Count']??'';
+                                                        $reportingPeriodTotal = 0;
+                                                            $countOfCurrentRow = count($SingleColumnCopy);
+                                                            if($countOfCurrentRow<$lenghtOfColumn){
+                                                                for(;$countOfCurrentRow<$lenghtOfColumn;$countOfCurrentRow++){
+                                                                    $currentDate = date('Y-m',strtotime($ReportingPeriod['Begin_Date']));
+                                                                    $ValueOfReporting = $orderDataValue[13][$countOfCurrentRow]==$currentDate?$valueofInstanceValue['Count']:'0';
+                                                                    $reportingPeriodTotal = $reportingPeriodTotal + (int)$ValueOfReporting;
+                                                                    $SingleColumnCopy[]= $ValueOfReporting;
+                                                                }
+                                                            }
+                                                        $orderDataValue[] = $SingleColumnCopy;
+                                                    }
+                                                }else{
+                                                    $orderDataValue[] = $SingleColumn;
+                                                }
                                             }
                                             
+                                            
+                                            array_walk_recursive($orderDataValue, function (&$value) {
+                                                $value = '"'. addslashes($value).'"';
+                                            });
+                                            
+                                            try {
                                             $TsvContentValue = '';
                                             $myfile = fopen($filenametsv, "w+") or die("Unable to open file!");
                                             
-                                            try{
+                                            
                                             foreach ($orderDataValue as $ContentOfTSV) {
                                                 $TsvContentValue = implode("\t", $ContentOfTSV) . "\n";
                                                 fwrite($myfile, $TsvContentValue);
                                             }
-                                            } catch (Exception $exception) {
-                                                report($exception);
-                                                return parent::render($request, $exception);
-                                            }
                                             
                                             fclose($myfile);
                                             
+                                            } catch (Exception $exception) {
+                                                report($exception);
+                                                
+                                                return parent::render($request, $exception);
+                                            }
+                                            //deletion of json
                                             unlink($destinationPath . $file);
                                             
                                         } else if($Rid === 'PR' || $Rid === 'PR_P1') {
@@ -1663,50 +2339,111 @@ class ShowController extends Controller {
                                                 'Access_Type',
                                                 'Access_Method',
                                                 'Metric_Type',
-                                                'Performance'
+                                                'Reporting_Period_Total'
                                             );
                                             
                                             $orderDataValue[] = $BodyReportHeading;
                                             $LastIndexOfJsonReport = count($dataValue1);
                                             
-                                            try {
+                                            
+                                            $ReportingPeriodFlag = 0;
                                             for($iCount=12;$iCount<$LastIndexOfJsonReport;$iCount++)
                                             {
+                                                
+                                                $matricValueFlage = 0;
                                                 $SingleColumn = array();
                                                 $CurrentRowValues = $dataValue1[$iCount];
                                                 
-                                                try{
                                                 foreach($BodyReportHeading as $BodyHeader){
-                                                    $SingleColumn[$BodyHeader] = $CurrentRowValues[$BodyHeader]??'';
+                                                    if($BodyHeader==='Metric_Type' || $BodyHeader==='Reporting_Period_Total'){
+                                                        $AllMatricTypeValue = unserialize($CurrentRowValues['Performance']);
+                                                        // echo "<pre>";print_r($AllMatricTypeValue);die;
+                                                        
+                                                        $ReportingPeriod = isset($AllMatricTypeValue['Period'])?$AllMatricTypeValue['Period']:'';
+                                                        
+                                                        
+                                                        $d1 = new DateTime($ReportingPeriod['Begin_Date']);
+                                                        $d2 = new DateTime($ReportingPeriod['End_Date']);
+                                                        
+                                                        $interval = $d2->diff($d1);
+                                                        
+                                                        // echo "<pre>";print_r($interval);die;
+                                                        
+                                                        $Differences = $interval->format('%m');
+                                                         if($ReportingPeriodFlag === 0){
+                                                         for($Irp=0;$Irp<=$Differences;$Irp++){
+                                                         $orderDataValue[13+$Irp][] = $d1->format('Y-m');
+                                                         //$d1->add(new DateInterval('P30D'));
+                                                         }
+                                                         $ReportingPeriodFlag = 1;
+                                                         } 
+                                                        
+                                                        // die('fhfg');
+                                                        
+                                                        $ReportingInstance = isset($AllMatricTypeValue['Instance'])?$AllMatricTypeValue['Instance']:'';
+                                                        
+                                                        
+                                                        //if(is_array($ReportingInstance) && (count($ReportingInstance))>1){
+                                                        if(is_array($ReportingInstance)){
+                                                            $matricValueFlage = 1;
+                                                            if (isset($instanceArray))
+                                                                unset($instanceArray);
+                                                                $instanceArray = array();
+                                                                foreach($ReportingInstance as $keyOfInstance=>$valueofInstance){
+                                                                    $instanceArray[] = $valueofInstance;
+                                                                }
+                                                        }
+                                                    } else {
+                                                        
+                                                        $SingleColumn[$BodyHeader] = $CurrentRowValues[$BodyHeader]??'';
+                                                    }
                                                 }
-                                                $orderDataValue[] = $SingleColumn;
-                                                } catch (Exception $exception) {
-                                                    report($exception);
-                                                    return parent::render($request, $exception);
+                                                
+                                                //making duplicate rows for Metric_Type
+                                                if(isset($matricValueFlage) && $matricValueFlage==1){
+                                                    $lenghtOfColumn = count($orderDataValue[13]);
+                                                    foreach($instanceArray as $valueofInstanceValue){
+                                                        $SingleColumnCopy = $SingleColumn;
+                                                        $SingleColumnCopy['Metric_Type'] = $valueofInstanceValue['Metric_Type']??'';
+                                                        $SingleColumnCopy['Reporting_Period_Total'] = $valueofInstanceValue['Count']??'';$reportingPeriodTotal = 0;
+                                                            $countOfCurrentRow = count($SingleColumnCopy);
+                                                            if($countOfCurrentRow<$lenghtOfColumn){
+                                                                for(;$countOfCurrentRow<$lenghtOfColumn;$countOfCurrentRow++){
+                                                                    $currentDate = date('Y-m',strtotime($ReportingPeriod['Begin_Date']));
+                                                                    $ValueOfReporting = $orderDataValue[13][$countOfCurrentRow]==$currentDate?$valueofInstanceValue['Count']:'0';
+                                                                    $reportingPeriodTotal = $reportingPeriodTotal + (int)$ValueOfReporting;
+                                                                    $SingleColumnCopy[]= $ValueOfReporting;
+                                                                }
+                                                            }
+                                                        $orderDataValue[] = $SingleColumnCopy;
+                                                    }
+                                                }else{
+                                                    $orderDataValue[] = $SingleColumn;
                                                 }
                                             }
-                                            } catch (Exception $exception) {
-                                                report($exception);
-                                                return parent::render($request, $exception);
-                                            }
                                             
                                             
+                                            array_walk_recursive($orderDataValue, function (&$value) {
+                                                $value = '"'. addslashes($value).'"';
+                                            });
                                             
+                                            try {
                                             $TsvContentValue = '';
                                             $myfile = fopen($filenametsv, "w+") or die("Unable to open file!");
                                             
-                                            try {
+                                            
                                             foreach ($orderDataValue as $ContentOfTSV) {
                                                 $TsvContentValue = implode("\t", $ContentOfTSV) . "\n";
                                                 fwrite($myfile, $TsvContentValue);
                                             }
-                                            } catch (Exception $exception) {
-                                                report($exception);
-                                                return parent::render($request, $exception);
-                                            }
                                             
                                             fclose($myfile);
-                                        
+                                            } catch (Exception $exception) {
+                                            report($exception);
+                                            
+                                            return parent::render($request, $exception);
+                                            }
+                                            
                                             unlink($destinationPath . $file);
                                             
                                         } else if($Rid === 'IR_A1' || $Rid === 'IR_M1' || $Rid === 'IR'){
@@ -1748,46 +2485,108 @@ class ShowController extends Controller {
                                                 'Access_Type',
                                                 'Access_Method',
                                                 'Metric_Type',
-                                                'Performance');
+                                                'Reporting_Period_Total');
                                             
                                             $orderDataValue[] = $BodyReportHeading;
                                             $LastIndexOfJsonReport = count($dataValue1);
                                             
-                                            try {
+                                            
+                                            $ReportingPeriodFlag = 0;
                                             for($iCount=12;$iCount<$LastIndexOfJsonReport;$iCount++)
                                             {
+                                                
+                                                $matricValueFlage = 0;
                                                 $SingleColumn = array();
                                                 $CurrentRowValues = $dataValue1[$iCount];
                                                 
-                                                try{
                                                 foreach($BodyReportHeading as $BodyHeader){
-                                                    $SingleColumn[$BodyHeader] = $CurrentRowValues[$BodyHeader]??'';
+                                                    
+                                                    if($BodyHeader==='Metric_Type' || $BodyHeader==='Reporting_Period_Total'){
+                                                        $AllMatricTypeValue = unserialize($CurrentRowValues['Performance']);
+                                                        // echo "<pre>ALL";print_r($AllMatricTypeValue);die;
+                                                        
+                                                        $ReportingPeriod = isset($AllMatricTypeValue['Period'])?$AllMatricTypeValue['Period']:'';
+                                                        
+                                                        $d1 = new DateTime($ReportingPeriod['Begin_Date']);
+                                                        $d2 = new DateTime($ReportingPeriod['End_Date']);
+                                                        
+                                                        $interval = $d2->diff($d1);
+                                                        
+                                                        $Differences = $interval->format('%m');
+                                                        if($ReportingPeriodFlag === 0){
+                                                            for($Irp=0;$Irp<=$Differences;$Irp++){
+                                                                $orderDataValue[13+$Irp][] = $d1->format('Y-m');
+                                                                //$d1->add(new DateInterval('P30D'));
+                                                            }
+                                                            $ReportingPeriodFlag = 1;
+                                                        }
+                                                        $ReportingInstance = isset($AllMatricTypeValue['Instance'])?$AllMatricTypeValue['Instance']:'';
+                                                        //if(is_array($ReportingInstance) && (count($ReportingInstance))>1){
+                                                        if(is_array($ReportingInstance)){
+                                                            $matricValueFlage = 1;
+                                                            if(isset($instanceArray))
+                                                                unset($instanceArray);
+                                                                $instanceArray = array();
+                                                                foreach($ReportingInstance as $keyOfInstance=>$valueofInstance){
+                                                                    $instanceArray[] = $valueofInstance;
+                                                                }
+                                                        }
+                                                    }
+                                                    
+                                                    else if($BodyHeader==='DOI' || $BodyHeader==='Online_ISSN' || $BodyHeader==='Print_ISSN'){
+                                                        $ItemIdValue = unserialize($CurrentRowValues['Item_ID']);
+                                                        foreach($ItemIdValue as $dataValueOfColumn){
+                                                            $SingleColumn[$dataValueOfColumn['Type']] = $dataValueOfColumn['Value'];
+                                                        }
+                                                    } else {
+                                                        $SingleColumn[$BodyHeader] = $CurrentRowValues[$BodyHeader]??'';
+                                                    }
                                                 }
-                                                $orderDataValue[] = $SingleColumn;
-                                                } catch (Exception $exception) {
-                                                    report($exception);
-                                                    return parent::render($request, $exception);
+                                                //making duplicate rows for Metric_Type
+                                                if(isset($matricValueFlage) && $matricValueFlage==1){
+                                                    $lenghtOfColumn = count($orderDataValue[13]);
+                                                    foreach($instanceArray as $valueofInstanceValue){
+                                                        $SingleColumnCopy = $SingleColumn;
+                                                        $SingleColumnCopy['Metric_Type'] = $valueofInstanceValue['Metric_Type']??'';
+                                                        $SingleColumnCopy['Reporting_Period_Total'] = $valueofInstanceValue['Count']??'';
+                                                        $reportingPeriodTotal = 0;
+                                                            $countOfCurrentRow = count($SingleColumnCopy);
+                                                            if($countOfCurrentRow<$lenghtOfColumn){
+                                                                for(;$countOfCurrentRow<$lenghtOfColumn;$countOfCurrentRow++){
+                                                                    $currentDate = date('Y-m',strtotime($ReportingPeriod['Begin_Date']));
+                                                                    $ValueOfReporting = $orderDataValue[13][$countOfCurrentRow]==$currentDate?$valueofInstanceValue['Count']:'0';
+                                                                    $reportingPeriodTotal = $reportingPeriodTotal + (int)$ValueOfReporting;
+                                                                    $SingleColumnCopy[]= $ValueOfReporting;
+                                                                }
+                                                            }
+                                                        $orderDataValue[] = $SingleColumnCopy;
+                                                    }
+                                                }else{
+                                                    $orderDataValue[] = $SingleColumn;
                                                 }
                                             }
-                                            } catch (Exception $exception) {
-                                                report($exception);
-                                                return parent::render($request, $exception);
-                                            }
                                             
+                                            array_walk_recursive($orderDataValue, function (&$value) {
+                                                $value = '"'. addslashes($value).'"';
+                                            });
                                             
+                                            try {
                                             $TsvContentValue = '';
                                             $myfile = fopen($filenametsv, "w+") or die("Unable to open file!");
                                             
-                                            try {
+                                            
                                             foreach ($orderDataValue as $ContentOfTSV) {
                                                 $TsvContentValue = implode("\t", $ContentOfTSV) . "\n";
                                                 fwrite($myfile, $TsvContentValue);
                                             }
-                                            } catch (Exception $exception) {
-                                                report($exception);
-                                                return parent::render($request, $exception);
-                                            }
+                                            
                                             fclose($myfile);
+                                        } catch (Exception $exception) {
+                                            report($exception);
+                                            
+                                            return parent::render($request, $exception);
+                                        }
+                                            
                                             
                                             unlink($destinationPath . $file);
                                             
@@ -1814,26 +2613,49 @@ class ShowController extends Controller {
                                                 'Reporting_Period',
                                                 'Created',
                                                 'Created_By'
-                                            );  
+                                            );
                                             
                                             $Rid = $dataValue1[3][1];
                                             
                                             // getting array for header from JSON Data
                                             $JsonHeaderValues = array();
-                                            
-                                            try {
                                             for($i=0;$i<11;$i++){
                                                 $JsonHeaderValues[$dataValue1[$i][0]] = $dataValue1[$i][1];
                                             }
-                                            } catch (Exception $exception) {
-                                                report($exception);
-                                                return parent::render($request, $exception);
-                                            }
                                             
                                             $orderDataValue = array();
+                                            $rname = str_replace('"', '', $JsonHeaderValues['Report_Name']);
+                                            
                                             foreach($CorrectHeaderSequence as $HeaderHeading){
-                                                $orderDataValue[] =  array($HeaderHeading,$JsonHeaderValues[$HeaderHeading]??'');
+                                                if($HeaderHeading=='Reporting_Period'){
+                                                    //echo "<pre>";print_r($JsonHeaderValues);die;
+                                                    $makecompatibleDate = explode(";",$JsonHeaderValues['Report_Filters']);
+                                                    $BeginDate = explode("=",$makecompatibleDate[0]);
+                                                    $EndDate = explode("=",$makecompatibleDate[1]);
+                                                    
+                                                    $start_date = $BeginDate[1];
+                                                    $end_date = $EndDate[1];
+                                                    $BeginDate[1] = date("Y-m-t", strtotime($start_date));
+                                                    $EndDate[1] = date("Y-m-t", strtotime($end_date));
+                                                    $FilterValueDate = implode('=',$BeginDate)."; ".implode('=',$EndDate);
+                                                    //$orderDataValue[] =  array($HeaderHeading,$JsonHeaderValues['Report_Filters']??'');
+                                                    $orderDataValue[] =  array($HeaderHeading,$FilterValueDate??'');
+                                                    
+                                                } else {
+                                                    if($HeaderHeading=='Report_Filters'){
+                                                        $orderDataValue[] =  array($HeaderHeading,'');
+                                                    } else if($HeaderHeading=='Report_Name') {
+                                                        $orderDataValue[] =  array($HeaderHeading,$rname);
+                                                    }else{
+                                                        $orderDataValue[] =  array($HeaderHeading,$JsonHeaderValues[$HeaderHeading]??'');
+                                                    }
+                                                }
                                             }
+                                            
+                                            for($i=0;$i<11;$i++){
+                                                $JsonHeaderValues[$dataValue1[$i][0]] = $dataValue1[$i][1];
+                                            }
+                                            
                                             
                                         // tsv creation start
                                         $filenametsv = $provider_name . "_" . $Member['Customer_ID'] . "_" . $ReportCode['report_code'] . "_5_" . $begin_date . "_" . $end_date . "_" . $rundate . ".tsv";
@@ -1844,60 +2666,163 @@ class ShowController extends Controller {
                                             
                                             $orderDataValue[] = array();
                                             $BodyReportHeading = array(
-                                                'Institution_Name',
-                                                'Customer_ID',
                                                 'Title',
                                                 'Publisher',
                                                 'Publisher_ID',
                                                 'Platform',
                                                 'DOI',
+                                                'Online_ISSN',
+                                                'Print_ISSN',
                                                 'Proprietary_ID',
                                                 'ISBN',
-                                                'Print_ISSN',
-                                                'Online_ISSN',
                                                 'Data_Type',
                                                 'Section_Type',
                                                 'YOP',
                                                 'Access_Type',
                                                 'Access_Method',
                                                 'Metric_Type',
-                                                'Performance');
+                                                'Reporting_Period_Total'
+                                            );
                                             
                                             $orderDataValue[] = $BodyReportHeading;
+                                            
                                             $LastIndexOfJsonReport = count($dataValue1);
+                                            
+                                            $ReportingPeriodFlag = 0;
                                             for($iCount=12;$iCount<$LastIndexOfJsonReport;$iCount++)
                                             {
+                                                $matricValueFlage = 0;
+                                                
                                                 $SingleColumn = array();
                                                 $CurrentRowValues = $dataValue1[$iCount];
-                                                
                                                 foreach($BodyReportHeading as $BodyHeader){
-                                                    $SingleColumn[$BodyHeader] = $CurrentRowValues[$BodyHeader]??'';
+                                                    if($BodyHeader==='Metric_Type' || $BodyHeader==='Reporting_Period_Total'){
+                                                        $AllMatricTypeValue = unserialize($CurrentRowValues['Performance']);
+                                                        // echo "<pre>ALL";print_r($AllMatricTypeValue);die;
+                                                        
+                                                        $ReportingPeriod = isset($AllMatricTypeValue['Period'])?$AllMatricTypeValue['Period']:'';
+                                                        
+                                                        $ReportingInstance = isset($AllMatricTypeValue['Instance'])?$AllMatricTypeValue['Instance']:'';
+                                                        //if(is_array($ReportingInstance) && (count($ReportingInstance))>1){
+                                                        if(is_array($ReportingInstance)){
+                                                            $matricValueFlage = 1;
+                                                            if(isset($instanceArray))
+                                                                unset($instanceArray);
+                                                                $instanceArray = array();
+                                                                foreach($ReportingInstance as $keyOfInstance=>$valueofInstance){
+                                                                    $instanceArray[] = $valueofInstance;
+                                                                    
+                                                                }
+                                                        }
+                                                        
+                                                        $matric_type = array_column($instanceArray, 'Metric_Type');
+                                                        
+                                                        if($ReportingPeriodFlag === 0){
+                                                            $d1 = new DateTime($start_date);
+                                                            $d2 = new DateTime($end_date);
+                                                            $interval = $d2->diff($d1);
+                                                            $Differences = $interval->format('%m');
+                                                            //echo "<pre>"; print_r($Differences);die;
+                                                            for($Irp=0;$Irp<=$Differences;$Irp++){
+                                                                $nextMonth = date('Y-m', strtotime("+".$Irp." months", strtotime($start_date)));
+                                                                $orderDataValue[13][] = $nextMonth;
+                                                                //$d1->add(new DateInterval('P30D'));
+                                                            }
+                                                            
+                                                            $orderDataValue[5][1] = implode(";",$matric_type);
+                                                            $ReportingPeriodFlag = 1;
+                                                        }
+                                                    }
+                                                    else if($BodyHeader==='DOI'){
+                                                        $updateFlage = 0;
+                                                        $ItemIdValue = unserialize($CurrentRowValues['Item_ID']);
+                                                        foreach($ItemIdValue as $dataValueOfColumn){
+                                                            if($dataValueOfColumn['Type']=='DOI'){
+                                                                $SingleColumn[$dataValueOfColumn['Type']] = $dataValueOfColumn['Value']??'';
+                                                                $updateFlage = 1;
+                                                            }
+                                                            
+                                                        }
+                                                        if($updateFlage==0){
+                                                            $SingleColumn['DOI'] = '';
+                                                        }
+                                                        
+                                                    }
+                                                    
+                                                    else if($BodyHeader==='Online_ISSN'){
+                                                        $updateFlage = 0;
+                                                        $ItemIdValue = unserialize($CurrentRowValues['Item_ID']);
+                                                        foreach($ItemIdValue as $dataValueOfColumn){
+                                                            if($dataValueOfColumn['Type']=='Online_ISSN'){
+                                                                $SingleColumn[$dataValueOfColumn['Type']] = $dataValueOfColumn['Value']??'';
+                                                                $updateFlage = 1;
+                                                            }
+                                                            
+                                                        }
+                                                        if($updateFlage==0){
+                                                            $SingleColumn['Online_ISSN'] = '';
+                                                        }
+                                                        
+                                                    }
+                                                    
+                                                    else if($BodyHeader==='Print_ISSN'){
+                                                        $updateFlage = 0;
+                                                        $ItemIdValue = unserialize($CurrentRowValues['Item_ID']);
+                                                        foreach($ItemIdValue as $dataValueOfColumn){
+                                                            if($dataValueOfColumn['Type']=='Print_ISSN'){
+                                                                $SingleColumn[$dataValueOfColumn['Type']] = $dataValueOfColumn['Value']??'';
+                                                                $updateFlage = 1;
+                                                            }
+                                                            
+                                                        }
+                                                        if($updateFlage==0){
+                                                            $SingleColumn['Print_ISSN'] = '';
+                                                        }
+                                                        
+                                                    }
+                                                    
+                                                    else{
+                                                        $SingleColumn[$BodyHeader] = $CurrentRowValues[$BodyHeader]??'';
+                                                    }
                                                 }
-                                                $SingleColumn['Customer_ID'] = $Customer_ID??'' ;
-                                                $SingleColumn['Institution_Name'] = $JsonHeaderValues['Institution_Name']??'';
-                                                $orderDataValue[] = $SingleColumn;
+                                                
+                                                //making duplicate rows for Metric_Type
+                                                if(isset($matricValueFlage) && $matricValueFlage==1){
+                                                    $lenghtOfColumn = count($orderDataValue[13]);
+                                                    foreach($instanceArray as $valueofInstanceValue){
+                                                        $SingleColumnCopy = $SingleColumn;
+                                                        $SingleColumnCopy['Metric_Type'] = $valueofInstanceValue['Metric_Type']??'';
+                                                        $SingleColumnCopy['Reporting_Period_Total'] = $valueofInstanceValue['Count']??'';
+                                                        $reportingPeriodTotal = 0;
+                                                            $countOfCurrentRow = count($SingleColumnCopy);
+                                                            if($countOfCurrentRow<$lenghtOfColumn){
+                                                                for(;$countOfCurrentRow<$lenghtOfColumn;$countOfCurrentRow++){
+                                                                    $currentDate = date('Y-m',strtotime($ReportingPeriod['Begin_Date']));
+                                                                    $ValueOfReporting = $orderDataValue[13][$countOfCurrentRow]==$currentDate?$valueofInstanceValue['Count']:'0';
+                                                                    $reportingPeriodTotal = $reportingPeriodTotal + (int)$ValueOfReporting;
+                                                                    $SingleColumnCopy[]= $ValueOfReporting;
+                                                                }
+                                                            }
+                                                        $orderDataValue[] = $SingleColumnCopy;
+                                                    }
+                                                }else{
+                                                    $orderDataValue[] = $SingleColumn;
+                                                }
                                             }
                                             
                                             // TSV creation
-                                            try {
-                                            
                                             $TsvContentValue = '';
                                             $AllConsolidatedTSV[$Rid][]=$orderDataValue;
                                             
-                                            } catch (Exception $exception) {
-                                                report($exception);
-                                                
-                                                return parent::render($request, $exception);
-                                            }
+                                            
                                             //deletion of json
                                             unlink($destinationPath . $file);
                                             
                                         } else if($Rid === 'DR_D1' || $Rid === 'DR_D2' || $Rid === 'DR') {
                                             
+                                           
                                             $orderDataValue[] = array();
                                             $BodyReportHeading = array(
-                                                'Institution_Name',
-                                                'Customer_ID',
                                                 'Database',
                                                 'Publisher',
                                                 'Publisher_ID',
@@ -1908,22 +2833,88 @@ class ShowController extends Controller {
                                                 'Access_Type',
                                                 'Access_Method',
                                                 'Metric_Type',
-                                                'Performance');
+                                                'Reporting_Period_Total');
                                             
                                             $orderDataValue[] = $BodyReportHeading;
                                             $LastIndexOfJsonReport = count($dataValue1);
+                                            
+                                            $ReportingPeriodFlag = 0;
                                             for($iCount=12;$iCount<$LastIndexOfJsonReport;$iCount++)
                                             {
+                                                $matricValueFlage = 0;
+                                                
                                                 $SingleColumn = array();
                                                 $CurrentRowValues = $dataValue1[$iCount];
                                                 
+                                                
                                                 foreach($BodyReportHeading as $BodyHeader){
-                                                    $SingleColumn[$BodyHeader] = $CurrentRowValues[$BodyHeader]??'';
+                                                    
+                                                    if($BodyHeader==='Metric_Type' || $BodyHeader==='Reporting_Period_Total'){
+                                                        $AllMatricTypeValue = unserialize($CurrentRowValues['Performance']);
+                                                        // echo "<pre>";print_r($AllMatricTypeValue);die;
+                                                        
+                                                        $ReportingPeriod = isset($AllMatricTypeValue['Period'])?$AllMatricTypeValue['Period']:'';
+                                                        
+                                                        
+                                                        $d1 = new DateTime($ReportingPeriod['Begin_Date']);
+                                                        $d2 = new DateTime($ReportingPeriod['End_Date']);
+                                                        
+                                                        $interval = $d2->diff($d1);
+                                                        
+                                                        // echo "<pre>";print_r($interval);die;
+                                                        
+                                                        $Differences = $interval->format('%m');
+                                                        /* if($ReportingPeriodFlag === 0){
+                                                         for($Irp=0;$Irp<=$Differences;$Irp++){
+                                                         $orderDataValue[13+$Irp][] = $d1->format('Y-m');
+                                                         //$d1->add(new DateInterval('P30D'));
+                                                         }
+                                                         $ReportingPeriodFlag = 1;
+                                                         } */
+                                                        
+                                                        // die('fhfg');
+                                                        
+                                                        $ReportingInstance = isset($AllMatricTypeValue['Instance'])?$AllMatricTypeValue['Instance']:'';
+                                                        
+                                                        
+                                                        //if(is_array($ReportingInstance) && (count($ReportingInstance))>1){
+                                                        if(is_array($ReportingInstance)){
+                                                            $matricValueFlage = 1;
+                                                            if (isset($instanceArray))
+                                                                unset($instanceArray);
+                                                                $instanceArray = array();
+                                                                foreach($ReportingInstance as $keyOfInstance=>$valueofInstance){
+                                                                    $instanceArray[] = $valueofInstance;
+                                                                }
+                                                        }
+                                                    } else {
+                                                        $SingleColumn[$BodyHeader] = $CurrentRowValues[$BodyHeader]??'';
+                                                    }
                                                 }
-                                                $SingleColumn['Customer_ID'] = $Customer_ID??'' ;
-                                                $SingleColumn['Institution_Name'] = $JsonHeaderValues['Institution_Name']??'';
-                                                $orderDataValue[] = $SingleColumn;
+                                                //making duplicate rows for Metric_Type
+                                                if(isset($matricValueFlage) && $matricValueFlage==1){
+                                                    $lenghtOfColumn = count($orderDataValue[13]);
+                                                    foreach($instanceArray as $valueofInstanceValue){
+                                                        $SingleColumnCopy = $SingleColumn;
+                                                        $SingleColumnCopy['Metric_Type'] = $valueofInstanceValue['Metric_Type']??'';
+                                                        $SingleColumnCopy['Reporting_Period_Total'] = $valueofInstanceValue['Count']??'';
+                                                        $reportingPeriodTotal = 0;
+                                                            $countOfCurrentRow = count($SingleColumnCopy);
+                                                            if($countOfCurrentRow<$lenghtOfColumn){
+                                                                for(;$countOfCurrentRow<$lenghtOfColumn;$countOfCurrentRow++){
+                                                                    $currentDate = date('Y-m',strtotime($ReportingPeriod['Begin_Date']));
+                                                                    $ValueOfReporting = $orderDataValue[13][$countOfCurrentRow]==$currentDate?$valueofInstanceValue['Count']:'0';
+                                                                    $reportingPeriodTotal = $reportingPeriodTotal + (int)$ValueOfReporting;
+                                                                    $SingleColumnCopy[]= $ValueOfReporting;
+                                                                }
+                                                            }
+                                                        $orderDataValue[] = $SingleColumnCopy;
+                                                    }
+                                                }else{
+                                                    $orderDataValue[] = $SingleColumn;
+                                                }
                                             }
+                                            
                                             
                                             try {
                                                 
@@ -1944,30 +2935,93 @@ class ShowController extends Controller {
                                             
                                             $orderDataValue[] = array();
                                             $BodyReportHeading = array(
-                                                'Institution_Name',
-                                                'Customer_ID',
                                                 'Platform',
                                                 'YOP',
                                                 'Data_Type',
                                                 'Access_Type',
                                                 'Access_Method',
                                                 'Metric_Type',
-                                                'Performance'
+                                                'Reporting_Period_Total'
                                             );
                                             
                                             $orderDataValue[] = $BodyReportHeading;
                                             $LastIndexOfJsonReport = count($dataValue1);
+                                            
+                                            
+                                            $ReportingPeriodFlag = 0;
                                             for($iCount=12;$iCount<$LastIndexOfJsonReport;$iCount++)
                                             {
+                                                
+                                                $matricValueFlage = 0;
                                                 $SingleColumn = array();
                                                 $CurrentRowValues = $dataValue1[$iCount];
                                                 
                                                 foreach($BodyReportHeading as $BodyHeader){
-                                                    $SingleColumn[$BodyHeader] = $CurrentRowValues[$BodyHeader]??'';
+                                                    if($BodyHeader==='Metric_Type' || $BodyHeader==='Reporting_Period_Total'){
+                                                        $AllMatricTypeValue = unserialize($CurrentRowValues['Performance']);
+                                                        // echo "<pre>";print_r($AllMatricTypeValue);die;
+                                                        
+                                                        $ReportingPeriod = isset($AllMatricTypeValue['Period'])?$AllMatricTypeValue['Period']:'';
+                                                        
+                                                        
+                                                        $d1 = new DateTime($ReportingPeriod['Begin_Date']);
+                                                        $d2 = new DateTime($ReportingPeriod['End_Date']);
+                                                        
+                                                        $interval = $d2->diff($d1);
+                                                        
+                                                        // echo "<pre>";print_r($interval);die;
+                                                        
+                                                        $Differences = $interval->format('%m');
+                                                        if($ReportingPeriodFlag === 0){
+                                                            for($Irp=0;$Irp<=$Differences;$Irp++){
+                                                                $orderDataValue[13+$Irp][] = $d1->format('Y-m');
+                                                                //$d1->add(new DateInterval('P30D'));
+                                                            }
+                                                            $ReportingPeriodFlag = 1;
+                                                        }
+                                                        
+                                                        // die('fhfg');
+                                                        
+                                                        $ReportingInstance = isset($AllMatricTypeValue['Instance'])?$AllMatricTypeValue['Instance']:'';
+                                                        
+                                                        
+                                                        //if(is_array($ReportingInstance) && (count($ReportingInstance))>1){
+                                                        if(is_array($ReportingInstance)){
+                                                            $matricValueFlage = 1;
+                                                            if (isset($instanceArray))
+                                                                unset($instanceArray);
+                                                                $instanceArray = array();
+                                                                foreach($ReportingInstance as $keyOfInstance=>$valueofInstance){
+                                                                    $instanceArray[] = $valueofInstance;
+                                                                }
+                                                        }
+                                                    } else {
+                                                        
+                                                        $SingleColumn[$BodyHeader] = $CurrentRowValues[$BodyHeader]??'';
+                                                    }
                                                 }
-                                                $SingleColumn['Customer_ID'] = $Customer_ID??'' ;
-                                                $SingleColumn['Institution_Name'] = $JsonHeaderValues['Institution_Name']??'';
-                                                $orderDataValue[] = $SingleColumn;
+                                                
+                                                //making duplicate rows for Metric_Type
+                                                if(isset($matricValueFlage) && $matricValueFlage==1){
+                                                    foreach($instanceArray as $valueofInstanceValue){
+                                                        $SingleColumnCopy = $SingleColumn;
+                                                        $SingleColumnCopy['Metric_Type'] = $valueofInstanceValue['Metric_Type']??'';
+                                                        $SingleColumnCopy['Reporting_Period_Total'] = $valueofInstanceValue['Count']??'';
+                                                        $reportingPeriodTotal = 0;
+                                                            $countOfCurrentRow = count($SingleColumnCopy);
+                                                            if($countOfCurrentRow<$lenghtOfColumn){
+                                                                for(;$countOfCurrentRow<$lenghtOfColumn;$countOfCurrentRow++){
+                                                                    $currentDate = date('Y-m',strtotime($ReportingPeriod['Begin_Date']));
+                                                                    $ValueOfReporting = $orderDataValue[13][$countOfCurrentRow]==$currentDate?$valueofInstanceValue['Count']:'0';
+                                                                    $reportingPeriodTotal = $reportingPeriodTotal + (int)$ValueOfReporting;
+                                                                    $SingleColumnCopy[]= $ValueOfReporting;
+                                                                }
+                                                            }
+                                                        $orderDataValue[] = $SingleColumnCopy;
+                                                    }
+                                                }else{
+                                                    $orderDataValue[] = $SingleColumn;
+                                                }
                                             }
                                             
                                             try {
@@ -1989,8 +3043,6 @@ class ShowController extends Controller {
                                             
                                             $orderDataValue[] = array();
                                             $BodyReportHeading = array(
-                                                'Institution_Name',
-                                                'Customer_ID',
                                                 'Item',
                                                 'Publisher',
                                                 'Publisher_ID',
@@ -2026,21 +3078,85 @@ class ShowController extends Controller {
                                                 'Access_Type',
                                                 'Access_Method',
                                                 'Metric_Type',
-                                                'Performance');
+                                                'Reporting_Period_Total');
                                             
                                             $orderDataValue[] = $BodyReportHeading;
                                             $LastIndexOfJsonReport = count($dataValue1);
+                                            
+                                            
+                                            $ReportingPeriodFlag = 0;
                                             for($iCount=12;$iCount<$LastIndexOfJsonReport;$iCount++)
                                             {
+                                                
+                                                $matricValueFlage = 0;
                                                 $SingleColumn = array();
                                                 $CurrentRowValues = $dataValue1[$iCount];
                                                 
                                                 foreach($BodyReportHeading as $BodyHeader){
-                                                    $SingleColumn[$BodyHeader] = $CurrentRowValues[$BodyHeader]??'';
+                                                    
+                                                    if($BodyHeader==='Metric_Type' || $BodyHeader==='Reporting_Period_Total'){
+                                                        $AllMatricTypeValue = unserialize($CurrentRowValues['Performance']);
+                                                        // echo "<pre>ALL";print_r($AllMatricTypeValue);die;
+                                                        
+                                                        $ReportingPeriod = isset($AllMatricTypeValue['Period'])?$AllMatricTypeValue['Period']:'';
+                                                        
+                                                        $d1 = new DateTime($ReportingPeriod['Begin_Date']);
+                                                        $d2 = new DateTime($ReportingPeriod['End_Date']);
+                                                        
+                                                        $interval = $d2->diff($d1);
+                                                        
+                                                        $Differences = $interval->format('%m');
+                                                        if($ReportingPeriodFlag === 0){
+                                                            for($Irp=0;$Irp<=$Differences;$Irp++){
+                                                                $orderDataValue[13+$Irp][] = $d1->format('Y-m');
+                                                                //$d1->add(new DateInterval('P30D'));
+                                                            }
+                                                            $ReportingPeriodFlag = 1;
+                                                        }
+                                                        $ReportingInstance = isset($AllMatricTypeValue['Instance'])?$AllMatricTypeValue['Instance']:'';
+                                                        //if(is_array($ReportingInstance) && (count($ReportingInstance))>1){
+                                                        if(is_array($ReportingInstance)){
+                                                            $matricValueFlage = 1;
+                                                            if(isset($instanceArray))
+                                                                unset($instanceArray);
+                                                                $instanceArray = array();
+                                                                foreach($ReportingInstance as $keyOfInstance=>$valueofInstance){
+                                                                    $instanceArray[] = $valueofInstance;
+                                                                }
+                                                        }
+                                                    }
+                                                    
+                                                    else if($BodyHeader==='DOI' || $BodyHeader==='Online_ISSN' || $BodyHeader==='Print_ISSN'){
+                                                        $ItemIdValue = unserialize($CurrentRowValues['Item_ID']);
+                                                        foreach($ItemIdValue as $dataValueOfColumn){
+                                                            $SingleColumn[$dataValueOfColumn['Type']] = $dataValueOfColumn['Value'];
+                                                        }
+                                                    } else {
+                                                        $SingleColumn[$BodyHeader] = $CurrentRowValues[$BodyHeader]??'';
+                                                    }
                                                 }
-                                                $SingleColumn['Customer_ID'] = $Customer_ID??'' ;
-                                                $SingleColumn['Institution_Name'] = $JsonHeaderValues['Institution_Name']??'';
-                                                $orderDataValue[] = $SingleColumn;
+                                                //making duplicate rows for Metric_Type
+                                                if(isset($matricValueFlage) && $matricValueFlage==1){
+                                                    $lenghtOfColumn = count($orderDataValue[13]);
+                                                    foreach($instanceArray as $valueofInstanceValue){
+                                                        $SingleColumnCopy = $SingleColumn;
+                                                        $SingleColumnCopy['Metric_Type'] = $valueofInstanceValue['Metric_Type']??'';
+                                                        $SingleColumnCopy['Reporting_Period_Total'] = $valueofInstanceValue['Count']??'';
+                                                        $reportingPeriodTotal = 0;
+                                                            $countOfCurrentRow = count($SingleColumnCopy);
+                                                            if($countOfCurrentRow<$lenghtOfColumn){
+                                                                for(;$countOfCurrentRow<$lenghtOfColumn;$countOfCurrentRow++){
+                                                                    $currentDate = date('Y-m',strtotime($ReportingPeriod['Begin_Date']));
+                                                                    $ValueOfReporting = $orderDataValue[13][$countOfCurrentRow]==$currentDate?$valueofInstanceValue['Count']:'0';
+                                                                    $reportingPeriodTotal = $reportingPeriodTotal + (int)$ValueOfReporting;
+                                                                    $SingleColumnCopy[]= $ValueOfReporting;
+                                                                }
+                                                            }
+                                                        $orderDataValue[] = $SingleColumnCopy;
+                                                    }
+                                                }else{
+                                                    $orderDataValue[] = $SingleColumn;
+                                                }
                                             }
                                             
                                             try {
@@ -2115,12 +3231,12 @@ class ShowController extends Controller {
             if($selectedFormat==='ConsolidatedTSV'){
                 if(isset($AllDataValue))
                     unset($AllDataValue);
-                $AllDataValue = array();
+                 $AllDataValue = array();
                 foreach($AllConsolidatedTSV as $ReportName=>$AllReportValues){
                     $firsttimeheader = 0;
                     if(isset($orderDataValueNew))
                     unset($orderDataValueNew);
-                    $orderDataValueNew[] = array();
+                    // $orderDataValueNew[] = array();
                     foreach($AllReportValues as $keyOfIndex=>$ReportValue){
                         //now Report Body
                             
@@ -2432,6 +3548,7 @@ class ShowController extends Controller {
 
     // ///////////////////////////////
     function addProvider($Configid = 0, $ProviderId = 0) {
+     
         $user = Session::get('user');
         if ($user['email'] == '') {
             return Redirect::to('/');
@@ -2468,11 +3585,11 @@ class ShowController extends Controller {
             return Redirect::to('/');
         }
         $data = Input::all();
-        // echo "<pre>";print_r($data);die;
+        //echo "<pre>";print_r($data);die;
         $rules = array(
             'provider_name' => 'required',
             'provider_url' => 'required|url',
-            'apikey' => 'required',
+            //'apikey' => 'required',
             'customer_id' => 'required',
             'requestor_id' => 'required'
                 // 'remarks' => 'required',
@@ -2493,37 +3610,30 @@ class ShowController extends Controller {
             $updatedataArray['requestor_id'] = $data['requestor_id'];
             $updatedataArray['remarks'] = $data['remarks'];
             
-            DB::beginTransaction();
-            try {
             $Reportdetail = Provider::where(array(
                         'id' => $data['provider_id'],
                         'configuration_id' => $data['configuration_id']
                     ))->update($updatedataArray);
-        } catch (Exception $exception) {
-            DB::rollback();
-        }
-
+        
             Session::flash('colupdatemsg', 'Provider Updated Successfully');
             return Redirect::intended('/add_provider/' . $data['configuration_id']);
         } else {
-            DB::beginTransaction();
-            try {
+            
                 $newUser = Provider::create($data);
-                DB::commit();
-            } catch (Exception $exception) {
-                DB::rollback();
-            }
+               
             
             $InsertedIDOfProvider = $newUser->id;
-            // echo "<pre>";print_r($newUser);die;
+//          echo "<pre>";print_r($newUser);die;
             if ($newUser) {
                 Session::flash('colupdatemsg', 'Provider Added Successfully');
                 
                         $mainURL =$data['provider_url'];
                         $fields = array(
                             'apikey' => $data['apikey'],
-                            'customer_id' => $data['customer_id'] 
+                            'customer_id' => $data['customer_id'],
+                            'requestor_id' => $data['requestor_id']
                         );
+                        $fields = array_filter($fields);
 //                         echo "<pre>";print_r($fields);die;
                         $url = $mainURL . "/members?" . http_build_query($fields, '', "&");
 //                         echo "<pre>";print_r($url);die;
@@ -2613,7 +3723,6 @@ class ShowController extends Controller {
                     
                     Session::flash('useralertmsg', 'No Data Available');
                     return Redirect::intended('/sushirequest');
-                    
                 }
                 
             }else{
@@ -2629,7 +3738,26 @@ class ShowController extends Controller {
             
             
             
-            $sushiHeader[] = array_keys($AllMatricArray[0]);
+            //$sushiHeader[] = array_keys($AllMatricArray[0]);
+            
+            $sushiHeader[] = Array
+            (
+                'Id',
+                'User_Email',
+                'Session_Id',
+                'Sushi_URL',
+                'Request_Name',
+                'Platform',
+                'Report_Id',
+                'Report_Format',
+                'Success',
+                'Number_Of_Errors',
+                'Date_Time'
+            );
+            
+            
+            
+           // echo "<pre>";print_r($sushiHeader);die;
             
             
             $arr1 = array_merge($sushiHeader,$AllMatricArray);
@@ -2637,8 +3765,7 @@ class ShowController extends Controller {
             
             $destinationPath = public_path() . "/upload/json/" ;
             $file = time() . '_file';
-            
-            try{
+//             try{
             return Excel::create($file, function ($excel) use ($arr1) {
                 
                 // Build the spreadsheet, passing in the $dataValue
@@ -2647,17 +3774,16 @@ class ShowController extends Controller {
                 });
             })->store('xlsx', $destinationPath)->download(); 
             // return \Redirect::to($destinationPath . $file);
-            } catch (Exception $exception) {
-                report($exception);
+//             } catch (Exception $exception) {
+//                 report($exception);
                 
-                return parent::render($request, $exception);
-            }
-            
-        }else{
+//                 return parent::render($request, $exception);
+//             }
+//         }else
+
             return Redirect::to('login');
         }
     }
-    // echo"<pre>";print_r($ConsortiumDetail);die;
     
     // ////////////////Creating New View page for Import configuration////////////////////////
     public function importConfiguration()

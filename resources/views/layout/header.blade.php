@@ -18,11 +18,25 @@
 
 </head>
 <body>
+
+
+
+
+<div class="preloader-wrap">
+  <div class="percentage" id="precent"></div>
+  <div class="loader">
+    <div class="trackbar">
+      <div class="loadbar"></div>
+    </div>
+    <div class="glow"></div>
+  </div>
+</div>
+
 <div class="container">
     <header>
     	<div class="row">
     	<div class="col-md-3">
-        	<h1 class="logoBlock"><a href="http://counter5.mpstechnologies.com"><img title="Project Counter" alt="Project Counter" src="/assets/image/logo.png"></a></h1>
+        	<h1 class="logoBlock"><a href="https://www.projectcounter.org/"><img title="Project Counter" alt="Project Counter" src="https://www.projectcounter.org/wp-content/themes/project-counter-2016/images/logo.png"></a></h1>
         </div>
         
         <div class="col-md-3 pull-right pt-3" style="padding-top:25px">
@@ -48,6 +62,7 @@
         				<ul class="nav navbar-nav">
         				    <li><a href="{{url('filelist')}}">File Validation</a></li>
         				    <li><a href="{{url('consortium')}}">Consortium Tool</a></li>
+        				     <li><a href="{{url('showreport')}}">User's Reports</a></li>
         				    </ul>
         				<ul class="nav navbar-nav pull-right">
         			     <li><a href="{{url('useredit')}}" ><i class="fa fa-user" aria-hidden="true"></i> <?php  echo "Welcome ".$userDisplayName?></a></li>

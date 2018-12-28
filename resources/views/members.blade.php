@@ -33,7 +33,14 @@
 					
 					<div class="col-sm-12"> 
 				<div class="col-md-12">
-				<h3><button><a href="{{url('consortium')}}">Back </a></button>&nbsp;&nbsp; Member Details : {{$SingleProvder->provider_name}}  ||  {{$SingleProvder->remarks}}&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<button><a href="{{url('refresh_members')}}/<?php echo $SingleProvder['id'];?>">Refresh Member </a></button></h3>
+				
+				
+				<h3><a href="{{url('consortium')}}" class="btn btn-info" role="button">Back</a> &nbsp;&nbsp;  
+				Member Details : {{$SingleProvder->provider_name}}  ||  {{$SingleProvder->remarks}}&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+				<a href="{{url('refresh_members')}}/<?php echo $SingleProvder['id'];?>" class="btn btn-info" role="button"> 
+				Refresh Member
+				</a>
+				</h3>
 				
 				<hr class="colorgraph"></div>
 					

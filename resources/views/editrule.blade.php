@@ -38,6 +38,8 @@
 					<option value="sum" <?php if($newarr["ruletype"]=="sum")echo "Selected";?>>sum</option>
 					<option value="row sum" <?php if($newarr["ruletype"]=="row sum")echo "Selected";?>>row sum</option>
 					<option value="isbn" <?php if($newarr["ruletype"]=="isbn")echo "Selected";?>>isbn</option>
+					<option value="doi" <?php if($newarr["ruletype"]=="doi")echo "Selected";?>>doi</option>
+					<option value="uri" <?php if($newarr["ruletype"]=="uri")echo "Selected";?>>uri</option>
 					<option value="sumif" <?php if($newarr["ruletype"]=="sumif")echo "Selected";?>>sumif</option>
 					<option value="sum-row-column" <?php if($newarr["ruletype"]=="sum-row-column")echo "Selected";?>>sum-row-column</option>
 					<option value="string" <?php if($newarr["ruletype"]=="string")echo "Selected";?>>string</option>

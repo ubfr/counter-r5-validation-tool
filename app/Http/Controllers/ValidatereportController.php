@@ -102,11 +102,35 @@ class ValidatereportController extends FilevalidateController {
         $ReportIdForCode = $reportdata::select('id')
                 ->where('report_code', trim($getreportCode))
                 ->first();
+        
+                
+                
+                //connected with row_validate_rules and getting
+                
+                
+                $HeaderArrayFix = array(
+                    'Report_Name',
+                    'Report_ID',
+                    'Release',
+                    'Institution_Name',
+                    'Institution_ID',
+                    'Metric_Types',
+                    'Report_Filters',
+                    'Report_Attributes',
+                    'Exceptions',
+                    'Reporting_Period',
+                    'Created',
+                    'Created_By'
+                );
+                $allExcelHeader = $sheet->rangeToArray('A1' . ':' . 'A12', NULL, TRUE, FALSE);
+                $allExcelHeader = array_column($allExcelHeader, '0');
+                
+                $DiffrenceOfHeader = array_diff($HeaderArrayFix,$allExcelHeader);
+                
+                
+                
 
 ////////////////////////////////////////report_attribute/////////////////////////////////////////////////////////
-
-        $Headervalue = $Header = $sheet->rangeToArray('A14' . ':' . 'Q14', NULL, TRUE, FALSE);
-        $headerdataarray = $Headervalue[0];
 
         //checking matrix type
         $MatrixValue = $MatrixFilter = $sheet->rangeToArray('B6' . ':' . 'B6', NULL, TRUE, FALSE);
@@ -135,6 +159,13 @@ class ValidatereportController extends FilevalidateController {
             $b++;
             $data_error++;
         }
+           else if(count($DiffrenceOfHeader)>0){
+                $error[$b]["data"] = implode(",",$DiffrenceOfHeader). " onwards headers";
+                $error[$b]["error"] = " Report header sequence mismatched.";
+                $b++;
+                $data_error++;
+            }
+        
         else {
             ini_set('max_execution_time', 0);
             ini_set('memory_limit', '2048M');
@@ -144,7 +175,6 @@ class ValidatereportController extends FilevalidateController {
             $highesstatictrow = $data::where('report_id', $ReportId['id'])
                     ->where('is_range', '0')
                     ->max('row');
-            //connected with row_validate_rules and getting 
             if ($flageForMatrixfilter == 1) {
                 $invalidMetric = implode(";", $invalidMetric);
                 $error[$a]["data"] = $invalidMetric;
@@ -152,26 +182,37 @@ class ValidatereportController extends FilevalidateController {
                 $a++;
                 $data_error++;
             }
-
-
-
-
+            
             $Institution_Name = $sheet->rangeToArray('B4' . ':' . 'B4', NULL, TRUE, FALSE);
             $Institution_Name = $Institution_Name[0][0] ?? '';
             if (empty($Institution_Name)) {
                 $error[$a]["data"] = 'NULL';
-                $error[$a]["error"] = "$Institution_Name should not be blank in Cell B4";
+                $error[$a]["error"] = "Institution_Name should not be blank in Cell B4";
                 $a++;
                 $data_error++;
             }
             $Institution_ID = $sheet->rangeToArray('B5' . ':' . 'B5', NULL, TRUE, FALSE);
             $Institution_ID = $Institution_ID[0][0] ?? '';
+            
             if (empty($Institution_ID)) {
                 $error[$a]["data"] = 'NULL';
-                $error[$a]["error"] = "$Institution_ID should not be blank in Cell B5";
+                $error[$a]["error"] = "Institution_ID should not be blank in Cell B5";
                 $a++;
                 $data_error++;
             }
+            else{
+            $dm = $Institution_ID;
+            if(strpos($dm,":") || strpos($dm,"=")) 
+               {
+                   //do nothing
+               }else{
+                    $error[$a]["data"] = $Institution_ID;
+                    $error[$a]["error"] = "Institution_ID is invalid in Cell B5";
+                    $a++;
+                    $data_error++;
+                }
+            }
+            
             $Metric_Types = $sheet->rangeToArray('B6' . ':' . 'B6', NULL, TRUE, FALSE);
             $Metric_Types = $Metric_Types[0][0] ?? '';
             if (empty($Metric_Types)) {
@@ -181,8 +222,6 @@ class ValidatereportController extends FilevalidateController {
                 $data_error++;
             }
 
-
-
             //now for B8 Rules
 
             $Attributes = $sheet->rangeToArray('B8' . ':' . 'B8', NULL, TRUE, FALSE);
@@ -190,10 +229,23 @@ class ValidatereportController extends FilevalidateController {
             //Stored Attributes to show for check in header report
             $CheckValidationAttribute = array();
             
-            $AttributesWithoutPipe = explode('=', $AttributesValue);
-            if(isset($AttributesWithoutPipe[0]) && $AttributesWithoutPipe[0]==='Attributes_To_Show'){
-                $CheckValidationAttribute = explode('|', $AttributesWithoutPipe[1]);
+            
+            
+            if(strpos($AttributesValue,';')){
+                $AttributesWithoutSemicolon = explode(';', $AttributesValue);
+                foreach($AttributesWithoutSemicolon as $AttributeValueWithSemicolon){
+                    $AttributesWithoutPipe = explode('=', $AttributeValueWithSemicolon);
+                    if(isset($AttributesWithoutPipe[0]) && $AttributesWithoutPipe[0]==='Attributes_To_Show'){
+                        $CheckValidationAttribute = explode('|', $AttributesWithoutPipe[1]);
+                    }
+                }
+            }else{
+                $AttributesWithoutPipe = explode('=', $AttributesValue);
+                if(isset($AttributesWithoutPipe[0]) && $AttributesWithoutPipe[0]==='Attributes_To_Show'){
+                    $CheckValidationAttribute = explode('|', $AttributesWithoutPipe[1]);
+                }
             }
+               
             if ($getreportCode === 'DR' || $getreportCode === 'PR') {
                 if (empty($AttributesValue)) {
                     $error[$a]["data"] = 'NULL';
@@ -211,17 +263,69 @@ class ValidatereportController extends FilevalidateController {
                     }
                 }
             }
-
-            $Reporting_Period = $sheet->rangeToArray('B10' . ':' . 'B10', NULL, TRUE, FALSE);
-            $Reporting_Period = $Reporting_Period[0][0] ?? '';
-            if (empty($Reporting_Period)) {
+            //get start date and end date with month Gap
+            $DateInterval = $sheet->rangeToArray('B10' . ':' . 'B10', NULL, TRUE, FALSE);
+            $DateInterval = $DateInterval[0][0]??'';
+            if (empty($DateInterval)) {
                 $error[$a]["data"] = 'NULL';
                 $error[$a]["error"] = "Reporting_Period should not be blank in Cell B10";
                 $a++;
                 $data_error++;
             }
-
-
+            else if(strpos($DateInterval,"Begin_Date") || strpos($DateInterval,"End_Date")) {
+                    //do nothing
+                }else{
+                $warning[$b]["data"] = $DateInterval;
+                $warning[$b]["error"] = "Reporting_Period should have proper format in  Cell B10";
+                $data_warning++;
+                $b++;
+            }
+            $BeginDatawithEndDAte = explode(";",$DateInterval??'');
+            $BeginDateFirstPart = explode("=",$BeginDatawithEndDAte[0]??'');
+            $EndDateFirstPart = explode("=",$BeginDatawithEndDAte[1]??'');
+            $BeginDAteValue = $BeginDateFirstPart[1]??'';
+            $EndDAteValue = $EndDateFirstPart[1]??'';
+            $ts1 = strtotime($BeginDAteValue);
+            $ts2 = strtotime($EndDAteValue);
+            
+            $monthoftheday = substr($BeginDAteValue,-2);
+            if($monthoftheday!='01'){
+                $error[$a]["data"] = $BeginDAteValue;
+                $error[$a]["error"] = "The date should start from the first day of the month in Cell B10";
+                $a++;
+                $data_error++;
+            }
+            
+            $year1 = date('Y', $ts1);
+            $year2 = date('Y', $ts2);
+            
+            $month1 = date('m', $ts1);
+            
+            $month2 = date('m', $ts2);
+            
+            if($year1>1970)
+                $diff = (($year2 - $year1) * 12) + ($month2 - $month1);
+                else
+                    $diff=0;
+                    $diff = $diff+1;
+                    
+                    
+                    $months = array(1 => 'Jan', 2 => 'Feb', 3 => 'Mar', 4 => 'Apr', 5 => 'May', 6 => 'Jun', 7 => 'Jul', 8 => 'Aug', 9 => 'Sep', 10 => 'Oct', 11 => 'Nov', 12 => 'Dec');
+                    
+                    $DiffMonthArray = array();
+                    for ($iDate = 1; $iDate <= $diff; $iDate++) {
+                        $DiffMonthArray[] = $months[$iDate]."-".date("Y",$ts1);
+                    }
+            $Created = $sheet->rangeToArray('B11' . ':' . 'B11', NULL, TRUE, FALSE);
+            $Created = $Created[0][0] ?? '';
+            if (empty($Created)) {
+                $error[$a]["data"] = 'NULL';
+                $error[$a]["error"] = "Created should not be blank in Cell B11";
+                $a++;
+                $data_error++;
+            }
+            ///////created by///////////
+            
             $Created_By = $sheet->rangeToArray('B12' . ':' . 'B12', NULL, TRUE, FALSE);
             $Created_By = $Created_By[0][0] ?? '';
             if (empty($Created_By)) {
@@ -234,24 +338,64 @@ class ValidatereportController extends FilevalidateController {
             //capturing filter type of report
             $ReportFilter = $sheet->rangeToArray('B7' . ':' . 'B7', NULL, TRUE, FALSE);
             $ReportFilter = $ReportFilter[0][0] ?? '';
+            $AllMastersValues = array(
+                'Access_Type'=>array('controlled','OA_Gold','Other_Free_To_Read'),
+                'Access_Method'=>array('regular' , 'TDM'),
+                'Section_Type'=>array('article','book','chapter'),
+                'Data_Type'=>array('book' ,'journal','multimedia','database')
+            );
+            
+            $arraykeyofmaster=array_keys($AllMastersValues);
+            //echo "<pre>";print_r($arraykeyofmaster);
+            
             $ReportFilterValidation = array();
             $ReportFilterKeyAndIndex = array();
-            if (!empty($ReportFilter)) {
+            if (empty($ReportFilter)) {
+                $error[$a]["data"] = "NULL";
+                $error[$a]["error"] = "Report_Filters should not be blank ";
+                $a++;
+                $data_error++;
+            }
+            {
                 $allFilters = explode(';',$ReportFilter);
-                
+                $IndexFlage =0;
+                $IncorrectIndex = array();
                 if(is_array($allFilters)){
                     $allFilters=array_filter($allFilters);
                     foreach($allFilters as $FilterValue){
                         $FilterValueWithKey = explode('=', $FilterValue);
-                        //echo "<pre>Image";print_r($FilterValueWithKey);
                         $FilterValue = explode("|",$FilterValueWithKey[1]??'');
-                        $allFilters=array_filter($FilterValue);
-                        foreach($allFilters as $SinglFilter){
-                           $ReportFilterValidation[trim($FilterValueWithKey[0])][]= $SinglFilter;
+                        if(!(in_array(trim($FilterValueWithKey[0])??'',$arraykeyofmaster))){
+                            $IncorrectIndex[]=$FilterValueWithKey[0]??'';
+                            $IndexFlage=1;
                         }
+                        
+                        $allFiltersInner=array_filter($FilterValue);
+                        foreach($allFiltersInner as $SinglFilter){
+                            if(isset($AllMastersValues[trim($FilterValueWithKey[0])])){
+                                if(!(in_array(strtolower($SinglFilter),$AllMastersValues[trim($FilterValueWithKey[0])]))){
+                                    $error[$a]["data"] = implode(",",$FilterValue);
+                                    $error[$a]["error"] = "Invalid values in cell B7";
+                                    $a++;
+                                    $data_error++;
+                                }
+                                  
+                            }
+                                
+                           $ReportFilterValidation[trim($FilterValueWithKey[1])][]= $SinglFilter;
+                        }
+                        
                     }
                 }
+                if(count($IncorrectIndex)>0){
+                    $error[$a]["data"] = implode(",",$IncorrectIndex);
+                    $error[$a]["error"] = "Header column index mismatching in cell B7.";
+                    $a++;
+                    $data_error++; 
+                }
+                
             }
+            
             // $queries = DB::getQueryLog();
             /////////loop for static column///////////////////////////////////////////////////////////////
             $endrrow = $highestRow + 1;
@@ -281,6 +425,44 @@ class ValidatereportController extends FilevalidateController {
                 if($i==14){
                     $Differences=array();
                     $AllColumnsHeading = $sheet->rangeToArray('A'.$i . ':' .$highestColumn.$i , NULL, TRUE, FALSE);
+                    $DataValueColumn = $AllColumnsHeading[0];
+                    $ReportingPerionIndex = array_search('Reporting_Period_Total', $DataValueColumn);
+                    $ReportingPerionIndex++;
+                    
+                    //echo "<pre>";print_r($DiffMonthArray);echo "<hr>";
+                    //echo "<pre>";print_r($DataValueColumn);
+                    
+                    
+                    //create array for only month column
+                    $BodyDateValue = array();
+                    for($icountBodyDate =$ReportingPerionIndex; $icountBodyDate<count($DataValueColumn);$icountBodyDate++){
+                        $BodyDateValue[] = $DataValueColumn[$icountBodyDate];
+                    }
+                    if((count($BodyDateValue))!=(count($DiffMonthArray))){
+                        $error[$a]["data"] = $DateInterval;
+                        $error[$a]["error"] = "Date ranges does not exist in column list in row no 14.";
+                        $a++;
+                        $data_error++; 
+                    }else{
+                        $MissingColumn = array();
+                        foreach($DiffMonthArray as $MonthRangeValue){
+                            $matchingstring = $DataValueColumn[$ReportingPerionIndex]??'';
+                            if(!($MonthRangeValue==$matchingstring)){
+                                $MissingColumn[]=$matchingstring;
+                            }
+                            $ReportingPerionIndex++;
+                        }
+
+                        //echo count($MissingColumn)."<pre>MISSSI";print_r($MissingColumn);die;
+                        if((count($MissingColumn))>0){
+                            $error[$a]["data"] = implode(",",$MissingColumn);
+                            $error[$a]["error"] = "Respective month column does not exist in column list in row no 14.";
+                            $a++;
+                            $data_error++; 
+                        }
+                    }
+                    //echo "<pre>";print_r($MissingColumn);die;
+                    
                     $Differences = array_diff($CheckValidationAttribute,$AllColumnsHeading[0]);
                     if(count($Differences)>0){
                         $error[$a]["data"] = implode(",",$Differences);
@@ -407,7 +589,7 @@ class ValidatereportController extends FilevalidateController {
                             $MetricTypeValue = trim($cellval);
                             if (!in_array(strtolower($MetricTypeValue), $valueOfCellArray)) {
                                 $error[$a]["data"] = $cellval;
-                                $error[$a]["error"] = $cellval . " Metric type Cell " . $coln . $i . " does not matched with header Metric Type";
+                                $error[$a]["error"] = $cellval . " Metric type Cell " . $coln . $i . " does not match with header Metric Type";
                                 $a++;
                                 $data_error++;
                             }
@@ -483,12 +665,49 @@ class ValidatereportController extends FilevalidateController {
                                                 $error_det = $columnval['value'];
                                             }
 
-                                            $error[$a]["data"] = $cellval;
-                                            $error[$a]["error"] = "Cell " . $startcell . $i . " should be $error_det";
+                                            $warning[$a]["data"] = "NULL";
+                                            $warning[$a]["error"] = "Cell " . $startcell . $i . " should not be $error_det";
+                                            $b++;
+                                            $data_warning++;
+                                        }
+                                    }
+                                    
+                                    ////////////if ruletype is "doi"////////////////////
+                                    
+                                    if ($columnval['ruletype'] == 'doi') {
+                                        $cellval = $sheet->getcell($coln . $i) ?? '';
+                                        $checkdoi = $this->checkdoi($cellval);
+                                        if($checkdoi===true){
+                                            
+                                            ////////#do nothing
+                                        }
+                                        else
+                                          {
+                                            $error[$a]["data"] = $cellint;
+                                            $error[$a]["error"] = "Cell " . $startcell . $i . " should be proper DOI format";
                                             $a++;
                                             $data_error++;
                                         }
                                     }
+                                    
+//                                     ////////////////uri format///////////
+                                    if ($columnval['ruletype'] == 'uri') {
+                                        $cellval = $sheet->getcell($startcell . $i);
+                                        //  $doi = array();
+                                        $checkuri = $this->checkuri($cellval);
+                                        if($checkuri===true){
+                                            
+                                        }
+                                        else
+                                        {
+                                            $error[$a]["data"] = $cellint;
+                                            $error[$a]["error"] = "Cell " . $startcell . $i . " should be proper URI format";
+                                            $a++;
+                                            $data_error++;
+                                        }
+                                    }
+                                    
+                                    
                                     ///////////////////////////////////////////////////////
                                     //////////////if rule type is Date type////////////////
                                     else if ($columnval['ruletype'] == 'date_format') {
@@ -537,7 +756,23 @@ class ValidatereportController extends FilevalidateController {
                                                 $data_warning++;
                                                 $b++;
                                             }
-                                        }else {
+                                        }
+                                        
+                                        else if ($columnval['value'] == 'yyyy-mm-ddThh:mm:ssZ') {
+                                            $checkdate = $this->checkUTCDateFormat($cellval);
+                                            if ($checkdate == false) {
+                                                
+                                                $warning[$b]["data"] = $cellval;
+                                                $warning[$b]["error"] = "Cell " . $coln . $i . " should contain " . $columnval['value'] . " format";
+                                                $data_warning++;
+                                                $b++;
+                                            }
+                                            
+                                        } 
+                                        
+                                        
+                                        
+                                        else {
                                             $getdate = $sheet->rangeToArray($startcell . $i . ':' . $startcell . $i, NULL, TRUE, FALSE);
                                             foreach ($getdate as $dateval) {
                                                 $cellval = $dateval[0];
@@ -721,8 +956,45 @@ class ValidatereportController extends FilevalidateController {
                                         } else {
                                             $error_det = $columnval['value'];
                                         }
+                                        $warning[$b]["data"] = "NULL";
+                                        $warning[$b]["error"] = "Cell " . $coln . $i . " should not be $error_det";
+                                        $b++;
+                                        $data_warning++;
+                                    }
+                                }
+                                //  //////////////doi///////////////////
+                                else if ($columnval['ruletype'] == 'doi') {
+                                    $cellValueNew = $sheet->rangeToArray($coln . $i . ':' . $coln . $i, NULL, TRUE, FALSE);
+                                    $cellValueNew = $cellValueNew[0][0] ?? '';
+                                    //  $doi = array();
+                                    $checkdoi = $this->checkdoi($cellValueNew);
+                                    
+                                    if( $checkdoi===true){
+                                        
+                                        
+                                    }
+                                    else
+                                    {
                                         $error[$a]["data"] = $cellval;
-                                        $error[$a]["error"] = "Cell " . $coln . $i . " should be $error_det";
+                                        $error[$a]["error"] = "Cell " . $coln   . $i . " should be proper DOI format";
+                                        $a++;
+                                        $data_error++;
+                                    }
+                                }
+                                
+                                //  //////////////uri///////////////////
+                                else if ($columnval['ruletype'] == 'uri') {
+                                    $cellValueNew = $sheet->rangeToArray($coln . $i . ':' . $coln . $i, NULL, TRUE, FALSE);
+                                    $cellValueNew = $cellValueNew[0][0] ?? '';
+                                    //  $doi = array();
+                                    $checkuri = $this->checkuri($cellValueNew);
+                                    //                                    echo"<pre>";print_r($checkuri);die();
+                                    if( $checkuri===true){
+                                        
+                                    }
+                                    else {
+                                        $error[$a]["data"] = $cellval;
+                                        $error[$a]["error"] = "Cell " . $coln . $i . " should be proper URI format";
                                         $a++;
                                         $data_error++;
                                     }
@@ -772,7 +1044,22 @@ class ValidatereportController extends FilevalidateController {
                                             $data_warning++;
                                             $b++;
                                         }
-                                    } else {
+                                        
+                                    } 
+                                    else if ($columnval['value'] == 'yyyy-mm-ddThh:mm:ssZ') {
+                                        $checkdate = $this->checkUTCDateFormat($cellval);
+                                        if ($checkdate == false) {
+                                        
+                                            $warning[$b]["data"] = $cellval;
+                                            $warning[$b]["error"] = "Cell " . $coln . $i . " should contain " . $columnval['value'] . " format";
+                                            $data_warning++;
+                                            $b++;
+                                        }
+                                        
+                                    } 
+                                    
+                                   
+                                    else {
                                         $getdate = $sheet->rangeToArray($coln . $i . ':' . $coln . $i, NULL, TRUE, FALSE);
                                         foreach ($getdate as $dateval) {
                                             $cellval = $dateval[0];
@@ -999,7 +1286,7 @@ class ValidatereportController extends FilevalidateController {
                             $ValueOfFilter = $ReportFilterValidation[$KeyOfFilter];
                             if(!in_array($cellval,$ValueOfFilter)){
                                 $error[$a]["data"] = $cellval;
-                                $error[$a]["error"] = $cellval . " does not matched with Report_Filters in  " . $coln . $j . "";
+                                $error[$a]["error"] = $cellval . " does not match with Report_Filters in  " . $coln . $j . "";
                                 $a++;
                                 $data_error++;  
                             }
@@ -1053,7 +1340,7 @@ class ValidatereportController extends FilevalidateController {
                           $ValueOfFilter = $ReportFilterValidation[$KeyOfFilter];
                           if(!in_array($cellval,$ValueOfFilter)){
                                 $error[$a]["data"] = $cellval;
-                                $error[$a]["error"] = $cellval . " does not matched with Report_Filters in  " . $coln . $j . "";
+                                $error[$a]["error"] = $cellval . " does not match with Report_Filters in  " . $coln . $j . "";
                                 $a++;
                                 $data_error++;  
                           }
@@ -1068,7 +1355,7 @@ class ValidatereportController extends FilevalidateController {
                             $MetricTypeValue = trim($cellval);
                             if (!in_array(strtolower($MetricTypeValue), $valueOfCellArray)) {
                                 $error[$a]["data"] = $cellval;
-                                $error[$a]["error"] = $cellval . " Metric type Cell " . $coln . $j . " does not matched with header Metric Type";
+                                $error[$a]["error"] = $cellval . " Metric type Cell " . $coln . $j . " does not match with header Metric Type";
                                 $a++;
                                 $data_error++;
                             }
@@ -1117,9 +1404,55 @@ class ValidatereportController extends FilevalidateController {
                                             $data_error++;
                                         }
                                     }
+                                    /////////////////////////doi////////////////
+                                    else  if ($columnval['ruletype'] === 'doi') {
+                                        //  $doi = array();
+                                        $cellval = $sheet->getcell($startcell . $i);
+                                        
+                                        $checkdoi = $this->checkdoi($cellval);
+                                        if($checkdoi===true){
+                                            
+                                        }
+                                        else
+                                        {
+                                            $error[$a]["data"] = $cellval;
+                                            $error[$a]["error"] = "Cell " . $startcell . $j . " should be proper DOI format";
+                                            $a++;
+                                            $data_error++;
+                                        }
+                                    }
+                                        // ////////////////uri format///////////
+                                        else if ($columnval['ruletype'] == 'uri') {
+                                            $cellval = $sheet->getcell($startcell . $i);
+                                            //  $doi = array();
+                                            $checkuri = $this->checkuri($cellval);
+                                            if($checkuri===true){
+                                                
+                                            }
+                                            else
+                                            {
+                                                $error[$a]["data"] = $cellval;
+                                                $error[$a]["error"] = "Cell " . $startcell . $j . " should be proper URI format";
+                                                $a++;
+                                                $data_error++;
+                                            }
+                                        }
+                                        
+                                    
+                                    
                                     //////////////if ruletype is "Integer"////////////////////
                                     else if ($columnval['ruletype'] == 'integer') {
                                         $cellint = $sheet->getCell($startcell . $j)->getCalculatedValue();
+                                        if($cellint>=0){
+                                            ##do nothing############
+                                        }else {
+                                            $error[$a]["data"] = $cellint;
+                                            $error[$a]["error"] = "Cell " . $startcell . $j . " should be greater than or equal 0";
+                                            $a++;
+                                            $data_error++;
+                                        }
+                                            
+                                        
                                         if (Is_numeric($cellint)) {
                                             ##do nothing############
                                         } else {
@@ -1192,7 +1525,20 @@ class ValidatereportController extends FilevalidateController {
                                                 $data_warning++;
                                                 $b++;
                                             }
-                                        } else {
+                                        } 
+                                        
+                                        else if ($columnval['value'] == 'yyyy-mm-ddThh:mm:ssZ') {
+                                            $checkdate = $this->checkUTCDateFormat($cellval);
+                                            if ($checkdate == false) {
+                                                
+                                                $warning[$b]["data"] = $cellval;
+                                                $warning[$b]["error"] = "Cell " . $coln . $j . " should contain " . $columnval['value'] . " format";
+                                                $data_warning++;
+                                                $b++;
+                                            }
+                                            
+                                        } 
+                                        else {
                                             $getdate = $sheet->rangeToArray($startcell . $j . ':' . $startcell . $j, NULL, TRUE, FALSE);
                                             foreach ($getdate as $dateval) {
                                                 $cellval = $dateval[0];
@@ -1331,6 +1677,15 @@ class ValidatereportController extends FilevalidateController {
                                 //////////////if ruletype is "Integer"////////////////////
                                 else if ($columnval['ruletype'] == 'integer') {
                                     $cellint = $sheet->getCell($coln . $j)->getCalculatedValue();
+                                    
+                                    if($cellint>=0){
+                                        ##do nothing############
+                                    }else {
+                                        $error[$a]["data"] = $cellint;
+                                        $error[$a]["error"] = "Cell " . $startcell . $j . " should be greater than or equal to 0";
+                                        $a++;
+                                        $data_error++;
+                                    }
                                     if (Is_numeric($cellint)) {
                                         ##do nothing############
                                     } else {
@@ -1359,8 +1714,45 @@ class ValidatereportController extends FilevalidateController {
                                         } else {
                                             $error_det = $columnval['value'];
                                         }
+                                        $warning[$b]["data"] = "NULL";
+                                        $warning[$b]["error"] = "Cell " . $coln . $j . " should not be $error_det";
+                                        $b++;
+                                        $data_warning++;
+                                    }
+                                }
+                                /////////////doi/////////////
+                               else if ($columnval['ruletype'] == 'doi') {
+                                    //  $doi = array();
+                                   $cellValueNew = $sheet->rangeToArray($coln . $j . ':' . $coln . $j, NULL, TRUE, FALSE);
+                                   $cellValueNew = $cellValueNew[0][0] ?? '';
+                                   $checkdoi = $this->checkdoi($cellValueNew);
+                                   
+                                    if( $checkdoi===true){
+                                        
+                                        
+                                    }
+                                    else
+                                 {
+                                     $error[$a]["data"] = $cellval;
+                                     $error[$a]["error"] = "Cell " . $coln   . $j . " should be proper DOI format";
+                                    $a++;
+                                    $data_error++;
+                                }
+                                }
+                                
+//                                 //////////////uri///////////////////
+                               else if ($columnval['ruletype'] == 'uri') {
+                                   $cellValueNew = $sheet->rangeToArray($coln . $j . ':' . $coln . $j, NULL, TRUE, FALSE);
+                                   $cellValueNew = $cellValueNew[0][0] ?? '';
+                                    //  $doi = array();
+                                   $checkuri = $this->checkuri($cellValueNew);
+//                                    echo"<pre>";print_r($checkuri);die();
+                                    if( $checkuri===true){
+                                    
+                                    }
+                                    else {
                                         $error[$a]["data"] = $cellval;
-                                        $error[$a]["error"] = "Cell " . $coln . $j . " should be $error_det";
+                                        $error[$a]["error"] = "Cell " . $coln . $j . " should be proper URI format";
                                         $a++;
                                         $data_error++;
                                     }
@@ -1408,7 +1800,21 @@ class ValidatereportController extends FilevalidateController {
                                             $data_warning++;
                                             $b++;
                                         }
-                                    } else {
+                                    } 
+                                    
+                                    else if ($columnval['value'] == 'yyyy-mm-ddThh:mm:ssZ') {
+                                        $checkdate = $this->checkUTCDateFormat($cellval);
+                                        if ($checkdate == false) {
+                                            
+                                            $warning[$b]["data"] = $cellval;
+                                            $warning[$b]["error"] = "Cell " . $coln . $i . " should contain " . $columnval['value'] . " format";
+                                            $data_warning++;
+                                            $b++;
+                                        }
+                                        
+                                    } 
+                                    
+                                    else {
                                         $getdate = $sheet->rangeToArray($coln . $j . ':' . $coln . $j, NULL, TRUE, FALSE);
                                         foreach ($getdate as $dateval) {
                                             $cellval = $dateval[0];

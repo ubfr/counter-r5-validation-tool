@@ -46,6 +46,8 @@ $(document).ready(function(){
 					<option value="issn" >issn</option>
 					<option value="sum" >sum</option>
 					<option value="row sum" >row sum</option>
+					<option value="doi" >doi</option>
+					<option value="uri" >uri</option>
 					<option value="isbn" >isbn</option>
 					<option value="sumif" >sumif</option>
 					<option value="sum-row-column" >sum-row-column</option>

@@ -102,10 +102,10 @@ $tot_data_warning=$tot_warning;
               <div class="alert alert-warning">
               	<p><strong>Warning</strong></p>
                 <div class="panel panel-body">
-				<?php echo $warning_details[$j]["data"];?>
+				<?php echo $warning_details[$j]["data"]??'';?>
 				</div>
                 <p style="color:#000">
-					<?php echo $warning_details[$j]["error"];?>
+					<?php echo $warning_details[$j]["error"]??'';?>
 				</p>
               </div>
 				  <?php }} if($tot_str_warning>0){?>

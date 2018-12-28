@@ -6,12 +6,10 @@ use App\Http\Controllers\ValidatereportController;
 use App\Http\Requests;
 use App\Validateerror;
 use App\Filename;
-Use Illuminate\Support\Facades\Session;
 Use Excel;
 Use Mail;
 use DateTime;
 use App\Http\Manager\SubscriptionManager;
-use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\Input;
 use Illuminate\Support\Facades\Redirect;
@@ -27,6 +25,8 @@ use App\Http\Controllers\CommonController;
 use Illuminate\Support\Facades\File;
 use App\Sushitransaction;
 use Exception;
+use Session;
+use DB;
 // phpinfo();die;
 // set_error_handler(null);
 // set_exception_handler(null);
@@ -83,8 +83,11 @@ class FilevalidateController extends CommonController
                 
                 $jsonpath = Input::file('import_file')->getRealPath();
                 $json = json_decode(file_get_contents($jsonpath), true);
-                
+                 // echo "<pre>";print_r($json);die;
+                 if (isset($json['Report_Header'])){
                 // /////// validate id and code
+                $jsonReportHeader = $json['Report_Header'];
+                 
                 $currentMasterID = $json['Report_Header']['Report_ID'] ?? '';
                 if($json === null) {
                     $currentReportName = 'Structure error in JSON file';
@@ -93,7 +96,7 @@ class FilevalidateController extends CommonController
                 }
                 
                 // /////// checking Code and ID first time
-                $result = CommonController::jsonHeaderCodeIDValidate($currentReportName, $currentMasterID);
+                $result = CommonController::jsonHeaderCodeIDValidate($currentReportName, $currentMasterID, $jsonReportHeader);
                 
                 if (isset($result[0])) {
                     $file = Input::file('import_file');
@@ -111,8 +114,10 @@ class FilevalidateController extends CommonController
                     $data['uploaded_file'] = $upload_file ?? '';
                     $inserterror_warning = $this->inserterror('', $data['warning_details'], $user['id'], $upload_file, $extension, $currentReportName, $currentMasterID);
                     $data['file_id'] = $inserterror_warning;
+                    //echo "<pre>REPORT";print_r($data);die;
                     return view('validate_report', $data);
-                }
+                } 
+                
                 
                 $jsonReportHeader = $json['Report_Header'];
                 $reportid = $jsonReportHeader['Report_ID'];
@@ -136,6 +141,7 @@ class FilevalidateController extends CommonController
                     $dataIncludeHeader['uploaded_file'] = $upload_file;
                     $inserterror_warning = $this->inserterror('', $dataIncludeHeader['warning_details'], $user['id'], $upload_file, $extension, $reportname, $reportid);
                     $dataIncludeHeader['file_id'] = $inserterror_warning;
+                    
                     return view('validate_report', $dataIncludeHeader);
                 } else {
                     
@@ -161,6 +167,7 @@ class FilevalidateController extends CommonController
                             $bodyResult = CommonController::jsonBodyValidate($AllBodyReport);
                     }
                     
+                    
                     // /////////////////////////////// JSON FILE END //////////////////////////////
                     $user = Session::get('user');
                     
@@ -179,6 +186,27 @@ class FilevalidateController extends CommonController
                     //echo "<pre>";print_r($dataIncludeHeader);die;
                     return view('validate_report', $dataIncludeHeader);
                 }
+                
+                 } else {
+                     $user = Session::get('user'); 
+                     $data['warning_details'] =array();
+                     $data['structure_error'] = '0';
+                     $data['error_details'] = array(array('data'=>'', 'error'=>'Report_Header is not Availavle in this Report'));
+                     $data['structure_warning'] = '0';
+                     $data['data_warning'] = 0;
+                     $data['userDisplayName'] = $user['display_name'];
+                     $data['utype'] = $user['utype'];
+                     $data['uploaded_file'] = $upload_file ?? '';
+                     $data['data_error'] = 'Header Missing';
+                     //echo "<pre>REPORT!!!";print_r($data);die;
+                    //$inserterror_warning = $this->inserterror('', $data['warning_details'], $user['id'], $upload_file, $extension, $currentReportName, $currentMasterID);
+                     $data['file_id'] ='';
+                     
+                     return view('validate_report', $data);
+                     
+                     
+                 }
+                 
             } else {
                 
                 if ($extension == 'tsv') {
@@ -298,43 +326,71 @@ class FilevalidateController extends CommonController
             // If validation falis redirect back to login.
             return Redirect::back()->withInput(array())->withErrors($validator, 'welcome');
         } else {
-            if ($allRequstVarible['requestButton'] == 'getmembers' || $allRequstVarible['requestButton'] == 'getverify') {
+            if ($allRequstVarible['requestButton'] == 'getmembers') {
                
                 $mainURL = $allRequstVarible['Requestorurl'];
-                $mainURL = $mainURL . "/members" . "?";
+                $mainURL = str_replace("?",'',$mainURL);
+                $mainURL = $mainURL . "/members/" . "?";
                 $fields = array(
                     'customer_id' => $allRequstVarible['CustomerId'],
-                    'apikey' => $allRequstVarible['APIkey']
+                    'apikey' => $allRequstVarible['APIkey'],
+                    'requestor_id' => $allRequstVarible['RequestorId']
                 );
+                $fields = (array_filter($fields));
                 $url = $mainURL . http_build_query($fields, '', "&");
+            } else if ($allRequstVarible['requestButton'] == 'getverify') {
+                
+                $mainURL = $allRequstVarible['Requestorurl'];
+                $mainURL = str_replace("?",'',$mainURL);
+                $mainURL = $mainURL . "/members/" . "?";
+                $fields = array(
+                    'customer_id' => $allRequstVarible['CustomerId'],
+                    'apikey' => $allRequstVarible['APIkey'],
+                    'requestor_id' => $allRequstVarible['RequestorId']
+                );
+                $fields = (array_filter($fields));
+                $url = $mainURL . http_build_query($fields, '', "&");
+                
+                // echo "<pre>";print_r($url);die;
             }
+            
             else if($allRequstVarible['requestButton'] == 'getstatus'){
                 $mainURL = $allRequstVarible['Requestorurl'];
+                $mainURL = str_replace("?",'',$mainURL);
                 $mainURL = $mainURL . "/status" . "?";
                 $fields = array(
                     'customer_id' => $allRequstVarible['CustomerId'],
-                    'apikey' => $allRequstVarible['APIkey']
+                    'apikey' => $allRequstVarible['APIkey'],
+                    'requestor_id' => $allRequstVarible['RequestorId']
                 );
+                $fields = (array_filter($fields));
                 $url = $mainURL . http_build_query($fields, '', "&");
             }
             
             else if($allRequstVarible['requestButton'] == 'getsupportedreports'){
                 $mainURL = $allRequstVarible['Requestorurl'];
+                $mainURL = str_replace("?",'',$mainURL);
                 $mainURL = $mainURL . "/reports" . "?";
                 $fields = array(
                     'customer_id' => $allRequstVarible['CustomerId'],
-                    'apikey' => $allRequstVarible['APIkey']
+                    'apikey' => $allRequstVarible['APIkey'],
+                    'requestor_id' => $allRequstVarible['RequestorId']
                 );
+                $fields = (array_filter($fields));
                 $url = $mainURL . http_build_query($fields, '', "&");
             }
             
             else if($allRequstVarible['requestButton'] == 'getall'){
                 $mainURL = $allRequstVarible['Requestorurl'];
+                $mainURL = str_replace("?",'',$mainURL);
                 $mainURL = $mainURL . "/reports" . "?";
                 $fields = array(
                     'customer_id' => $allRequstVarible['CustomerId'],
-                    'apikey' => $allRequstVarible['APIkey']
+                    'apikey' => $allRequstVarible['APIkey'],
+                    'requestor_id' => $allRequstVarible['RequestorId']
                 );
+                
+                $fields = (array_filter($fields));
                 $url = $mainURL . http_build_query($fields, '', "&");
                 
                 if (!preg_match("~^(?:f|ht)tps?://~i", $url)) {
@@ -348,7 +404,7 @@ class FilevalidateController extends CommonController
             if ($result !== false) {
                 $statusCode = curl_getinfo($curl, CURLINFO_HTTP_CODE);
                 if ($statusCode == 404) {
-                    $result = array("SUSHI URL doest not exist");
+                    $result = array("SUSHI URL does not exist");
                 } else {
                     //$data = json_encode(['Text 1','Text 2','Text 3','Text 4','Text 5']);
                     $opts = [
@@ -397,6 +453,8 @@ class FilevalidateController extends CommonController
 
                     $headers = ['Content-Type: application/json'];
                     $newName = $file;
+                    
+                    //echo "<pre>";print_r($newName);die;
                     return response()->download($completePath, $file, $headers);
                 
             }
@@ -412,11 +470,23 @@ class FilevalidateController extends CommonController
             $file = time() . '_file.json';
                 $curl = curl_init($url);
                 curl_setopt($curl, CURLOPT_NOBODY, true);
+                curl_setopt($curl, CURLOPT_NOBODY, false);
+                curl_setopt($curl, CURLOPT_SSL_VERIFYPEER, false);
+                curl_setopt($curl,CURLOPT_RETURNTRANSFER,1);
+                curl_setopt($curl, CURLOPT_USERAGENT, "Mozilla/5.0 (Windows; U; Windows NT 5.1; en-US) AppleWebKit/525.13 (KHTML, like Gecko) Chrome/0.A.B.C Safari/525.13");
+                $ErrorFlag = 0;
                 $result = curl_exec($curl);
-                if ($result !== false) {
+                
+                if(curl_errno($curl)){
+                    $ErrorMessage= curl_error($curl);
+                    // echo "<pre>Message";print_r($ErrorMessage);die;
+                    $ErrorFlag=1;
+                }
+                if ($result !== false || $ErrorFlag==1) {
+                //if ($result !== false) {
                     $statusCode = curl_getinfo($curl, CURLINFO_HTTP_CODE);
                     if ($statusCode == 404) {
-                        $result = array("SUSHI URL doest not exist");
+                        $result = array("SUSHI URL does not exist");
                     } else {
                         //$data = json_encode(['Text 1','Text 2','Text 3','Text 4','Text 5']);
                         $opts = [
@@ -424,7 +494,11 @@ class FilevalidateController extends CommonController
                                 "method" => "GET",
                                 "header" => "Accept-language: en\r\n" .
                                 "apikey: " . $allRequstVarible['APIkey']
-                            ]
+                            ],
+                            "ssl" => [
+                               "verify_peer" => false,
+                               "verify_peer_name" => false ,
+                           ]
                         ];
 
                         $context = stream_context_create($opts);
@@ -432,6 +506,7 @@ class FilevalidateController extends CommonController
                         // Open the file using the HTTP headers set above
                         //$file = file_get_contents('https://c5.mpsinsight.com/insightc5api/services/reports/tr_j1?customer_id=11&begin_date=2018-01-01&end_date=2018-06-30', false, $context);
                         $data = file_get_contents($url, false, $context);
+                       
 
                         $destinationPath = public_path() . "/upload/json/";
                         if (!is_dir($destinationPath)) {
@@ -454,6 +529,9 @@ class FilevalidateController extends CommonController
                                         'success'=>'Y',
                                         'number_of_errors'=>0
                                     );
+                        
+                      // echo "<pre>";print_r($DataForInsertion);die;
+                        
                     DB::beginTransaction();
                     try {
                         Sushitransaction::create($DataForInsertion);
@@ -463,7 +541,36 @@ class FilevalidateController extends CommonController
                     }
                         $headers = ['Content-Type: application/json'];
                         $newName = $file;
+                        if($DataForInsertion['request_name'] == 'getverify'){
+                            
+                            $json = json_decode(($data), true);
+                            // echo "<pre>";print_r($json);die;
+                            
+                            if(isset($json[0]['Data'])){
+                                ?>
+                                <script>
+                                alert("The service being called requires a valid APIKey to access usage data and the key provided was not valid or not authorized for the data being requested.");
+                                history.back();
+                                </script>
+                                <?php 
+                                return ;
+                                
+                            } else {
+                                
+                                ?>
+                                <script>
+                                alert("Verified Credentials Successfully.");
+                                history.back();
+                                </script>
+                                <?php
+                                return;
+                                
+                            }
+                        } else {
+                            
                         return response()->download($completePath, $file, $headers);
+                        
+                        }
                     }
                 } else {
                     $result = array("SUSHI URL seems to invalid");
@@ -535,7 +642,7 @@ class FilevalidateController extends CommonController
     }
     
     //sushi parameter form
-    public function sushiRequestParameter($Requestorurl='',$apikey='',$CustomerId='',$platform='') {
+    public function sushiRequestParameter($Requestorurl='',$apikey='',$CustomerId='',$platform='',$RequestorIdInner='') {
         //get Report list
          $user = Session::get('user');
         if ($user['email'] == '') {
@@ -546,6 +653,7 @@ class FilevalidateController extends CommonController
         $data['apikey'] = $apikey;
         $data['CustomerId'] = $CustomerId;
         $data['platform'] = $platform;
+        $data['RequestorIdInner'] = $RequestorIdInner;
         $AllReportCodes = Reportname::select(array(
                                     'report_code'
                                 ))->orderBy('report_code', 'asc')
@@ -565,9 +673,12 @@ class FilevalidateController extends CommonController
         }
         $allRequstVarible = Input::all();
         $result = "";
-        $mainURL = str_replace('_','/',$allRequstVarible['Requestorurl']);
+        $mainURL = str_replace('~','/',$allRequstVarible['Requestorurl']);
         $ReportName = $allRequstVarible['ReportName'];
-        $mainURL    =    $mainURL."/reports/".strtolower($ReportName)."?";
+        /*if(substr($mainURL, -1)=='/')
+            $mainURL    =    $mainURL."reports/".strtolower($ReportName)."/?";
+        else*/
+        $mainURL    =    $mainURL."/reports/".strtolower($ReportName)."/?"; 
         
         $begin_date = explode("-", $allRequstVarible['startmonth']);
         $begin_date = $begin_date[1] . "-" . $begin_date[0] . "-01";
@@ -583,8 +694,9 @@ class FilevalidateController extends CommonController
         $data_type = implode(',',$allRequstVarible['data_type']??array());
         $plateformValue =  isset($allRequstVarible['platform']) ? $allRequstVarible['platform']:'';
         $fields = array(
-            'apikey' => $allRequstVarible['APIkey']==0?'':$allRequstVarible['APIkey'],
-            'customer_id' => $allRequstVarible['CustomerId'],
+            'apikey' => $allRequstVarible['APIkey']===0?'':$allRequstVarible['APIkey'],
+            'customer_id' => $allRequstVarible['CustomerId']===0?'':$allRequstVarible['CustomerId'],
+            'requestor_id' => $allRequstVarible['RequestorId']===0?'':$allRequstVarible['RequestorId'],
             'begin_date' => $begin_date,
             'end_date' => $end_date,
             'metric_type' => $metricType,
@@ -598,81 +710,97 @@ class FilevalidateController extends CommonController
         if (!preg_match("~^(?:f|ht)tps?://~i", $url)) {
             $url = "https://" . $url;
         }
+        //echo "<pre>";print_r($url);die;
+        try{
         $file = time() . '_file.json';
         $curl = curl_init($url);
-        curl_setopt($curl, CURLOPT_NOBODY, true);
+        curl_setopt($curl, CURLOPT_NOBODY, false);
+        curl_setopt($curl, CURLOPT_SSL_VERIFYPEER, false);
+        curl_setopt($curl,CURLOPT_RETURNTRANSFER,1);
+        curl_setopt($curl, CURLOPT_USERAGENT, "Mozilla/5.0 (Windows; U; Windows NT 5.1; en-US) AppleWebKit/525.13 (KHTML, like Gecko) Chrome/0.A.B.C Safari/525.13");
         $result = curl_exec($curl);
-            if ($result !== false) {
-                $statusCode = curl_getinfo($curl, CURLINFO_HTTP_CODE);
-                if ($statusCode == 404) {
-                    $result = array("SUSHI URL does not exist");
+        //echo "<pre>";print_r($result);die;
+        $ErrorFlag = 0;
+        $ErrorMessage = '';
+        if(curl_errno($curl)){
+            $ErrorMessage= curl_error($curl);
+            echo "<pre>Message";print_r($ErrorMessage);die;
+            $ErrorFlag=1;
+        }
+        if ($result !== false || $ErrorFlag==1) {
+            $statusCode = curl_getinfo($curl, CURLINFO_HTTP_CODE);
+            if ($statusCode == 404) {
+                $result = array("SUSHI URL does not exist");
+
+
+                Session::flash('reportmsg', 'This URL is not compatible for selected report'.$ErrorMessage);
+                Session::put('keyurl', 'display');
+                return Redirect::intended('/filelist/');
+            } else {
+                $opts = [
+                    "http" => [
+                        "method" => "GET",
+                        "header" => "Accept-language: en\r\n" .
+                        "apikey: " . $allRequstVarible['APIkey'],
+                    ],
+                     "ssl" => [
+                        "verify_peer" => false,
+                        "verify_peer_name" => false ,
+                    ]
                     
-                    
-                    Session::flash('reportmsg', 'This URL is not compatible for selected report');
-                    Session::put('keyurl', 'display');
-                    return Redirect::intended('/filelist/');
+                ];
+
+                $context = stream_context_create($opts);
+                // Open the file using the HTTP headers set above
+                //$file = file_get_contents('https://c5.mpsinsight.com/insightc5api/services/reports/tr_j1?customer_id=11&begin_date=2018-01-01&end_date=2018-06-30', false, $context);
+                $data = file_get_contents($url, false, $context);
+                $json = json_decode($data, true);
+
+
+                $jsonReportHeader = $json['Report_Header']??array();
+                $currentReportID = $jsonReportHeader['Report_ID']??'';
+                if ($currentReportID == 'DR_D1' || $currentReportID == 'DR_D2' || $currentReportID == 'DR') {
+
+                    $AllDrReport = $json['Report_Items'];
+                    $bodyResult = CommonController::jsonDrValidate($AllDrReport);
+                } else if ($currentReportID == 'PR_P1' || $currentReportID == 'PR') {
+                    $AllPrReport = $json['Report_Items'];
+                    $bodyResult = CommonController::jsonPrValidate($AllPrReport);
+                } else if ($currentReportID == 'IR_A1' || $currentReportID == 'IR_M1' || $currentReportID == 'IR') {
+                    $AllIrReport = $json['Report_Items'];
+                    $bodyResult = CommonController::jsonIrValidate($AllIrReport);
                 } else {
-                    $opts = [
-                        "http" => [
-                            "method" => "GET",
-                            "header" => "Accept-language: en\r\n" .
-                            "apikey: ".$allRequstVarible['APIkey']
-                        ]
-                    ];
+                    $AllBodyReport = $json['Report_Items'];
+                    $bodyResult = CommonController::jsonBodyValidate($AllBodyReport);
+                }
 
-                    $context = stream_context_create($opts);
+                $user = Session::get('user');
 
-                    // Open the file using the HTTP headers set above
-                    //$file = file_get_contents('https://c5.mpsinsight.com/insightc5api/services/reports/tr_j1?customer_id=11&begin_date=2018-01-01&end_date=2018-06-30', false, $context);
-                    $data = file_get_contents($url, false, $context);
-                    $json = json_decode($data, true);
-                    
-                    
-                    $jsonReportHeader = $json['Report_Header'];
-                    $currentReportID = $jsonReportHeader['Report_ID'];
-                    if ($currentReportID == 'DR_D1' || $currentReportID == 'DR_D2' || $currentReportID == 'DR') {
-                        
-                        $AllDrReport = $json['Report_Items'];
-                        $bodyResult = CommonController::jsonDrValidate($AllDrReport);
+                $dataIncludeHeader = $bodyResult['data_error'];
+
+                if ($dataIncludeHeader == 0) {
+
+                    $destinationPath = public_path() . "/upload/json/";
+                    if (!is_dir($destinationPath)) {
+                        mkdir($destinationPath, 0777, true);
                     }
-                    else if ($currentReportID == 'PR_P1' || $currentReportID == 'PR') {
-                        $AllPrReport = $json['Report_Items'];
-                        $bodyResult = CommonController::jsonPrValidate($AllPrReport);
-                    }
-                    else if ($currentReportID == 'IR_A1' || $currentReportID == 'IR_M1' || $currentReportID == 'IR') {
-                        $AllIrReport = $json['Report_Items'];
-                        $bodyResult = CommonController::jsonIrValidate($AllIrReport);
-                    }
-                    else {
-                        $AllBodyReport = $json['Report_Items'];
-                        $bodyResult = CommonController::jsonBodyValidate($AllBodyReport);
-                    }
-                    
-                    $user = Session::get('user');
-                    
-                    $dataIncludeHeader =  $bodyResult['data_error'];
-                    
-                    if($dataIncludeHeader == 0){
-                        
-                        $destinationPath=public_path()."/upload/json/";
-                        if (!is_dir($destinationPath)) {  mkdir($destinationPath,0777,true);  }
-                        
-                        File::put($destinationPath.$file,$data);
-                        //response()->download($destinationPath.$file);
-                        $completePath = $destinationPath.$file;
-                        
-                        $DataForInsertion = array(
-                            'user_email'=>$user['email']??'',
-                            'session_id'=>$user['display_name']??'',
-                            'report_id'=>$allRequstVarible['ReportName']??'',
-                            'report_format'=>'json',
-                            'sushi_url'=>str_replace("_","/", $allRequstVarible['Requestorurl']),
-                            'request_name'=>'getreportrequest',
-                            'platform'=>'getreport',
-                            'success'=>'Y',
-                            'number_of_errors'=>0
-                        );
-                        
+
+                    File::put($destinationPath . $file, $data);
+                    //response()->download($destinationPath.$file);
+                    $completePath = $destinationPath . $file;
+
+                    $DataForInsertion = array(
+                        'user_email' => $user['email'] ?? '',
+                        'session_id' => $user['display_name'] ?? '',
+                        'report_id' => $allRequstVarible['ReportName'] ?? '',
+                        'report_format' => 'json',
+                        'sushi_url' => str_replace("_", "/", $allRequstVarible['Requestorurl']),
+                        'request_name' => 'getreportrequest',
+                        'platform' => 'getreport',
+                        'success' => 'Y',
+                        'number_of_errors' => 0
+                    );
+
                     DB::beginTransaction();
                     try {
                         Sushitransaction::create($DataForInsertion);
@@ -720,7 +848,11 @@ class FilevalidateController extends CommonController
                 }    
             } 
         
-}
+        }
+        }catch(\Mockery\CountValidator\Exception $e){
+            report($exception);
+            return parent::render($request, $exception);
+        }
         
     }
 }

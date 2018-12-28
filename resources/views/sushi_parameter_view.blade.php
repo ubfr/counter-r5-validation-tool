@@ -7,6 +7,7 @@
                 <input type="hidden" name="Requestorurl" value="<?php echo $Requestorurl ?? ''; ?>">
                 <input type="hidden" name="APIkey" value="<?php echo $apikey ?? ''; ?>">
                 <input type="hidden" name="CustomerId" value="<?php echo $CustomerId ?? ''; ?>">
+                <input type="hidden" name="RequestorId" value="<?php echo $RequestorIdInner ?? ''; ?>">
                 <input type="hidden" name="platform" value="<?php echo $platform ?? ''; ?>">
                 <div class="row">
                     <div class="col-xs-12 col-md-6">
@@ -33,12 +34,18 @@
                         Metric Type:&nbsp;&nbsp;&nbsp;
                         <?php
                         $allMatricType = array(
-                                                'Total_Item_Investigations',
-                                                'Total_Item_Requests',
-                                                'Unique_Item_Investigations',
-                                                'Unique_Title_Investigations',
-                                                'Searches_Regular',
-                                                'No_License'
+                            'Searches_Automated',
+                            'Searches_Federated',
+                            'Searches_Regular',
+                            'Searches_Platform',
+                            'Total_Item_Investigations',
+                            'Unique_Item_Investigations ',
+                            'Unique_Title_Investigations',
+                            'Total_Item_Requests',
+                            'Unique_Item_Requests',
+                            'Unique_Title_Requests',
+                            'No_License',
+                            'Limit_Exceeded'
                                                 );
                         ?>
                         <select id="Metric_Type" name="metricType[]" multiple class="multiselectoption">
@@ -57,7 +64,19 @@
                     Data Type:&nbsp;&nbsp;&nbsp;
                     <?php
                         $allDataType = array(
-                                                'Database',
+                            'Article',
+                            'Book',
+                            'Book Segment',
+                            'Database',
+                            'Dataset',
+                            'Journal',
+                            'Multimedia',
+                            'Newspaper or Newsletter',
+                            'Other',
+                            'Platform',
+                            'Report',
+                            'Repository Item',
+                            'Thesis or Dissertation'
                                                 );
                         ?>
                     <select id="Data_Type" name="data_type[]" multiple class="multiselectoption">
@@ -71,6 +90,8 @@
                         <?php
                         $AllAccessType = array(
                                                 'Controlled',
+                                                'OA_Gold',
+                                                'Other_Free_To_Read',
                                                 );
                         ?>
                         <select id="Access_Type" name="accessType[]" multiple class="multiselectoption">
@@ -86,7 +107,8 @@
                     Access Method:&nbsp;&nbsp;&nbsp;
                      <?php
                         $AllAcessMethod = array(
-                                                'Controlled',
+                                                'Regular',
+                                                'TDM',
                                                 );
                         ?>
                     <select id="Access_Type" name="accessMethod[]" multiple class="multiselectoption">

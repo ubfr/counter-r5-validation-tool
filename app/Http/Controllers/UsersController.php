@@ -111,10 +111,8 @@ class Userscontroller extends Controller
         $validator = Validator::make($data, $rules);
         if ($validator->fails()){
             // If validation fails redirect back to login.
-            
-            return Redirect::back()->withInput(Input::except('password'))->withErrors($validator,'register');
+            return Redirect('')->withInput(Input::except('password'))->withErrors($validator,'register');
         }else{
-            
             
             $data['newsletter'] = $data['newsletter']??0;
             $data['commercial'] = $data['commercial']??0;

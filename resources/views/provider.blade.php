@@ -25,7 +25,7 @@
                             <div class="widget stacked widget-table action-table">
                                     <!-- Div for border -->
                                     <div class="col-md-12">
-                                    <div class="col-md-12"><h3><button><a href="{{url('consortium')}}">Back </a></button> <?php echo isset($SingleProvder['id'])?'Update':'Enter'; ?> Provider Details For : {{$information->configuration_name}}  ||  {{$information->remarks}}</h3><hr class="colorgraph"></div>
+                                    <div class="col-md-12"><h3><a href="{{url('consortium')}}" class="btn btn-info" role="button">Back </a> &nbsp;&nbsp;<?php echo isset($SingleProvder['id'])?'Update':'Enter'; ?> Provider Details For : {{$information->configuration_name}}  ||  {{$information->remarks}}</h3><hr class="colorgraph"></div>
                                     <form name="save_provider" method="post" class="file-uploader1" action="/save_provider" enctype="multipart/form-data">
                                       
                                         <input type="hidden" name="_token" value="<?php echo csrf_token() ?>">

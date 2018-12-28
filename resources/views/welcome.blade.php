@@ -275,7 +275,7 @@ if(flag=='display'){
             if ($(this).val() == "ipaddress") {
             // Disable your roomnumber element here
                 $('#RequestorId').hide();
-                $('#RequestorId').val('');
+                $('#RequestorId').val('');		
                 $('#APIkey').hide();
                 $('#APIkey').val('');
                 $('#RequestorId').hide();
@@ -324,8 +324,13 @@ if(flag=='display'){
             alert("Please enter Requester Id");
             return false;
         }
-        Requestorurl = Requestorurl.replace(new RegExp('/', 'g'), '_');
-        $('.modal-body').load('showshushiparameter/'+Requestorurl+'/'+name+'/'+CustomerId+'/'+platform,function(){
+        Requestorurl = Requestorurl.replace(new RegExp('/', 'g'), '~');
+        Requestorurl = Requestorurl.replace('?','');
+        if(RequestorIdInner==''){
+            RequestorIdInner='0';
+        }
+        
+        $('.modal-body').load('showshushiparameter/'+Requestorurl.trim()+'/'+name+'/'+CustomerId.trim()+'/'+platform+'/'+RequestorIdInner,function(){
         $('#myModal').modal({show:true});
         });
         });

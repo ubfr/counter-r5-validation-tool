@@ -19,7 +19,7 @@
                             {{ session('status') }}
                         </div>
                     @endif
-                        <input type="email" name="email" id="email" value="{{ old('email') }}" class="form-control input-lg" placeholder="Email Address">
+                        <input type="email" name="email" id="email" value="{{ old('email') }}" class="form-control input-lg" placeholder="Email Address" required>
                        <span style="color:#ff0000"> {{ $errors->first('email') }}</span> 
 				  </div>
                        @if (Session::has('error'))

@@ -95,8 +95,8 @@
                                                                                             'getmembers'=>'Get Members',
                                                                                             'getsupportedreports'=>'Get Supported Reports List',
                                                                                             'getall'=>'Get All',
-                                                                                            'fail'=>'Get Report/Sushi Verification Failed',
-                                                                                            'getreport'=>'Get Report/Sushi Verified',
+                                                                                            'fail'=>'Get Report/SUSHI Verification Failed',
+                                                                                            'getreport'=>'Get Report/SUSHI Verified',
                                                                                             'getreportrequest'=>'Get Report'
                                                                                             );
 								//echo'<pre>'; print_r($sushi_detail);  die();

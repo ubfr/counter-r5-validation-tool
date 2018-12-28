@@ -7,8 +7,10 @@
  <div class="col-md-8 col-md-offset-2">
  <div class="panel panel-default">
  
- <div class="col-md-12"><h3><button><a href="{{url('/')}}">Back </a></button> 
- </h3></div>
+ 
+ 
+ <div class="col-md-12"> <h3><a href="{{url('/')}}" class="btn btn-info" role="button">Back</a> </h3>&nbsp;&nbsp;</div>
+ 
  <div class="panel-heading">Reset Password</div>
  <div class="panel-body">
 
