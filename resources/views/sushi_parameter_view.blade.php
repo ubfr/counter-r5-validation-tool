@@ -39,7 +39,7 @@
                             'Searches_Regular',
                             'Searches_Platform',
                             'Total_Item_Investigations',
-                            'Unique_Item_Investigations ',
+                            'Unique_Item_Investigations',
                             'Unique_Title_Investigations',
                             'Total_Item_Requests',
                             'Unique_Item_Requests',
@@ -49,8 +49,8 @@
                                                 );
                         ?>
                         <select id="Metric_Type" name="metricType[]" multiple class="multiselectoption">
-                            <?php foreach($allMatricType as $matric){ ?>
-                            <option  value="<?php echo $matric;?>"><?php echo $matric;?></option>
+                            <?php foreach($allMatricType as $matric){?>
+                            <option  value="<?php echo $matric; ?>"><?php echo $matric; ?></option>
                             <?php } ?>
                         </select>
                     </div>
@@ -157,10 +157,10 @@
         
         $('.multiselectoption').multiselect({
             includeSelectAllOption: true,
-            enableFiltering: true
+            enableFiltering: true,
+            enableCaseInsensitiveFiltering: true,
+            numberDisplayed: 1
         });
-        
-
     });
 
 

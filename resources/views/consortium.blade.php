@@ -198,7 +198,7 @@ div {
                                             <tr>
 										<td><?php echo $i++; ?></td>
 										<td><?php echo $filedetails['configuration_name']; ?></td>
-										<td><?php echo $filedetails['providers']==''?'&nbsp;<a class="btn btn-primary" href="add_provider/'.$filedetails['id'].'">Add Provider</a>':$filedetails['providers'].'&nbsp;<a class="btn btn-primary" href="add_provider/'.$filedetails['id'].'"> Add More/View</a>';?></td>
+										<td><?php echo $filedetails['providers']==''?'&nbsp;<a class="btn btn-primary" href="add_provider/'.$filedetails['id'].'">Add Provider</a>':$filedetails['providers'].'&nbsp;<a class="btn btn-primary" href="/add_provider/'.$filedetails['id'].'"> Add More/View</a>';?></td>
 										<td><?php echo $filedetails['remarks']; ?></td>
 										<td class="td-actions"><a
 											href="/consortium/<?php echo $filedetails['id']; ?>"><i

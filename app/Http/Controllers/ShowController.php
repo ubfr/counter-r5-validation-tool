@@ -432,14 +432,8 @@ class ShowController extends Controller {
                 $updatearray['configuration_name'] = $data['configuration_name'];
                 $updatearray['remarks'] = $data['remarks'];
                 
-                DB::beginTransaction();
-                try {
                 $Reportdetail = Consortium::where('id', $data['currentId'])->update($updatearray);
-                DB::commit();
-                } catch(Exception $exception) {
-                    DB::rollback();
-                }
-                
+               
                 Session::flash('colupdatemsg', 'Configuration Updated Successfully');
                 return Redirect::intended('/consortium');
             } else {
@@ -451,7 +445,6 @@ class ShowController extends Controller {
                 } catch(Exception $exception) {
                     DB::rollback();
                 }
-                
             }
 
             if ($newUser) {
