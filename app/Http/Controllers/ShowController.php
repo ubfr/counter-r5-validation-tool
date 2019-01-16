@@ -336,10 +336,11 @@ class ShowController extends Controller {
             );
             $fields = array_filter($fields);
             
+            if(substr($mainURL,-1)=='/')
+                $url = $mainURL . "members?" . http_build_query($fields, '', "&");
+            else
+                $url = $mainURL . "/members?" . http_build_query($fields, '', "&");
             
-            
-            
-            $url = $mainURL . "/members?" . http_build_query($fields, '', "&");
             
             if (!preg_match("~^(?:f|ht)tps?://~i", $url)) {
                 $url = "https://" . $url;
@@ -697,7 +698,7 @@ class ShowController extends Controller {
                 DB::rollback();
             }
             
-            Session::flash('colupdatemsg', 'Configuation successfully deleted');
+            Session::flash('colupdatemsg', 'Configuration successfully deleted');
             return Redirect::intended('/consortium');
             // echo "<pre>";print_r($id);die;
         }
@@ -943,8 +944,11 @@ class ShowController extends Controller {
                 $fields = array_filter($fields);
                 
                 
-                
-                $url = $mainURL . "/members?" . http_build_query($fields, '', "&");
+                if(substr($mainURL,-1)=='/')
+                    $url = $mainURL . "members?" . http_build_query($fields, '', "&");
+                else
+                    $url = $mainURL . "/members?" . http_build_query($fields, '', "&");
+				
                 if (! preg_match("~^(?:f|ht)tps?://~i", $url)) {
                     $url = "https://" . $url;
                 }

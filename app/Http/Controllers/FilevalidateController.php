@@ -191,7 +191,7 @@ class FilevalidateController extends CommonController
                      $user = Session::get('user'); 
                      $data['warning_details'] =array();
                      $data['structure_error'] = '0';
-                     $data['error_details'] = array(array('data'=>'', 'error'=>'Report_Header is not Availavle in this Report'));
+                     $data['error_details'] = array(array('data'=>'', 'error'=>'Report_Header is in incorrect format or not available in this Report'));
                      $data['structure_warning'] = '0';
                      $data['data_warning'] = 0;
                      $data['userDisplayName'] = $user['display_name'];

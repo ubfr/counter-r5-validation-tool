@@ -72,17 +72,61 @@
     
     
     $(function () {
-        $('.date-picker').datepicker({
-            format: "mm-yyyy",
-            viewMode: "months",
-            minViewMode: "months"
-        });
+//        $('.date-picker').datepicker({
+//            format: "mm-yyyy",
+//            viewMode: "months",
+//            minViewMode: "months"
+//        });
         $('#datepicker-12').on('changeDate', function(){
             $(this).datepicker('hide');
         });
         $('#datepicker-10').on('changeDate', function(){
             $(this).datepicker('hide');
         });
+
+
+
+
+
+
+
+        var start = new Date();
+        start.setMonth(start.getMonth() - 2);
+        end = start;
+        $('#datepicker-12').datepicker({
+        format: "mm-yyyy",
+        viewMode: "months",
+        minViewMode: "months",
+        endDate   : end
+        }).on('changeDate', function(){
+        // set the "toDate" start to not be later than "fromDate" ends:
+        $('#datepicker-10').datepicker('setStartDate', new Date($(this).val()));
+        }); 
+
+        $('#datepicker-10').datepicker({
+        format: "mm-yyyy",
+        viewMode: "months",
+        minViewMode: "months",
+        endDate   : end
+        }).on('changeDate', function(){
+        $('#datepicker-12').datepicker('setEndDate', new Date($(this).val()));
+        });
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
     });
 

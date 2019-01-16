@@ -278,13 +278,16 @@ div {
 										<td><?php echo $TransactionSingle['count']; ?></td>
 										<td><?php echo $TransactionSingle['message']; ?></td>
 										
-										<td><a href="/upload/json/<?php echo $TransactionSingle['transaction_id']; ?>.zip"><i class="fa fa-download"
-												aria-hidden="true"></i>	</a></td>
-												
-												
+										@if($TransactionSingle['message'] == 'success')  
+		                                <td><a href="/upload/json/<?php echo $TransactionSingle['transaction_id']; ?>.zip"><i class="fa fa-download"
+				                               aria-hidden="true"></i>	</a></td>       
+                                         @else
+                                         <td><i class="fa fa-download"aria-hidden="true"></i></td>
+                                        @endif
+													
 										<td class=""><a onclick="return confirm('Are you sure to delete this Transaction?')" 
 										href="delete_transaction/<?php echo $TransactionSingle['transaction_id'];?>"><i class="fa fa-trash-o trashIcon" style="font-size: 15px;padding-right: 10px;"></i></a></td>		
-							</tr>
+							            </tr>
 							
 							
                                             <?php

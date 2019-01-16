@@ -147,7 +147,7 @@ class CommonController extends Controller
         // /// Report Name validation
         
         $HeaderKeys = array_keys($jsonReportHeader);
-       // echo "<pre>";print_r($HeaderKeys);die();
+        // echo "<pre>";print_r($HeaderKeys);die();
         
         $ReportHeaderArray = array(
             'Created',
@@ -163,7 +163,7 @@ class CommonController extends Controller
             'Exceptions'
         );
         
-        $result=array_diff($HeaderKeys,$ReportHeaderArray);
+        $result = array_diff($HeaderKeys, $ReportHeaderArray);
         $final = array_values($result);
         
         // echo "<pre>";print_r($final);die();
@@ -171,12 +171,11 @@ class CommonController extends Controller
         foreach ($final as $ki => $arrayHead) {
             // $arrayHead = trim($arrayHead[0]);
             $warning[$b]["data"] = $arrayHead ?? '';
-            $warning[$b]["error"] =   '"'.$arrayHead.'"'. " shouldn't be there in Report Header";
+            $warning[$b]["error"] = '"' . $arrayHead . '"' . " shouldn't be there in Report Header";
             $b ++;
             $data_warning ++;
-          
         }
-       
+        
         if (isset($jsonReportHeader['Report_Name'])) {
             
             $reportNameFromJson = str_replace('"', '', ($jsonReportHeader['Report_Name']));
@@ -188,7 +187,7 @@ class CommonController extends Controller
                 $b ++;
                 $data_warning ++;
             }
-        }else {
+        } else {
             $warning[$b]["data"] = '';
             $warning[$b]["error"] = "Report_Name is Invalid in report header";
             $b ++;
@@ -219,8 +218,7 @@ class CommonController extends Controller
             $CustomerId = trim($jsonReportHeader['Customer_ID'] ?? '');
             // $CustomerId = (string)$CustomerId;
             
-            if ((empty($CustomerId)) || (trim($CustomerId) && strpos($CustomerId, ' ')))
-             {
+            if ((empty($CustomerId)) || (trim($CustomerId) && strpos($CustomerId, ' '))) {
                 $warning[$b]["data"] = $CustomerId;
                 $warning[$b]["error"] = "Customer_ID is Invalid in Report Header";
                 $b ++;
@@ -237,7 +235,7 @@ class CommonController extends Controller
         if (isset($jsonReportHeader['Created'])) {
             $Created = $jsonReportHeader['Created'] ?? '';
             
-           // echo "<pre>";print_r($Created);die;
+            // echo "<pre>";print_r($Created);die;
             
             if ((! $this->checkUTCDateFormat($Created)) || empty($Created)) {
                 $warning[$b]["data"] = $Created;
@@ -271,9 +269,9 @@ class CommonController extends Controller
         // Release no Validation
         if (isset($jsonReportHeader['Release'])) {
             $ReleaseNo = $jsonReportHeader['Release'] ?? '';
-            $ReleaseNo = (string)$ReleaseNo;
+            $ReleaseNo = (string) $ReleaseNo;
             
-            if (!($ReleaseNo === '5') || empty($ReleaseNo)) {
+            if (! ($ReleaseNo === '5') || empty($ReleaseNo)) {
                 $warning[$b]["data"] = $ReleaseNo;
                 $warning[$b]["error"] = "Release Number is Invalid in Report Header";
                 $b ++;
@@ -285,7 +283,6 @@ class CommonController extends Controller
             $b ++;
             $data_warning ++;
         }
-        
         
         // Institution Name Validation
         if (isset($jsonReportHeader['Institution_Name'])) {
@@ -303,25 +300,19 @@ class CommonController extends Controller
             $b ++;
             $data_warning ++;
         }
-       
+        
         // Institution_ID / ISNI Value Validation
         if (isset($jsonReportHeader['Institution_ID'])) {
             $Value = $jsonReportHeader['Institution_ID'][0]['Value'] ?? '';
             
-            if (empty($Value)){
-            
+            if (empty($Value)) {
+                
                 $error[$a]["data"] = $Value;
                 $error[$a]["error"] = "Institution_ID is Invalid in report header";
                 $b ++;
                 $data_warning ++;
             }
-        }
-         else {
-            $warning[$b]["data"] = '';
-            $warning[$b]["error"] = "Institution_ID is missing in report header";
-            $b ++;
-            $data_warning ++;
-        }
+        } 
         
         // Report_Filters Validation
         if (isset($jsonReportHeader['Report_Filters'])) {
@@ -336,26 +327,26 @@ class CommonController extends Controller
             $ReportFilterArray = array(
                 'Begin_Date',
                 'End_Date',
-                'Access_Method',
-                'Access_Type',
+                'Metric_Type',
                 'Data_Type',
-                'Metric_Type'
+                'Access_Method',
+                'Access_Type'
             );
             
-            
-            $Filtersresult = array_diff($AllArrayOffilters,$ReportFilterArray);
+            $Filtersresult = array_diff($AllArrayOffilters, $ReportFilterArray);
             $finalFilters = array_values($Filtersresult);
-           
+            
+            
             foreach ($finalFilters as $ki => $AllfinalFilters) {
                 // $arrayHead = trim($arrayHead[0]);
                 $warning[$b]["data"] = $AllfinalFilters ?? '';
-                $warning[$b]["error"] =   '"'.$AllfinalFilters.'"'. " shouldn't be there in Report_Filters";
+                $warning[$b]["error"] = '"' . $AllfinalFilters . '"' . " shouldn't be there in Report_Filters";
                 $b ++;
                 $data_warning ++;
             }
             
-            //echo "<pre>";print_r($AllArrayOffilters);die;
-           
+            // echo "<pre>";print_r($AllArrayOffilters);die;
+            
             if (isset($jsonReportHeader['Report_Filters'][0])) {
                 // Begin date Validation
                 $Bname = $jsonReportHeader['Report_Filters'][0]['Name'];
@@ -368,27 +359,39 @@ class CommonController extends Controller
                 
                 $Bvalue = $jsonReportHeader['Report_Filters'][0]['Value'];
                 
+                $BeginDatawithEndDAte = explode("-", $Bvalue??'');
+                // echo "<pre>";print_r($BeginDatawithEndDAte);die;
+               
+                if(isset($BeginDatawithEndDAte[2])){
+                    $BeginDAteValue = $BeginDatawithEndDAte[2]??'';
+                    // $ts1 = strtotime($BeginDAteValue);
+                    
+                    $monthoftheday = substr($BeginDAteValue,-2);
+                    if($monthoftheday!='01'){
+                        $warning[$b]["data"] = $Bvalue;
+                        $warning[$b]["error"] = "The date should start from the first day of the month in report header";
+                        $b ++;
+                        $data_warning ++;
+                    }
+                } 
+                
+                
                 $begindatea = preg_match("/^[0-9]{4}-(0[1-9]|1[0-2])$/", $Bvalue);
                 $begindateb = preg_match("/^[0-9]{4}-(0[1-9]|1[0-2])-(0[1-9]|[1-2][0-9]|3[0-1])$/", $Bvalue);
                 
-                if($begindatea || $begindateb){
-                    
-                } else if (empty($Bvalue)) {
+                if ($begindatea || $begindateb) {} else if (empty($Bvalue)) {
                     
                     $warning[$b]["data"] = $Bvalue;
                     $warning[$b]["error"] = "Begin_Date is Invalid in report header";
                     $b ++;
                     $data_warning ++;
-                    
                 } else {
                     
                     $warning[$b]["data"] = $Bvalue;
                     $warning[$b]["error"] = "Begin_Date is Invalid in report header";
                     $b ++;
                     $data_warning ++;
-                    
                 }
-                
             }
             
             // End date Validation
@@ -404,18 +407,88 @@ class CommonController extends Controller
                 
                 $Evalue = $jsonReportHeader['Report_Filters'][1]['Value'];
                 
+                $EndDAte = explode("-",$Evalue??'');
+                $EndDateCheckForMonth = $EndDAte[1];
+                // echo "<pre>";print_r($EndDateCheckForMonth);die;
+                $EndDateArrayOdd = array(
+                    '01',
+                    '03',
+                    '05',
+                    '07',
+                    '08',
+                    '10',
+                    '12'
+                    );
+                
+                $EndDateArrayEven = array(
+                    '04',
+                    '06',
+                    '09',
+                    '11',
+                );
+                
+                $EndDateArrayFeb = array(
+                    '02'
+                );
+                
+                if(in_array($EndDateCheckForMonth, $EndDateArrayOdd)){
+                    if(isset($EndDAte[2])){
+                        $EndDAteValue = $EndDAte[2];
+                        $monthoftheday = substr($EndDAteValue,-2);
+                        if(! ($monthoftheday === '31')){
+                            $warning[$b]["data"] = $Evalue;
+                            $warning[$b]["error"] = "The End_Date should be the last day of the month in report header";
+                            $b ++;
+                            $data_warning ++;
+                        }
+                    } 
+                } else if(in_array($EndDateCheckForMonth, $EndDateArrayEven)) {
+                    
+                    if(isset($EndDAte[2])){
+                        $EndDAteValue = $EndDAte[2];
+                        $monthoftheday = substr($EndDAteValue,-2);
+                        if(! ($monthoftheday === '30')){
+                            $warning[$b]["data"] = $Evalue;
+                            $warning[$b]["error"] = "The End_Date should be the last day of the month in report header";
+                            $b ++;
+                            $data_warning ++;
+                        }
+                    } 
+                } else if(in_array($EndDateCheckForMonth, $EndDateArrayFeb)) {
+                    if(isset($EndDAte[2])){
+                        $EndDAteValue = $EndDAte[2];
+                        $monthoftheday = substr($EndDAteValue,-2);
+                        if(! ($monthoftheday === '28')){
+                            $warning[$b]["data"] = $Evalue;
+                            $warning[$b]["error"] = "The End_Date should be the last day of the month in report header";
+                            $b ++;
+                            $data_warning ++;
+                        }
+                    }
+                } 
+                
+                 
+                if(isset($EndDAte[2])){
+                    $EndDAteValue = $EndDAte[2]??'';
+                    
+                    $monthoftheday = substr($EndDAteValue,-2);
+                    if(! ($monthoftheday === '28' || $monthoftheday=== '29' || $monthoftheday === '30' || $monthoftheday === '31')){
+                        $warning[$b]["data"] = $Evalue;
+                        $warning[$b]["error"] = "The End_Date should be the last day of the month in report header";
+                        $b ++;
+                        $data_warning ++;
+                    }
+                  } 
+                
                 $enddatea = preg_match("/^[0-9]{4}-(0[1-9]|1[0-2])$/", $Evalue);
                 $enddateb = preg_match("/^[0-9]{4}-(0[1-9]|1[0-2])-(0[1-9]|[1-2][0-9]|3[0-1])$/", $Evalue);
                 
-                if($enddatea || $enddateb){
-                    
-                } else if (empty($Evalue)) {
+                if ($enddatea || $enddateb) {} else if (empty($Evalue)) {
                     
                     $warning[$b]["data"] = $Evalue;
                     $warning[$b]["error"] = "End_Date is Invalid in report header";
                     $b ++;
                     $data_warning ++;
-                    
                 } else {
                     
                     $warning[$b]["data"] = $Evalue;
@@ -431,9 +504,8 @@ class CommonController extends Controller
                     $b ++;
                     $data_warning ++;
                 }
-                
             }
-                // Access_Method
+            // Access_Method
             if (isset($jsonReportHeader['Report_Filters'][2])) {
                 $Access_Methodname = $jsonReportHeader['Report_Filters'][2]['Name'];
                 
@@ -443,19 +515,23 @@ class CommonController extends Controller
                     $b ++;
                     $data_warning ++;
                 }
-            
-                $Access_Methodvalue = $jsonReportHeader['Report_Filters'][2]['Value'];
                 
-                if (! ($Access_Methodvalue === 'Regular') || empty($Access_Methodvalue)) {
+                $Access_Methodvalue = $jsonReportHeader['Report_Filters'][2]['Value'];
+                $AccessMethodArray = array(
+                    'Regular',
+                    'TDM'
+                );
+                
+                if(!in_array($Access_Methodvalue, $AccessMethodArray)){
                     $warning[$b]["data"] = $Access_Methodvalue;
                     $warning[$b]["error"] = "Access_Method Value is Invalid in Report Header";
                     $b ++;
                     $data_warning ++;
                 }
             }
-                // Access_Type
+            // Access_Type
             if (isset($jsonReportHeader['Report_Filters'][3])) {
-               
+                
                 $AccessTypename = $jsonReportHeader['Report_Filters'][3]['Name'];
                 // echo "<pre>";print_r($publisherJson);die;
                 if (! ($AccessTypename === 'Access_Type') || empty($AccessTypename)) {
@@ -466,27 +542,29 @@ class CommonController extends Controller
                 }
                 
                 $AccessTypevalue = $jsonReportHeader['Report_Filters'][3]['Value'];
+                $AccessTypevalue1 = (explode("|", $AccessTypevalue));
                 
-                $ALlAccessTypeArray = array(
-                    'Controlled',
-                    'OA_Gold',
-                    'Other_Free_To_Read',
-                );
-                $AccessTypevalue1 = (explode("|",$AccessTypevalue));
-                
-                //echo "<pre>";print_r($AccessTypevalue1);die;
-                
-                if (! array_intersect($AccessTypevalue1, $ALlAccessTypeArray) || empty($AccessTypevalue)) {
-                    $warning[$b]["data"] = $AccessTypevalue;
-                    $warning[$b]["error"] = "Access_Type Value is Invalid in Report Header";
-                    $b ++;
-                    $data_warning ++;
+                foreach ($AccessTypevalue1 as $NewAccessTypevalue1){
+                    
+                    $ALlAccessTypeArray = array(
+                        'Controlled',
+                        'OA_Gold',
+                        'Other_Free_To_Read'
+                    );
+                    
+                    if (! in_array($NewAccessTypevalue1, $ALlAccessTypeArray)) {
+                        $warning[$b]["data"] = $NewAccessTypevalue1;
+                        $warning[$b]["error"] = "Access_Type Value "."'$NewAccessTypevalue1'"." is Invalid in Report Header";
+                        $b ++;
+                        $data_warning ++;
+                    }
                 }
             }
-                // Data_Type
-                if (isset($jsonReportHeader['Report_Filters'][4])) {
+            
+            // Data_Type
+            if (isset($jsonReportHeader['Report_Filters'][4])) {
                 $Data_Typename = $jsonReportHeader['Report_Filters'][4]['Name'];
-                // echo "<pre>";print_r($publisherJson);die;
+                
                 if (! ($Data_Typename === 'Data_Type') || empty($Data_Typename)) {
                     $warning[$b]["data"] = $Data_Typename;
                     $warning[$b]["error"] = "Data_Type Name is Invalid in Report Header";
@@ -495,49 +573,97 @@ class CommonController extends Controller
                 }
                 
                 $Data_Typevalue = $jsonReportHeader['Report_Filters'][4]['Value'];
-                if (! ($Data_Typevalue === 'Controlled') || empty($Data_Typevalue)) {
+                // echo "<pre>";print_r($Data_Typevalue);die;
+                $DataTypeArray = array(
+                    'Article',
+                    'Book',
+                    'Book Segment',
+                    'Collection',
+                    'Database',
+                    'Dataset',
+                    'Journal',
+                    'Multimedia',
+                    'Newspaper',
+                    'Newsletter',
+                    'Platform',
+                    'Repository Item',
+                    'Dissertation',
+                    'Thesis',
+                    'Other'
+                );
+                
+                if(!in_array($Data_Typevalue, $DataTypeArray)){
                     $warning[$b]["data"] = $Data_Typevalue;
                     $warning[$b]["error"] = "Data_Type Value is Invalid in Report Header";
                     $b ++;
                     $data_warning ++;
                 }
-              }
-            } else {
+            }
+        } else {
             $warning[$b]["data"] = '';
             $warning[$b]["error"] = "'Report_Filters' is not Available in Report Header";
             $b ++;
             $data_warning ++;
         }
         
-        // report attributes validate
-         if (isset($jsonReportHeader['Report_Attributes'])) {
+        // Report_Attributes validate
+        if (isset($jsonReportHeader['Report_Attributes'])) {
             
-           $ReportAt = $jsonReportHeader['Report_Attributes'];
-           foreach ($ReportAt as $ki => $ReportAttributes) {
-            
-            $ravalue = $ReportAttributes['Name'];
-            if (empty($ravalue)) {
-                $warning[$b]["data"] = $ravalue;
-                $warning[$b]["error"] = "Name of Report_Attributes is Invalid in Report Header";
-                $b ++;
-                $data_warning ++;
+            $ReportAt = $jsonReportHeader['Report_Attributes'];
+            $reportAttributesMasters = array('Attributes_To_Show');
+            foreach ($ReportAt as $ki => $ReportAttributes) {
+                
+                $ravalueName = $ReportAttributes['Name'];
+                if(!in_array($ravalueName,$reportAttributesMasters)){
+                    $warning[$b]["data"] = $ravalueName;
+                    $warning[$b]["error"] = "Name of Report_Attributes is Invalid in Report Header";
+                    $b ++;
+                    $data_warning ++;
+                }
+                
+                $errorFlageAcess =0;
+                $ravalue = $ReportAttributes['Value'];
+                if($ravalueName=='Attributes_To_Show'){
+                    $ravalueExploded = explode("|", $ravalue);
+                    
+                    $testarray = array(
+                        'YOP',
+                        'Data_Type',
+                        'Access_Type',
+                        'Access_Method'
+                    );
+                
+                    $stringOfMessage = array();
+                    if (is_array($ravalueExploded)) {
+                        foreach ($ravalueExploded as $key => $aravalue) {
+                            if(!in_array($aravalue,$testarray)){
+                                $errorFlageAcess =1;
+                                $stringOfMessage[]=$aravalue;
+                            }
+                        }
+                    } else {
+                        if(!in_array($ravalueExploded,$testarray)){
+                            $errorFlageAcess =1;
+                            $stringOfMessage[]=$ravalueExploded;
+                        }
+                    }
+                    
+
+                    if($errorFlageAcess==1 && $ravalueName=='Attributes_To_Show' ){
+                        $warning[$b]["data"] = implode(",",$stringOfMessage);
+                        $warning[$b]["error"] = "Value of Report_Attributes index[".$ki."] is Invalid in Report Header";
+                        $b ++;
+                        $data_warning ++;
+                    }
+                }
+                 
             }
-            
-            $ravalue = $ReportAttributes['Value'];
-            if (empty($ravalue)) {
-                $warning[$b]["data"] = $ravalue;
-                $warning[$b]["error"] = "Value of Report_Attributes is Invalid in Report Header";
-                $b ++;
-                $data_warning ++;
-            }
-          }
-        } 
-//       else {
-//             $warning[$b]["data"] = '';
-//             $warning[$b]["error"] = "'Report_Attributes' is Invalid in Report Header";
-//             $b ++;
-//             $data_warning ++;
-//         }
+        } else {
+            $warning[$b]["data"] = '';
+            $warning[$b]["error"] = "'Report_Attributes' is Invalid in Report Header";
+            $b ++;
+            $data_warning ++;
+        }
         
         $data["warning"] = $warning ?? array();
         $data["structure_error"] = $structure_error;
@@ -546,7 +672,7 @@ class CommonController extends Controller
         $data["data_warning"] = $data_warning;
         return $data;
     }
-    
+
     // ///////////////////-Body Part Pr Validation-///////////////////////
     public function jsonPrValidate($AllPrReport)
     {
@@ -589,8 +715,27 @@ class CommonController extends Controller
             }
             
             $DataType = $dataValue['Data_Type'] ?? '';
+            
+            $DataTypeArray = array(
+                'Article',
+                'Book',
+                'Book Segment',
+                'Collection',
+                'Database',
+                'Dataset',
+                'Journal',
+                'Multimedia',
+                'Newspaper',
+                'Newsletter',
+                'Platform',
+                'Repository Item',
+                'Dissertation',
+                'Thesis',
+                'Other'
+            );
+            
             // echo "<pre>";print_r($publisherJson);die;
-            if (! ($DataType === 'Journal') || empty($DataType)) {
+            if (!in_array($DataType, $DataTypeArray)) {
                 $warning[$b]["data"] = $DataType;
                 $warning[$b]["error"] = "Data_Type is Invalid in Report_Items Index[ " . $key . " ]";
                 $b ++;
@@ -600,7 +745,15 @@ class CommonController extends Controller
             // Section_Type
             $Section_Type = $dataValue['Section_Type'] ?? '';
             // echo "<pre>";print_r($publisherJson);die;
-            if (! ($Section_Type === 'Article') || empty($Section_Type)) {
+            $Section_Typearray = array(
+                'Article',
+                'Book',
+                'Chapter',
+                'Section',
+                'Other'
+            );
+            
+            if (! in_array($Section_Type, $Section_Typearray)) {
                 $warning[$b]["data"] = $Section_Type;
                 $warning[$b]["error"] = "Section_Type is Invalid in Report_Items Index[ " . $key . " ]";
                 $b ++;
@@ -609,16 +762,33 @@ class CommonController extends Controller
             
             $AccessType = $dataValue['Access_Type'] ?? '';
             // echo "<pre>";print_r($publisherJson);die;
-            if (! ($AccessType === 'Controlled') || empty($AccessType)) {
-                $warning[$b]["data"] = $AccessType;
-                $warning[$b]["error"] = "Access_Type is Invalid in Report_Items Index[ " . $key . " ]";
-                $b ++;
-                $data_warning ++;
+            $AccessTypevalue1 = (explode("|", $AccessType));
+            // echo "<pre>";print_r($AccessTypevalue);die;
+            
+            foreach ($AccessTypevalue1 as $NewAccessTypevalue1){
+                
+                $ALlAccessTypeArray = array(
+                    'Controlled',
+                    'OA_Gold',
+                    'Other_Free_To_Read'
+                );
+                
+                if (! in_array($NewAccessTypevalue1, $ALlAccessTypeArray)) {
+                    $warning[$b]["data"] = $NewAccessTypevalue1;
+                    $warning[$b]["error"] = "Access_Type Value "."'$NewAccessTypevalue1'"." is Invalid in Report_Items Index[ " . $key . " ]";
+                    $b ++;
+                    $data_warning ++;
+                }
             }
             
             $AccessMethod = $dataValue['Access_Method'] ?? '';
             // echo "<pre>";print_r($publisherJson);die;
-            if (! ($AccessMethod === 'Regular') || empty($AccessMethod)) {
+            $AccessMethodArray = array(
+                'Regular',
+                'TDM'
+            );
+            
+            if (! in_array($AccessMethod, $AccessMethodArray)) {
                 $warning[$b]["data"] = $AccessMethod;
                 $warning[$b]["error"] = "Access_Method is Invalid in Report_Items Index[ " . $key . " ]";
                 $b ++;
@@ -630,58 +800,49 @@ class CommonController extends Controller
             $itemDetailPerformance = $dataValue['Performance'] ?? '';
             foreach ($itemDetailPerformance as $ke => $Performance) {
                 
-                
                 // begin_date
-                $bdJson = $Performance['Period']['Begin_Date']??'';
+                $bdJson = $Performance['Period']['Begin_Date'] ?? '';
                 
                 $a = preg_match("/^[0-9]{4}-(0[1-9]|1[0-2])$/", $bdJson);
                 $b = preg_match("/^[0-9]{4}-(0[1-9]|1[0-2])-(0[1-9]|[1-2][0-9]|3[0-1])$/", $bdJson);
                 
-                if($a || $b){
-                    
-                } else if (empty($bdJson)) {
+                if ($a || $b) {} else if (empty($bdJson)) {
                     
                     $warning[$b]["data"] = $bdJson;
-                    $warning[$b]["error"] = "Begin_date is Invalid in Report Items Index[ " . $key . " ] Performance Index[ " . $k . " ] period index[ " . $ke . " ]";
+                    $warning[$b]["error"] = "Begin_date is Invalid in Report_Items Index[ " . $key . " ] Performance Index[ " . $k . " ] period index[ " . $ke . " ]";
                     $b ++;
                     $data_warning ++;
-                    
                 } else {
                     
                     $warning[$b]["data"] = $bdJson;
-                    $warning[$b]["error"] = "Invalid Begin_date in Report Items Index[ " . $key . " ] Performance Index[ " . $k . " ] period index[ " . $ke . " ]";
+                    $warning[$b]["error"] = "Invalid Begin_date in Report_Items Index[ " . $key . " ] Performance Index[ " . $k . " ] period index[ " . $ke . " ]";
                     $b ++;
                     $data_warning ++;
-                    
                 }
                 
                 // end_date
-                $edJson = $Performance['Period']['End_Date']??'';
+                $edJson = $Performance['Period']['End_Date'] ?? '';
                 
                 $a = preg_match("/^[0-9]{4}-(0[1-9]|1[0-2])$/", $edJson);
                 $b = preg_match("/^[0-9]{4}-(0[1-9]|1[0-2])-(0[1-9]|[1-2][0-9]|3[0-1])$/", $edJson);
                 
-                if($a || $b){
-                    
-                } else if (empty($edJson)) {
+                if ($a || $b) {} else if (empty($edJson)) {
                     
                     $warning[$b]["data"] = $edJson;
-                    $warning[$b]["error"] = "End_date is Empty in Report Items Index[ " . $key . " ] Performance Index[ " . $k . " ] period index[ " . $ke . " ]";
+                    $warning[$b]["error"] = "End_date is Empty in Report_Items Index[ " . $key . " ] Performance Index[ " . $k . " ] period index[ " . $ke . " ]";
                     $b ++;
                     $data_warning ++;
-                    
                 } else {
                     
                     $warning[$b]["data"] = $edJson;
-                    $warning[$b]["error"] = "Invalid End_date in Report Items Index[ " . $key . " ] Performance Index[ " . $k . " ] period index[ " . $ke . " ]";
+                    $warning[$b]["error"] = "Invalid End_date in Report_Items Index[ " . $key . " ] Performance Index[ " . $k . " ] period index[ " . $ke . " ]";
                     $b ++;
                     $data_warning ++;
-                    
                 }
-               
+                
                 if ($bdJson >= $edJson) {
                     $warning[$b]["data"] = $bdJson;
-                    $warning[$b]["error"] = "Begin_date shouldn't be greater than End_date in Report Items Index[ " . $key . " ] Performance Index[ " . $k . " ] period index[ " . $ke . " ]";
+                    $warning[$b]["error"] = "Begin_date shouldn't be greater than End_date in Report_Items Index[ " . $key . " ] Performance Index[ " . $k . " ] period index[ " . $ke . " ]";
                     $b ++;
                     $data_warning ++;
                 }
@@ -694,7 +855,7 @@ class CommonController extends Controller
                     
                     if (empty($MatricValue) || ! in_array($MatricValue, $AllArrayOfMatrix)) {
                         $warning[$b]["data"] = $MatricValue ?? '';
-                        $warning[$b]["error"] = "Metric Type is Invalid in Report Items Index[ " . $key . " ] performance index[ " . $ke . " ] Instance index[ " . $ki . " ]";
+                        $warning[$b]["error"] = "Metric Type is Invalid in Report_Items Index[ " . $key . " ] performance index[ " . $ke . " ] Instance index[ " . $ki . " ]";
                         $b ++;
                         $data_warning ++;
                     }
@@ -714,7 +875,6 @@ class CommonController extends Controller
     // ///////////////////-Body Part Dr Validation-///////////////////////
     public function jsonDrValidate($AllDrReport)
     {
-        
         $reportdta = new Filtertype();
         $AllMatricArray = Filtertype::where(array())->orderBy('id', 'asc')
             ->get()
@@ -752,8 +912,27 @@ class CommonController extends Controller
             }
             
             $DataType = $dataValue['Data_Type'] ?? '';
+            
+            $DataTypeArray = array(
+                'Article',
+                'Book',
+                'Book Segment',
+                'Collection',
+                'Database',
+                'Dataset',
+                'Journal',
+                'Multimedia',
+                'Newspaper',
+                'Newsletter',
+                'Platform',
+                'Repository Item',
+                'Dissertation',
+                'Thesis',
+                'Other'
+            );
+            
             // echo "<pre>";print_r($publisherJson);die;
-            if (! ($DataType == 'Journal') || empty($DataType)) {
+            if (!in_array($DataType, $DataTypeArray)) {
                 $warning[$b]["data"] = $DataType;
                 $warning[$b]["error"] = "Data_Type is Invalid in Report_Items Index[ " . $key . " ]";
                 $b ++;
@@ -763,7 +942,15 @@ class CommonController extends Controller
             // Section_Type
             $Section_Type = $dataValue['Section_Type'] ?? '';
             // echo "<pre>";print_r($Section_Type);die;
-            if (! ($Section_Type === 'Article') || empty($Section_Type)) {
+            $Section_Typearray = array(
+                'Article',
+                'Book',
+                'Chapter',
+                'Section',
+                'Other'
+            );
+            
+            if (! in_array($Section_Type, $Section_Typearray)) {
                 $warning[$b]["data"] = $Section_Type;
                 $warning[$b]["error"] = "Section_Type is Invalid in Report_Items Index[ " . $key . " ]";
                 $b ++;
@@ -772,33 +959,47 @@ class CommonController extends Controller
             
             $AccessType = $dataValue['Access_Type'] ?? '';
             // echo "<pre>";print_r($publisherJson);die;
-            if (! ($AccessType == 'Controlled') || empty($AccessType)) {
-                $warning[$b]["data"] = $AccessType;
-                $warning[$b]["error"] = "Access_Type is Invalid in Report_Items Index[ " . $key . " ]";
-                $b ++;
-                $data_warning ++;
+            $AccessTypevalue1 = (explode("|", $AccessType));
+            // echo "<pre>";print_r($AccessTypevalue);die;
+            
+            foreach ($AccessTypevalue1 as $NewAccessTypevalue1){
+                
+                $ALlAccessTypeArray = array(
+                    'Controlled',
+                    'OA_Gold',
+                    'Other_Free_To_Read'
+                );
+                
+                if (! in_array($NewAccessTypevalue1, $ALlAccessTypeArray)) {
+                    $warning[$b]["data"] = $NewAccessTypevalue1;
+                    $warning[$b]["error"] = "Access_Type Value "."'$NewAccessTypevalue1'"." is Invalid in Report_Items Index[ " . $key . " ]";
+                    $b ++;
+                    $data_warning ++;
+                }
             }
             
             $AccessMethod = $dataValue['Access_Method'] ?? '';
-            // echo "<pre>";print_r($publisherJson);die;
-            if (! ($AccessMethod == 'Regular') || empty($AccessMethod)) {
+            $AccessMethodArray = array(
+                'Regular',
+                'TDM'
+            );
+            
+            if (! in_array($AccessMethod, $AccessMethodArray)) {
                 $warning[$b]["data"] = $AccessMethod;
                 $warning[$b]["error"] = "Access_Method is Invalid in Report_Items Index[ " . $key . " ]";
                 $b ++;
                 $data_warning ++;
             }
             
-            /*
-             * $publisherId = $dataValue['Publisher_ID'][0]['Value']??'';
-             * // $publisherId = explode(" ", $publisherIdd);
-             * // echo "<pre>";print_r($publisherId); die;
-             * if (empty($publisherId) || ! (is_numeric($publisherId))) {
-             * $warning[$b]["data"] = $publisherId;
-             * $warning[$b]["error"] = "Publisher Id is Empty in Report_Items Index[ ".$key." ]";
-             * $b ++;
-             * $data_warning ++;
-             * }
-             */
+              /* $publisherId = $dataValue['Publisher_ID'][0]['Value']??'';
+              // echo "<pre>";print_r($publisherId); die;
+              if (empty($publisherId) || ! (is_numeric($publisherId))) {
+              $warning[$b]["data"] = $publisherId;
+              $warning[$b]["error"] = "Publisher_ID is Empty in Report_Items Index[ ".$key." ]";
+              $b ++;
+              $data_warning ++;
+              } */
+             
             // /// for yop /////
             $yopJson = $datavalue['YOP'] ?? '';
             // echo "<pre>";print_r($yopJson); die;
@@ -815,63 +1016,54 @@ class CommonController extends Controller
             foreach ($itemDetailPerformance as $ke => $Performance) {
                 
                 // begin_date
-                $bdJson = $Performance['Period']['Begin_Date']??'';
+                $bdJson = $Performance['Period']['Begin_Date'] ?? '';
                 
-                //echo"<pre>";print_r($bdJson);die;
+                // echo"<pre>";print_r($bdJson);die;
                 
                 $a = preg_match("/^[0-9]{4}-(0[1-9]|1[0-2])$/", $bdJson);
                 $b = preg_match("/^[0-9]{4}-(0[1-9]|1[0-2])-(0[1-9]|[1-2][0-9]|3[0-1])$/", $bdJson);
                 
-                if($a || $b){
-                    
-                } else if (empty($bdJson)) {
+                if ($a || $b) {} else if (empty($bdJson)) {
                     
                     $warning[$b]["data"] = $bdJson;
-                    $warning[$b]["error"] = "Begin_Date is Empty in Report Items Index[ ".$key." ] performance index[ ".$ke." ] period index[ ".$ke." ]";
+                    $warning[$b]["error"] = "Begin_Date is Empty in Report_Items Index[ " . $key . " ] performance index[ " . $ke . " ] period index[ " . $ke . " ]";
                     $b ++;
                     $data_warning ++;
-                    
                 } else {
                     
                     $warning[$b]["data"] = $bdJson;
-                    $warning[$b]["error"] = "Invalid Begin_date in Report Items Index[ ".$key." ] performance index[ ".$ke." ] period index[ ".$ke." ]";
+                    $warning[$b]["error"] = "Invalid Begin_date in Report_Items Index[ " . $key . " ] performance index[ " . $ke . " ] period index[ " . $ke . " ]";
                     $b ++;
                     $data_warning ++;
-                    
                 }
                 
                 // end_date
-                $edJson = $Performance['Period']['End_Date']??'';
-
+                $edJson = $Performance['Period']['End_Date'] ?? '';
+                
                 $a = preg_match("/^[0-9]{4}-(0[1-9]|1[0-2])$/", $edJson);
                 $b = preg_match("/^[0-9]{4}-(0[1-9]|1[0-2])-(0[1-9]|[1-2][0-9]|3[0-1])$/", $edJson);
                 
-                if($a || $b){
-                    
-                } else if (empty($edJson)) {
+                if ($a || $b) {} else if (empty($edJson)) {
                     
                     $warning[$b]["data"] = $edJson;
-                    $warning[$b]["error"] = "End_Date is Empty in Report Items Index[ ".$key." ] performance index[ ".$ke." ] period index[ ".$ke." ]";
+                    $warning[$b]["error"] = "End_Date is Empty in Report_Items Index[ " . $key . " ] performance index[ " . $ke . " ] period index[ " . $ke . " ]";
                     $b ++;
                     $data_warning ++;
-                    
                 } else {
                     
                     $warning[$b]["data"] = $edJson;
-                    $warning[$b]["error"] = "Invalid End_Date in Report Items Index[ ".$key." ] performance index[ ".$ke." ] period index[ ".$ke." ]";
+                    $warning[$b]["error"] = "Invalid End_Date in Report_Items Index[ " . $key . " ] performance index[ " . $ke . " ] period index[ " . $ke . " ]";
                     $b ++;
                     $data_warning ++;
-                    
                 }
                 
                 // comparision
                 if ($bdJson >= $edJson) {
                     $warning[$b]["data"] = $bdJson;
-                    $warning[$b]["error"] = "Begin_date shouldn't be greater than End_date in Report Items Index[ ".$key." ] performance index[ ".$ke." ] period index[ ".$ke." ]";
+                    $warning[$b]["error"] = "Begin_date shouldn't be greater than End_date in Report_Items Index[ " . $key . " ] performance index[ " . $ke . " ] period index[ " . $ke . " ]";
                     $b ++;
                     $data_warning ++;
                 }
-                
                 
                 // internal loop for instance
                 $InstanceArray = array();
@@ -881,7 +1073,7 @@ class CommonController extends Controller
                     
                     if (empty($MatricValue) || ! in_array($MatricValue, $AllArrayOfMatrix)) {
                         $warning[$b]["data"] = $MatricValue ?? '';
-                        $warning[$b]["error"] = "Metric Type is Invalid in Report Items Index[ " . $key . " ] performance index[ " . $ke . " ] Instance index[ " . $ki . " ]";
+                        $warning[$b]["error"] = "Metric Type is Invalid in Report_Items Index[ " . $key . " ] performance index[ " . $ke . " ] Instance index[ " . $ki . " ]";
                         $b ++;
                         $data_warning ++;
                     }
@@ -920,6 +1112,31 @@ class CommonController extends Controller
         $jsonReportHeader = 0;
         
         foreach ($AllIrReport as $key => $dataValue) {
+            
+            $requiredreportitemsarray = array(
+                'Title',
+                'Item_ID',
+                'Platform',
+                'Publisher',
+                'Publisher_ID',
+                'Data_Type',
+                'Section_Type',
+                'Access_Type',
+                'Access_Method',
+                'Performance'
+            );
+            
+            $Report_ItemsKeys = array_keys($dataValue);
+            $Report_Itemsdiff = array_diff($Report_ItemsKeys, $requiredreportitemsarray);
+            
+            // echo "<pre>";print_r($Report_Itemsdiff);die;
+            foreach($Report_Itemsdiff as $ki => $RItemKeys){
+                $warning[$b]["data"] = $RItemKeys ?? '';
+                $warning[$b]["error"] = '"' . $RItemKeys . '"' ."shouldn't be there Invalid in Report_Items";
+                $b ++;
+                $data_warning ++;
+            }
+            
             $itemFromJson = $dataValue['Item'] ?? '';
             if (empty($itemFromJson)) {
                 $warning[$b]["data"] = $itemFromJson;
@@ -931,16 +1148,14 @@ class CommonController extends Controller
             $itemDetailValues = array();
             $itemDetailValues = $dataValue['Item_ID'] ?? '';
             foreach ($itemDetailValues as $k => $ItemData) {
-               // echo "<pre>";print_r($ItemData);die;
-                
+                // echo "<pre>";print_r($ItemData);die;
                 
                 if (! preg_match("/^[0-9]{4}-(0[1-9]|1[0-2])$/", $ItemData['Value'])) {
                     $warning[$b]["data"] = $ItemData['Value'];
                     $warning[$b]["error"] = "DOI value is Invalid in Report_Items Index[ " . $key . " ] Item Id index[ " . $k . " ]";
                     $b ++;
                     $data_warning ++;
-                    
-                } 
+                }
                 
                 if (($ItemData['Type'] == 'Proprietary_ID') && (empty($ItemData['Value']) || ! (is_numeric($ItemData['Value'])))) {
                     $warning[$b]["data"] = $ItemData['Value'];
@@ -1007,6 +1222,7 @@ class CommonController extends Controller
                 $b ++;
                 $data_warning ++;
             }
+            
             $publisherJson = $dataValue['Publisher'] ?? '';
             if (empty($publisherJson)) {
                 $warning[$b]["data"] = $publisherJson;
@@ -1015,19 +1231,37 @@ class CommonController extends Controller
                 $data_warning ++;
             }
             
-            /*
-             * $publisherId = $dataValue['Publisher_ID'][0]['Value']??'';
-             * if (empty($publisherId) || ! (is_numeric($publisherId))) {
-             * $warning[$b]["data"] = $publisherId;
-             * $warning[$b]["error"] = "Publisher Id is Empty in Report_Items Index[ ".$key." ]";
-             * $b ++;
-             * $data_warning ++;
-             * }
-             */
+            /* $publisherId = $dataValue['Publisher_ID'][0]['Value']??'';
+              if (empty($publisherId) || ! (is_numeric($publisherId))) {
+              $warning[$b]["data"] = $publisherId;
+              $warning[$b]["error"] = "Publisher_Id is Invalid in Report_Items Index[ ".$key." ]";
+              $b ++;
+              $data_warning ++;
+              } */
+             
             
             $DataType = $dataValue['Data_Type'] ?? '';
+            
+            $DataTypeArray = array(
+                'Article',
+                'Book',
+                'Book Segment',
+                'Collection',
+                'Database',
+                'Dataset',
+                'Journal',
+                'Multimedia',
+                'Newspaper',
+                'Newsletter',
+                'Platform',
+                'Repository Item',
+                'Dissertation',
+                'Thesis',
+                'Other'
+            );
+            
             // echo "<pre>";print_r($publisherJson);die;
-            if (! ($DataType == 'Journal') || empty($DataType)) {
+            if (!in_array($DataType, $DataTypeArray)) {
                 $warning[$b]["data"] = $DataType;
                 $warning[$b]["error"] = "Data_Type is Invalid in Report_Items Index[ " . $key . " ]";
                 $b ++;
@@ -1036,8 +1270,15 @@ class CommonController extends Controller
             
             // Section_Type
             $Section_Type = $dataValue['Section_Type'] ?? '';
-            // echo "<pre>";print_r($Section_Type);die;
-            if (! ($Section_Type === 'Article') || empty($Section_Type)) {
+            $Section_Typearray = array(
+                'Article',
+                'Book',
+                'Chapter',
+                'Section',
+                'Other'
+            );
+            
+            if (! in_array($Section_Type, $Section_Typearray)) {
                 $warning[$b]["data"] = $Section_Type;
                 $warning[$b]["error"] = "Section_Type is Invalid in Report_Items Index[ " . $key . " ]";
                 $b ++;
@@ -1045,17 +1286,33 @@ class CommonController extends Controller
             }
             
             $AccessType = $dataValue['Access_Type'] ?? '';
-            // echo "<pre>";print_r($publisherJson);die;
-            if (! ($AccessType == 'Controlled') || empty($AccessType)) {
-                $warning[$b]["data"] = $AccessType;
-                $warning[$b]["error"] = "Access_Type is Invalid in Report_Items Index[ " . $key . " ]";
-                $b ++;
-                $data_warning ++;
+            $AccessTypevalue1 = (explode("|", $AccessType));
+            // echo "<pre>";print_r($AccessTypevalue);die;
+            
+            foreach ($AccessTypevalue1 as $NewAccessTypevalue1){
+                
+                $ALlAccessTypeArray = array(
+                    'Controlled',
+                    'OA_Gold',
+                    'Other_Free_To_Read'
+                );
+                
+                if (! in_array($NewAccessTypevalue1, $ALlAccessTypeArray)) {
+                    $warning[$b]["data"] = $NewAccessTypevalue1;
+                    $warning[$b]["error"] = "Access_Type Value "."'$NewAccessTypevalue1'"." is Invalid in Report_Items Index[ " . $key . " ]";
+                    $b ++;
+                    $data_warning ++;
+                }
             }
             
             $AccessMethod = $dataValue['Access_Method'] ?? '';
             // echo "<pre>";print_r($publisherJson);die;
-            if (! ($AccessMethod == 'Regular') || empty($AccessMethod)) {
+            $AccessMethodArray = array(
+                'Regular',
+                'TDM'
+            );
+            
+            if (! in_array($AccessMethod, $AccessMethodArray)) {
                 $warning[$b]["data"] = $AccessMethod;
                 $warning[$b]["error"] = "Access_Method is Invalid in Report_Items Index[ " . $key . " ]";
                 $b ++;
@@ -1066,62 +1323,50 @@ class CommonController extends Controller
             $itemDetailPerformance = array();
             $itemDetailPerformance = $dataValue['Performance'] ?? '';
             foreach ($itemDetailPerformance as $ke => $Performance) {
-               
                 
                 // begin_date
-                $bdJson = $Performance['Period']['Begin_Date']??'';
+                $bdJson = $Performance['Period']['Begin_Date'] ?? '';
                 
                 $a = preg_match("/^[0-9]{4}-(0[1-9]|1[0-2])$/", $bdJson);
                 $b = preg_match("/^[0-9]{4}-(0[1-9]|1[0-2])-(0[1-9]|[1-2][0-9]|3[0-1])$/", $bdJson);
                 
-                if($a || $b){ 
-                    
-                } else if (empty($bdJson)) {
+                if ($a || $b) {} else if (empty($bdJson)) {
                     
                     $warning[$b]["data"] = $bdJson;
-                    $warning[$b]["error"] = "Begin_date is Empty in Report Items Index[ ".$key." ] performance index[ ".$ke." ] period index[ ".$ke." ]";
+                    $warning[$b]["error"] = "Begin_date is Empty in Report_Items Index[ " . $key . " ] performance index[ " . $ke . " ] period index[ " . $ke . " ]";
                     $b ++;
                     $data_warning ++;
-                    
                 } else {
                     
                     $warning[$b]["data"] = $bdJson;
-                    $warning[$b]["error"] = "Invalid Begin_date in Report Items Index[ ".$key." ] performance index[ ".$ke." ] period index[ ".$ke." ]";
+                    $warning[$b]["error"] = "Invalid Begin_date in Report_Items Index[ " . $key . " ] performance index[ " . $ke . " ] period index[ " . $ke . " ]";
                     $b ++;
                     $data_warning ++;
-                    
                 }
                 
-                
                 // end_date
-                $edJson = $Performance['Period']['End_Date']??'';
+                $edJson = $Performance['Period']['End_Date'] ?? '';
                 
                 $a = preg_match("/^[0-9]{4}-(0[1-9]|1[0-2])$/", $edJson);
                 $b = preg_match("/^[0-9]{4}-(0[1-9]|1[0-2])-(0[1-9]|[1-2][0-9]|3[0-1])$/", $edJson);
                 
-                if($a || $b){
-                    
-                } else if (empty($edJson)) {
+                if ($a || $b) {} else if (empty($edJson)) {
                     
                     $warning[$b]["data"] = $edJson;
-                    $warning[$b]["error"] = "End_date is Empty in Report Items Index[ ".$key." ] performance index[ ".$ke." ] period index[ ".$ke." ]";
+                    $warning[$b]["error"] = "End_date is Empty in Report_Items Index[ " . $key . " ] performance index[ " . $ke . " ] period index[ " . $ke . " ]";
                     $b ++;
                     $data_warning ++;
-                    
                 } else {
                     
                     $warning[$b]["data"] = $edJson;
-                    $warning[$b]["error"] = "Invalid End_date in Report Items Index[ ".$key." ] performance index[ ".$ke." ] period index[ ".$ke." ]";
+                    $warning[$b]["error"] = "Invalid End_date in Report_Items Index[ " . $key . " ] performance index[ " . $ke . " ] period index[ " . $ke . " ]";
                     $b ++;
                     $data_warning ++;
-                    
                 }
-                
-                
                 
                 if ($bdJson >= $edJson) {
                     $warning[$b]["data"] = $bdJson;
-                    $warning[$b]["error"] = "Begin_date shouldn't be greater than End_date in Report Items Index[ " . $key . " ] performance index[ " . $ke . " ] period index[ " . $ke . " ]";
+                    $warning[$b]["error"] = "Begin_date shouldn't be greater than End_date in Report_Items Index[ " . $key . " ] performance index[ " . $ke . " ] period index[ " . $ke . " ]";
                     $b ++;
                     $data_warning ++;
                 }
@@ -1134,7 +1379,7 @@ class CommonController extends Controller
                     
                     if (empty($MatricValue) || ! in_array($MatricValue, $AllArrayOfMatrix)) {
                         $warning[$b]["data"] = $MatricValue ?? '';
-                        $warning[$b]["error"] = "Metric Type is Invalid in Instance index[ " . $ki . " ] of performance index[ " . $ke . " ] of Report Items Index[ " . $key . " ]";
+                        $warning[$b]["error"] = "Metric Type is Invalid in Instance index[ " . $ki . " ] of performance index[ " . $ke . " ] of Report_Items Index[ " . $key . " ]";
                         $b ++;
                         $data_warning ++;
                     }
@@ -1172,8 +1417,35 @@ class CommonController extends Controller
         $structure_warning = 0;
         $data_warning = 0;
         $jsonReportHeader = 0;
+        
         if (is_array($AllBodyReport) && count($AllBodyReport) > 0) {
+            
             foreach ($AllBodyReport as $key => $dataValue) {
+                
+                $requiredreportitemsarray = array(
+                    'Title',
+                    'Item_ID',
+                    'Platform',
+                    'Publisher',
+                    'Publisher_ID',
+                    'Data_Type',
+                    'Section_Type',
+                    'Access_Type',
+                    'Access_Method',
+                    'Performance'
+                );
+                
+                $Report_ItemsKeys = array_keys($dataValue);
+                $Report_Itemsdiff = array_diff($Report_ItemsKeys, $requiredreportitemsarray);
+                
+                // echo "<pre>";print_r($Report_Itemsdiff);die;
+                foreach($Report_Itemsdiff as $ki => $RItemKeys){
+                        $warning[$b]["data"] = $RItemKeys ?? '';
+                        $warning[$b]["error"] = '"' . $RItemKeys . '"' ."shouldn't be there Invalid in Report_Items";
+                        $b ++;
+                        $data_warning ++;
+                }
+                
                 $titleFromJson = $dataValue['Title'] ?? '';
                 if (empty($titleFromJson)) {
                     $warning[$b]["data"] = $titleFromJson;
@@ -1185,19 +1457,39 @@ class CommonController extends Controller
                 $itemDetailValues = array();
                 $itemDetailValues = $dataValue['Item_ID'] ?? array();
                 
-                //echo "<pre>";print_r($itemDetailValues);die;
-                
+                // echo "<pre>";print_r($itemDetailValues);die;
+                $RequiredtestArrays = array(
+                    'DOI',
+                    'Proprietary_Id',
+                    'ISBN',
+                    'Print_ISSN',
+                    'Online_ISSN',
+                    'URI'
+                );
                 
                 foreach ($itemDetailValues as $k => $ItemData) {
                     
-                    if ($ItemData['Type'] == 'DOI') {
-                    if (! preg_match('/\b(10[.][0-9]{4,}(?:[.][0-9]+)*\/(?:(?!["&\'<>])\S)+)\b/',  $ItemData['Value'])) {
-                        $warning[$b]["data"] = $ItemData['Value'];
-                        $warning[$b]["error"] = "DOI value is Invalid in Report_Items Index[ " . $key . " ] Item Id index[ " . $k . " ]";
+                    $Reportitemtype = $ItemData['Type'];
+                    $ReportitemValue = $ItemData['Value'];
+                    
+                    // echo "<pre>";print_r($Reportitemtype);die;
+                    
+                    if(!in_array($Reportitemtype, $RequiredtestArrays)){
+                        $warning[$b]["data"] = $Reportitemtype;
+                        $warning[$b]["error"] = "Type is Invalid in Report_Items Index[ " . $key . " ] Item Id index[ " . $k . " ]";
                         $b ++;
                         $data_warning ++;
                     }
-                   }
+                    
+                    if($Reportitemtype === 'DOI') {
+                        if (! preg_match('/\b(10[.][0-9]{4,}(?:[.][0-9]+)*\/(?:(?!["&\'<>])\S)+)\b/', $ReportitemValue)) {
+                            $warning[$b]["data"] = $ReportitemValue;
+                            $warning[$b]["error"] = "DOI value is Invalid in Report_Items Index[ " . $key . " ] Item Id index[ " . $k . " ]";
+                            $b ++;
+                            $data_warning ++;
+                        }
+                    }
+                    
                     /*
                      * if (($ItemData['Type'] == 'Proprietary_ID') && (empty($ItemData['Value']) || ! (is_numeric($ItemData['Value'])))) {
                      * $warning[$b]["data"] = $ItemData['Value'];
@@ -1207,34 +1499,34 @@ class CommonController extends Controller
                      * }
                      */
                     
-                    if ($ItemData['Type'] == 'ISBN') {
-                        $checkisbn = $this->ValidateIsbn($ItemData['Value']);
+                    if ($Reportitemtype === 'ISBN') {
+                        $checkisbn = $this->ValidateIsbn($ReportitemValue);
                         if ($checkisbn == false) {
-                            $warning[$b]["data"] = $ItemData['Value'];
+                            $warning[$b]["data"] = $ReportitemValue;
                             $warning[$b]["error"] = "ISBN value is Invalid in Report_Items Index[ " . $key . " ] Item Id index[ " . $k . " ]";
                             $b ++;
                             $data_error ++;
                         }
                     }
                     
-                    if ($ItemData['Type'] == 'Print_ISSN' && (empty($ItemData['Value']))) {
-                        $warning[$b]["data"] = $ItemData['Value'];
+                    if ($Reportitemtype === 'Print_ISSN' && (empty($ReportitemValue))) {
+                        $warning[$b]["data"] = $ReportitemValue;
                         $warning[$b]["error"] = "Print_ISSN value is Invalid in Report_Items Index[ " . $key . " ] Item Id index[ " . $k . " ]";
                         $b ++;
                         $data_warning ++;
                     }
                     
-                    if ($ItemData['Type'] == 'Online_ISSN') {
+                    if ($Reportitemtype === 'Online_ISSN') {
                         
-                        if (empty($ItemData['Value'])) {
-                            $warning[$b]["data"] = $ItemData['Value'];
+                        if (empty($ReportitemValue)) {
+                            $warning[$b]["data"] = $ReportitemValue;
                             $warning[$b]["error"] = "Online_ISSN value is Invalid in Report_Items Index[ " . $key . " ] Item Id index[ " . $k . " ]";
                             $b ++;
                             $data_error ++;
                         } else {
-                            $check = $this->issn(strtoupper($ItemData['Value']));
+                            $check = $this->issn(strtoupper($ReportitemValue));
                             if ($check == false) {
-                                $warning[$b]["data"] = $ItemData['Value'];
+                                $warning[$b]["data"] = $ReportitemValue;
                                 $warning[$b]["error"] = "Online_ISSN value is Invalid in Report_Items Index[ " . $key . " ] Item Id index[ " . $k . " ]";
                                 $b ++;
                                 $data_error ++;
@@ -1258,10 +1550,39 @@ class CommonController extends Controller
                     $b ++;
                     $data_warning ++;
                 }
+ 
+                /* $publisherId = $dataValue['Publisher_ID'][0]['Value']??'';
+                if (empty($publisherId) || ! (is_numeric($publisherId))) {
+                    $warning[$b]["data"] = $publisherId;
+                    $warning[$b]["error"] = "Publisher_Id is Invalid in Report_Items Index[ ".$key." ]";
+                    $b ++;
+                    $data_warning ++;
+                } */
                 
+                
+                // Data_Type
                 $DataType = $dataValue['Data_Type'] ?? '';
+                $DataTypeArray = array(
+                    
+                    'Article',
+                    'Book',
+                    'Book Segment',
+                    'Collection',
+                    'Database',
+                    'Dataset',
+                    'Journal',
+                    'Multimedia',
+                    'Newspaper',
+                    'Newsletter',
+                    'Platform',
+                    'Repository Item',
+                    'Dissertation',
+                    'Thesis',
+                    'Other'
+                );
+                
                 // echo "<pre>";print_r($publisherJson);die;
-                if (! ($DataType == 'Journal') || empty($DataType)) {
+                if (!in_array($DataType, $DataTypeArray)) {
                     $warning[$b]["data"] = $DataType;
                     $warning[$b]["error"] = "Data_Type is Invalid in Report_Items Index[ " . $key . " ]";
                     $b ++;
@@ -1270,36 +1591,52 @@ class CommonController extends Controller
                 
                 // Section_Type
                 $Section_Type = $dataValue['Section_Type'] ?? '';
-                // echo "<pre>";print_r($Section_Type);die;
-                if (! ($Section_Type === 'Article') || empty($Section_Type)) {
+                 // echo "<pre>";print_r($Section_Type);die;
+                 $Section_Typearray = array(
+                     'Article',
+                     'Book',
+                     'Chapter',
+                     'Section',
+                     'Other'
+                 );
+                 
+                 if (! in_array($Section_Type, $Section_Typearray)) {
                     $warning[$b]["data"] = $Section_Type;
                     $warning[$b]["error"] = "Section_Type is Invalid in Report_Items Index[ " . $key . " ]";
                     $b ++;
                     $data_warning ++;
                 }
-               
+                
+                // Access_Type
                 $AccessType = $dataValue['Access_Type'] ?? '';
-                
-                $ALlAccessTypeArray = array(
-                    'Controlled',
-                    'OA_Gold',
-                    'Other_Free_To_Read',
-                );
-                
-                $AccessTypevalue1 = (explode("|",$AccessType));
-                
+                $AccessTypevalue1 = (explode("|", $AccessType));
                 // echo "<pre>";print_r($AccessTypevalue);die;
                 
-                if (! array_intersect($AccessTypevalue1, $ALlAccessTypeArray) || empty($AccessType)) {
-                    $warning[$b]["data"] = $AccessType;
-                    $warning[$b]["error"] = "Access_Type is Invalid in Report_Items Index[ " . $key . " ]";
-                    $b ++;
-                    $data_warning ++;
+                foreach ($AccessTypevalue1 as $NewAccessTypevalue1){
+                    
+                    $ALlAccessTypeArray = array(
+                        'Controlled',
+                        'OA_Gold',
+                        'Other_Free_To_Read'
+                    );
+                    
+                    if (! in_array($NewAccessTypevalue1, $ALlAccessTypeArray)) {
+                        $warning[$b]["data"] = $NewAccessTypevalue1;
+                        $warning[$b]["error"] = "Access_Type Value "."'$NewAccessTypevalue1'"." is Invalid in Report_Items Index[ " . $key . " ]";
+                        $b ++;
+                        $data_warning ++;
+                    }
                 }
                 
+                // Access_Method
                 $AccessMethod = $dataValue['Access_Method'] ?? '';
-                // echo "<pre>";print_r($publisherJson);die;
-                if (! ($AccessMethod == 'Regular') || empty($AccessMethod)) {
+                // echo "<pre>";print_r($AccessMethod);die;
+                $AccessMethodArray = array(
+                    'Regular',
+                    'TDM'
+                );
+                
+                if (! in_array($AccessMethod, $AccessMethodArray)) {
                     $warning[$b]["data"] = $AccessMethod;
                     $warning[$b]["error"] = "Access_Method is Invalid in Report_Items Index[ " . $key . " ]";
                     $b ++;
@@ -1318,60 +1655,147 @@ class CommonController extends Controller
                 // /////checking for performance
                 $itemDetailPerformance = array();
                 $itemDetailPerformance = $dataValue['Performance'] ?? '';
+                // echo "<pre>";print_r($itemDetailPerformance);die;
+               
+                
                 foreach ($itemDetailPerformance as $ke => $Performance) {
-                    
+                  
                     // begin_date
-                    $bdJson = $Performance['Period']['Begin_Date']??'';
+                    $bdJson = $Performance['Period']['Begin_Date'] ?? '';
+                    
+                    $BeginDatawithEndDAte = explode("-", $bdJson??'');
+                    
+                    if(isset($BeginDatawithEndDAte[2])){
+                        $BeginDAteValue = $BeginDatawithEndDAte[2]??'';
+                        // $ts1 = strtotime($BeginDAteValue);
+                        
+                        $monthoftheday = substr($BeginDAteValue,-2);
+                        if($monthoftheday!='01'){
+                            $warning[$b]["data"] = $bdJson;
+                            $warning[$b]["error"] = "The date should start from the first day of the month in Report_Items Index[ " . $key . " ] performance index[ " . $ke . " ] period index[ " . $ke . " ]";
+                            $b ++;
+                            $data_warning ++;
+                        }
+                    } 
                     
                     $a = preg_match("/^[0-9]{4}-(0[1-9]|1[0-2])$/", $bdJson);
                     $b = preg_match("/^[0-9]{4}-(0[1-9]|1[0-2])-(0[1-9]|[1-2][0-9]|3[0-1])$/", $bdJson);
                     
-                    if($a || $b){
+                    if ($a || $b) {
                         
                     } else if (empty($bdJson)) {
                         
                         $warning[$b]["data"] = $bdJson;
-                        $warning[$b]["error"] = "Begin_date is Invalid in Report Items Index[ " . $key . " ] performance index[ " . $ke . " ] period index[ " . $ke . " ]";
+                        $warning[$b]["error"] = "Begin_date is Invalid in Report_Items Index[ " . $key . " ] performance index[ " . $ke . " ] period index[ " . $ke . " ]";
                         $b ++;
                         $data_warning ++;
                         
                     } else {
                         
                         $warning[$b]["data"] = $bdJson;
-                        $warning[$b]["error"] = "Invalid Begin_date in Report Items Index[ " . $key . " ] performance index[ " . $ke . " ] period index[ " . $ke . " ]";
+                        $warning[$b]["error"] = "Invalid Begin_date in Report_Items Index[ " . $key . " ] performance index[ " . $ke . " ] period index[ " . $ke . " ]";
                         $b ++;
                         $data_warning ++;
-                        
                     }
                     
                     // end_date
-                    $edJson = $Performance['Period']['End_Date']??'';
+                    $edJson = $Performance['Period']['End_Date'] ?? '';
+                    
+                    $EndDAte = explode("-",$edJson??'');
+                    $EndDateCheckForMonth = $EndDAte[1];
+                    // echo "<pre>";print_r($EndDateCheckForMonth);die;
+                    $EndDateArrayOdd = array(
+                        '01',
+                        '03',
+                        '05',
+                        '07',
+                        '08',
+                        '10',
+                        '12'
+                    );
+                    
+                    $EndDateArrayEven = array(
+                        '04',
+                        '06',
+                        '09',
+                        '11',
+                    );
+                    
+                    $EndDateArrayFeb = array(
+                        '02'
+                    );
+                    
+                    if(in_array($EndDateCheckForMonth, $EndDateArrayOdd)){
+                        if(isset($EndDAte[2])){
+                            $EndDAteValue = $EndDAte[2];
+                            $monthoftheday = substr($EndDAteValue,-2);
+                            if(! ($monthoftheday === '31')){
+                                $warning[$b]["data"] = $edJson;
+                                $warning[$b]["error"] = "The End_Date should be the last day of the month in report header";
+                                $b ++;
+                                $data_warning ++;
+                            }
+                        }
+                    } else if(in_array($EndDateCheckForMonth, $EndDateArrayEven)) {
+                        
+                        if(isset($EndDAte[2])){
+                            $EndDAteValue = $EndDAte[2];
+                            $monthoftheday = substr($EndDAteValue,-2);
+                            if(! ($monthoftheday === '30')){
+                                $warning[$b]["data"] = $edJson;
+                                $warning[$b]["error"] = "The End_Date should be the last day of the month in report header";
+                                $b ++;
+                                $data_warning ++;
+                            }
+                        }
+                    } else if(in_array($EndDateCheckForMonth, $EndDateArrayFeb)) {
+                        if(isset($EndDAte[2])){
+                            $EndDAteValue = $EndDAte[2];
+                            $monthoftheday = substr($EndDAteValue,-2);
+                            if(! ($monthoftheday === '28')){
+                                $warning[$b]["data"] = $edJson;
+                                $warning[$b]["error"] = "The End_Date should be the last day of the month in report header";
+                                $b ++;
+                                $data_warning ++;
+                            }
+                        }
+                    }
+                    
+                    
+                    if(isset($EndDAte[2])){
+                        $EndDAteValue = $EndDAte[2]??'';
+                        
+                        $monthoftheday = substr($EndDAteValue,-2);
+                        if(! ($monthoftheday === '28' || $monthoftheday=== '29' || $monthoftheday === '30' || $monthoftheday === '31')){
+                            $warning[$b]["data"] = $Evalue;
+                            $warning[$b]["error"] = "The End_Date should be the last day of the month in report header";
+                            $b ++;
+                            $data_warning ++;
+                        }
+                    }
+                    
                     
                     $a = preg_match("/^[0-9]{4}-(0[1-9]|1[0-2])$/", $edJson);
                     $b = preg_match("/^[0-9]{4}-(0[1-9]|1[0-2])-(0[1-9]|[1-2][0-9]|3[0-1])$/", $edJson);
                     
-                    if($a || $b){
+                    if ($a || $b) {
                         
                     } else if (empty($edJson)) {
-                        
                         $warning[$b]["data"] = $edJson;
-                        $warning[$b]["error"] = "End_date is Invalid in Report Items Index[ ".$key." ] performance index[ ".$ke." ] period index[ ".$ke." ]";
+                        $warning[$b]["error"] = "End_date is Invalid in Report_Items Index[ " . $key . " ] performance index[ " . $ke . " ] period index[ " . $ke . " ]";
                         $b ++;
                         $data_warning ++;
-                        
                     } else {
-                        
                         $warning[$b]["data"] = $edJson;
-                        $warning[$b]["error"] = "Invalid End_date in Report Items Index[ ".$key." ] performance index[ ".$ke." ] period index[ ".$ke." ]";
+                        $warning[$b]["error"] = "Invalid End_date in Report_Items Index[ " . $key . " ] performance index[ " . $ke . " ] period index[ " . $ke . " ]";
                         $b ++;
                         $data_warning ++;
-                        
                     }
                     
-                    
                     if ($bdJson >= $edJson) {
+                        // die($bdJson);
                         $warning[$b]["data"] = $bdJson;
-                        $warning[$b]["error"] = "Begin_date shouldn't be greater than End_date in Report Items Index[ " . $key . " ] performance index[ " . $ke . " ] period index[ " . $ke . " ]";
+                        $warning[$b]["error"] = "Begin_date shouldn't be greater than End_date in Report_Items Index[ " . $key . " ] performance index[ " . $ke . " ] period index[ " . $ke . " ]";
                         $b ++;
                         $data_warning ++;
                     }
@@ -1379,12 +1803,29 @@ class CommonController extends Controller
                     // internal loop for instance
                     $InstanceArray = array();
                     $InstanceArray = $Performance['Instance'] ?? '';
+                    
+                    $Performanceinstancesarrays = array(
+                        'Metric_Type',
+                        'Count'
+                    );
+                   
                     foreach ($InstanceArray as $ki => $installValue) {
+                    $PerformanceInstancekeys = array_keys($installValue);
+                    
+                    foreach ($PerformanceInstancekeys as $Performanceinstances ){
+                        if(!in_array($Performanceinstances, $Performanceinstancesarrays)){
+                            $warning[$b]["data"] = $Performanceinstances;
+                            $warning[$b]["error"] = "'$Performanceinstances' shouldn't be there in Report_Items Index[ " . $key . " ] performance index[ " . $ke . " ] Instance index[ " . $ki . " ]";
+                                $b ++;
+                                $data_warning ++;
+                            }
+                        }
+                        
                         $MatricValue = trim(strtolower($installValue['Metric_Type']));
                         
                         if (empty($MatricValue) || ! in_array($MatricValue, $AllArrayOfMatrix)) {
                             $warning[$b]["data"] = $MatricValue ?? '';
-                            $warning[$b]["error"] = "Metric Type is invalid in Report Items Index[ " . $key . " ] performance index[ " . $ke . " ] Instance index[ " . $ki . " ]";
+                            $warning[$b]["error"] = "Metric Type is invalid in Report_Items Index[ " . $key . " ] performance index[ " . $ke . " ] Instance index[ " . $ki . " ]";
                             $b ++;
                             $data_warning ++;
                         }
@@ -1632,7 +2073,7 @@ class CommonController extends Controller
             $val = 2;
         } else if (empty($chk_format_field)) {
             $val = '';
-        }        // ///////////no error/////////////////
+        } // ///////////no error/////////////////
         else {
             // $str_input=strtolower($chk_input_field);
             // $str_format=strtolower($chk_format_field);
@@ -1779,31 +2220,29 @@ class CommonController extends Controller
         }
     }
 
-    ///////////////////////////////////////Function for Checking DOI///////////////////////
-    function checkdoi($doi){
+    // /////////////////////////////////////Function for Checking DOI///////////////////////
+    function checkdoi($doi)
+    {
         preg_match('/\b(10[.][0-9]{4,}(?:[.][0-9]+)*\/(?:(?!["&\'<>])\S)+)\b/', $doi, $output_array);
-        if (count($output_array)>0){
+        if (count($output_array) > 0) {
             return true;
-        }
-        else{
+        } else {
             return false;
         }
     }
-    
-    
-    /////////////function for URI/////////////
-    
-    function checkuri($uri){
-        if(preg_match( '/^(http|https):\\/\\/[a-z0-9]+([\\-\\.]{1}[a-z0-9]+)*\\.[a-z]{2,5}'.'((:[0-9]{1,5})?\\/.*)?$/i' ,$uri,$output_array1)){
-            if (count($output_array1)>0){
-            return true;
-        }
-        else{
-            return false;
+
+    // ///////////function for URI/////////////
+    function checkuri($uri)
+    {
+        if (preg_match('/^(http|https):\\/\\/[a-z0-9]+([\\-\\.]{1}[a-z0-9]+)*\\.[a-z]{2,5}' . '((:[0-9]{1,5})?\\/.*)?$/i', $uri, $output_array1)) {
+            if (count($output_array1) > 0) {
+                return true;
+            } else {
+                return false;
+            }
         }
     }
-    
-    }
+
     // /////////////////function For checking ISBN (10/13) number/////////////////////////////////////
     function ValidateIsbn($str)
     {
@@ -1872,46 +2311,38 @@ class CommonController extends Controller
     }
 
     // /////////////////Function For check Date Format("yyyy-mm-ddThh:mm:ssZ")///////////////////////////////////
-    
-    function checkUTCDateFormat($Date='')
+    function checkUTCDateFormat($Date = '')
     {
         $Flag = true;
         $DataFlage = true;
         $FinalFlag = false;
         try {
             $dt = new DateTime($Date);
-            $breakdate = explode("T",$Date);
-            $Timevalue = substr($breakdate[1],0,-1);
+            $breakdate = explode("T", $Date);
+            $Timevalue = substr($breakdate[1], 0, - 1);
             
-            
-            if ((preg_match("/^([0-9]{4})-([0-9]{2})-([0-9]{2})$/",$breakdate[0])) && (preg_match("/^(?:(?:([01]\d|2[0-3]):)?([0-5]\d):)?([0-5]\d)$/",$Timevalue) )) {
+            if ((preg_match("/^([0-9]{4})-([0-9]{2})-([0-9]{2})$/", $breakdate[0])) && (preg_match("/^(?:(?:([01]\d|2[0-3]):)?([0-5]\d):)?([0-5]\d)$/", $Timevalue))) {
                 $DataFlage = true;
                 
-                if(substr($Date, -1)=='Z')
+                if (substr($Date, - 1) == 'Z')
                     $Flage = true;
-                    else
-                        $Flage =false;
-            }else
-            {
+                else
+                    $Flage = false;
+            } else {
                 
-                $DataFlage=false;
-                $Flage =false;
+                $DataFlage = false;
+                $Flage = false;
             }
-            if($DataFlage && $Flage){
+            if ($DataFlage && $Flage) {
                 $FinalFlag = true;
             }
-            
         } catch (Exception $exception) {
             
             $FinalFlag = false;
         }
         return $FinalFlag;
     }
-    
-    
-    
-    
-    
+
     // ///////////////////////////////////////////////////////////////////////////////////////////////
     // /////////////////Function For check Date Format(yyyy-mm-dd to yyyy-mm-dd)////////////////////////////////////
     function validateDate($date)
@@ -2003,7 +2434,7 @@ class CommonController extends Controller
         $user = Session::get('user');
         $file_detail = new Filename();
         $file_detail->file_type = $extension;
-        $file_detail->email=$user->email;
+        $file_detail->email = $user->email;
         $file_detail->user_id = $userid;
         $file_detail->filename = $filename;
         $file_detail->report_name = $reportNameFromJson;
