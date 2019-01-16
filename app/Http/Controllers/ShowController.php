@@ -3000,6 +3000,7 @@ class ShowController extends Controller {
                                                 
                                                 //making duplicate rows for Metric_Type
                                                 if(isset($matricValueFlage) && $matricValueFlage==1){
+                                                    $lenghtOfColumn = count($orderDataValue[13]);
                                                     foreach($instanceArray as $valueofInstanceValue){
                                                         $SingleColumnCopy = $SingleColumn;
                                                         $SingleColumnCopy['Metric_Type'] = $valueofInstanceValue['Metric_Type']??'';
