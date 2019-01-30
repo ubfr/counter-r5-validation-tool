@@ -141,7 +141,7 @@
 			
 			<div class="form-group">
 			
-				<div class="g-recaptcha" name="g-recaptcha" data-sitekey="6LdeomcUAAAAAD_EgMjj-9gKwusnJJ5fw_nJrHwZ"></div>
+				<div class="g-recaptcha" name="g-recaptcha" data-sitekey="{{env('NOCAPTCHA_SITEKEY')}}"></div>
 				<span id="captcha" style="color:#ff0000" >{{ $errors->register->first('g-recaptcha') }}</span> 
             </div>
 			
