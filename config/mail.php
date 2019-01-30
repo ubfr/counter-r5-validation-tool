@@ -55,7 +55,7 @@ return [
     |
     */
 
-    'from' => ['address' => 'support@validate.projectcounter.org', 'name' => 'support'],
+    'from' => ['address' => env('MAIL_FROM_ADDRESS'), 'name' => env('MAIL_FROM_NAME')],
 
     /*
     |--------------------------------------------------------------------------
