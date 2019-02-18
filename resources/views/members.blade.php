@@ -18,6 +18,11 @@
 	Session::get('memberdeletemsg') }}</div>
 @endif
 
+@if (Session::has('error'))
+	<div class="alert alert-danger" >
+		{{ Session::get('error') }}
+	</div>
+@endif
 
 @if (Session::has('memberfreshmsg'))
 <div class="alert alert-success" style="color: green">{{

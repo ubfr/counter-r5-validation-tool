@@ -20,14 +20,13 @@ Route::post('user_edit/{id}', 'UserlistController@user_edit');
 Route::get('useredit', 'UserlistController@useredit');
 //Route::post('login', 'UsersController@postLogin');
 Route::get('welcome', 'ShowController@checkview');
-Route::get('home', 'UserlistController@userlist');
+//Route::get('home', 'UserlistController@userlist');
 Route::post('login', [ 'as' => 'login', 'uses' => 'UsersController@postLogin']);
 Route::post('/registeradmin', array(
     'as' => 'registeradmin',
     'uses' => 'UserlistController@registeradmin'
 ));
 
-// Route::get('login', 'UsersController@register');
 Route::get('login', 'ShowController@checkview');
 Route::post('register', 'UsersController@register');
 
@@ -100,6 +99,7 @@ Route::post('delete_user', 'UserlistController@delete_user');
 Route::post('edit_user/{user_id}', 'UserlistController@edit_user');
 Route::get('edit_report/{id}', 'ShowController@edit_report');
 Route::get('edituser/{user_id}', 'UserlistController@edit_user_display');
+Route::get('home', 'UserlistController@userlist');
 
 // now sushiValidate
 //Route::post('/sushiValidate', 'FilevalidateController@sushiValiate');
