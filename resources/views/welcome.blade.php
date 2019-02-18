@@ -452,7 +452,11 @@ $(document).ready(function(){
   $('.fileUploader').uploader({
     MessageAreaText: "Upload File Here"
   });
-  
+  var string = document.URL,
+  substring = "getverify";
+  if(string.indexOf(substring) !== -1){
+      $("#second a").trigger("click");
+  }
   
   $('.getShushiValue').click(function(){
       
@@ -485,9 +489,6 @@ $(document).ready(function(){
             alert("Please enter Requester Id");
             return false;
         }
-      
-      
-      
       $("#requestButton").val($(this).attr('rel'));
       $('#frmshushivalidate').submit();
   });
