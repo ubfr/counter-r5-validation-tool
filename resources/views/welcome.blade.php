@@ -22,7 +22,7 @@ foreach ($reportsname as $reportDetails) {
 
 
 	@if (Session::has('error'))
-	<div class="alert alert-success" style="color: red">{{
+	<div class="alert alert-danger" style="color: red">{{
 		Session::get('error') }}</div>
 	@endif
 	@if (Session::has('userupdatemsg'))
@@ -262,6 +262,12 @@ src="https://cdn.datatables.net/1.10.11/js/dataTables.bootstrap.min.js">
 
 <script>
 jQuery(function(){
+    var dataoferror = $('.alert-danger').html();
+    if (typeof dataoferror !== 'undefined'){
+       setTimeout(function(){ 
+           window.location.href='';
+       },4000); 
+    }
     var flag = '<?php echo Session::get('keyurl');?>'
 if(flag=='display'){
 	$("#second a").trigger("click");
@@ -446,7 +452,11 @@ $(document).ready(function(){
   $('.fileUploader').uploader({
     MessageAreaText: "Upload File Here"
   });
-  
+  var string = document.URL,
+  substring = "getverify";
+  if(string.indexOf(substring) !== -1){
+      $("#second a").trigger("click");
+  }
   
   $('.getShushiValue').click(function(){
       
@@ -479,9 +489,6 @@ $(document).ready(function(){
             alert("Please enter Requester Id");
             return false;
         }
-      
-      
-      
       $("#requestButton").val($(this).attr('rel'));
       $('#frmshushivalidate').submit();
   });

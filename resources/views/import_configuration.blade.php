@@ -55,7 +55,7 @@
 							
 								<i class="fa fa-tasks" aria-hidden="true"></i>
 						
-								<h3>Sample File Downloads</h3>
+								<h3>Sample file format for import configuration</h3>
 							</div>
 							<!-- /widget-header -->
 							<div class="widget-content">
@@ -70,7 +70,7 @@
 										
         										<tr>
         										
-											<td><a href="/sample/configuration_import_sample.xlsx"><i class="fa fa-download"
+											<td><a href="/sample/Template for import configuration.xlsx"><i class="fa fa-download"
 												aria-hidden="true"></i>	</a></td>
 										</tr>
 									

@@ -310,6 +310,8 @@ class FilevalidateController extends CommonController
     {
         // $allRequstVarible = $request->all();
         $allRequstVarible = Input::all();
+        
+      // echo "<pre>";print_r($allRequstVarible);die;
         $user = Session::get('user');
         
         $rules = array(
@@ -351,7 +353,7 @@ class FilevalidateController extends CommonController
                 $fields = (array_filter($fields));
                 $url = $mainURL . http_build_query($fields, '', "&");
                 
-                // echo "<pre>";print_r($url);die;
+               // echo "<pre>";print_r($url);die;
             }
             
             else if($allRequstVarible['requestButton'] == 'getstatus'){
@@ -399,34 +401,26 @@ class FilevalidateController extends CommonController
             
             $file = time() . '_file.json';
             $curl = curl_init($url);
-            curl_setopt($curl, CURLOPT_NOBODY, true);
+            
+            curl_setopt($curl, CURLOPT_NOBODY, false);
+            curl_setopt($curl, CURLOPT_SSL_VERIFYPEER, false);
+            curl_setopt($curl,CURLOPT_RETURNTRANSFER,1);
+            curl_setopt($curl, CURLOPT_USERAGENT, "Mozilla/5.0 (Windows; U; Windows NT 5.1; en-US) AppleWebKit/525.13 (KHTML, like Gecko) Chrome/0.A.B.C Safari/525.13");
+            
             $result = curl_exec($curl);
+            
             if ($result !== false) {
                 $statusCode = curl_getinfo($curl, CURLINFO_HTTP_CODE);
                 if ($statusCode == 404) {
                     $result = array("SUSHI URL does not exist");
                 } else {
-                    //$data = json_encode(['Text 1','Text 2','Text 3','Text 4','Text 5']);
-                    $opts = [
-                        "http" => [
-                            "method" => "GET",
-                            "header" => "Accept-language: en\r\n" .
-                            "apikey: " . $allRequstVarible['APIkey']
-                        ]
-                    ];
-
-                    $context = stream_context_create($opts);
-
-                    // Open the file using the HTTP headers set above
-                    //$file = file_get_contents('https://c5.mpsinsight.com/insightc5api/services/reports/tr_j1?customer_id=11&begin_date=2018-01-01&end_date=2018-06-30', false, $context);
-                    $data = file_get_contents($url, false, $context);
 
                     $destinationPath = public_path() . "/upload/json/";
                     if (!is_dir($destinationPath)) {
                         mkdir($destinationPath, 0777, true);
                     }
 
-                    File::put($destinationPath . $file, $data);
+                    File::put($destinationPath . $file, $result);
                     $completePath = $destinationPath . $file;
 
                     //data insertsion for sushi transaction 
@@ -489,31 +483,13 @@ class FilevalidateController extends CommonController
                         $result = array("SUSHI URL does not exist");
                     } else {
                         //$data = json_encode(['Text 1','Text 2','Text 3','Text 4','Text 5']);
-                        $opts = [
-                            "http" => [
-                                "method" => "GET",
-                                "header" => "Accept-language: en\r\n" .
-                                "apikey: " . $allRequstVarible['APIkey']
-                            ],
-                            "ssl" => [
-                               "verify_peer" => false,
-                               "verify_peer_name" => false ,
-                           ]
-                        ];
-
-                        $context = stream_context_create($opts);
-
-                        // Open the file using the HTTP headers set above
-                        //$file = file_get_contents('https://c5.mpsinsight.com/insightc5api/services/reports/tr_j1?customer_id=11&begin_date=2018-01-01&end_date=2018-06-30', false, $context);
-                        $data = file_get_contents($url, false, $context);
-                       
 
                         $destinationPath = public_path() . "/upload/json/";
                         if (!is_dir($destinationPath)) {
                             mkdir($destinationPath, 0777, true);
                         }
                         
-                        File::put($destinationPath . $file, $data);
+                        File::put($destinationPath . $file, $result);
                         $completePath = $destinationPath . $file;
                         
                         //data insertsion for sushi transaction 
@@ -543,7 +519,7 @@ class FilevalidateController extends CommonController
                         $newName = $file;
                         if($DataForInsertion['request_name'] == 'getverify'){
                             
-                            $json = json_decode(($data), true);
+                            $json = json_decode(($result), true);
                             // echo "<pre>";print_r($json);die;
                             
                             if(isset($json[0]['Data'])){
@@ -563,7 +539,7 @@ class FilevalidateController extends CommonController
                                 history.back();
                                 </script>
                                 <?php
-                                return;
+                                return ;
                                 
                             }
                         } else {
@@ -719,45 +695,39 @@ class FilevalidateController extends CommonController
         curl_setopt($curl,CURLOPT_RETURNTRANSFER,1);
         curl_setopt($curl, CURLOPT_USERAGENT, "Mozilla/5.0 (Windows; U; Windows NT 5.1; en-US) AppleWebKit/525.13 (KHTML, like Gecko) Chrome/0.A.B.C Safari/525.13");
         $result = curl_exec($curl);
-        //echo "<pre>";print_r($result);die;
+        // echo "<pre>";print_r($result);die;
         $ErrorFlag = 0;
         $ErrorMessage = '';
         if(curl_errno($curl)){
             $ErrorMessage= curl_error($curl);
-            echo "<pre>Message";print_r($ErrorMessage);die;
-            $ErrorFlag=1;
+            Session::flash('reportmsg', $ErrorMessage);
+            return Redirect::intended('/filelist/');
         }
         if ($result !== false || $ErrorFlag==1) {
             $statusCode = curl_getinfo($curl, CURLINFO_HTTP_CODE);
             if ($statusCode == 404) {
                 $result = array("SUSHI URL does not exist");
-
-
-                Session::flash('reportmsg', 'This URL is not compatible for selected report'.$ErrorMessage);
-                Session::put('keyurl', 'display');
+                Session::flash('error', 'This URL is not compatible for selected report'.$ErrorMessage);
                 return Redirect::intended('/filelist/');
             } else {
-                $opts = [
-                    "http" => [
-                        "method" => "GET",
-                        "header" => "Accept-language: en\r\n" .
-                        "apikey: " . $allRequstVarible['APIkey'],
-                    ],
-                     "ssl" => [
-                        "verify_peer" => false,
-                        "verify_peer_name" => false ,
-                    ]
-                    
-                ];
+                
+                $json = json_decode($result, true);
 
-                $context = stream_context_create($opts);
-                // Open the file using the HTTP headers set above
-                //$file = file_get_contents('https://c5.mpsinsight.com/insightc5api/services/reports/tr_j1?customer_id=11&begin_date=2018-01-01&end_date=2018-06-30', false, $context);
-                $data = file_get_contents($url, false, $context);
-                $json = json_decode($data, true);
-
-
+                
                 $jsonReportHeader = $json['Report_Header']??array();
+                // echo "<pre>";print_r($errorMes);die;
+                //checking error in header
+                if(isset($json['Report_Header'])){
+                    
+                    
+                    
+                    if(count($json['Report_Header']['Exceptions'])>0){
+                        $errorMessagage = $json['Report_Header']['Exceptions'][0]['Message']??''." and ". $json['Report_Header']['Exceptions'][0]['Data']??'';
+                        Session::flash('reportmsg', $errorMessagage);
+                        return Redirect::intended('/filelist/');
+                    } 
+               
+                
                 $currentReportID = $jsonReportHeader['Report_ID']??'';
                 if ($currentReportID == 'DR_D1' || $currentReportID == 'DR_D2' || $currentReportID == 'DR') {
 
@@ -770,6 +740,7 @@ class FilevalidateController extends CommonController
                     $AllIrReport = $json['Report_Items'];
                     $bodyResult = CommonController::jsonIrValidate($AllIrReport);
                 } else {
+                    //echo "<pre>";print_r($json);die;
                     $AllBodyReport = $json['Report_Items'];
                     $bodyResult = CommonController::jsonBodyValidate($AllBodyReport);
                 }
@@ -785,7 +756,7 @@ class FilevalidateController extends CommonController
                         mkdir($destinationPath, 0777, true);
                     }
 
-                    File::put($destinationPath . $file, $data);
+                    File::put($destinationPath . $file, $result);
                     //response()->download($destinationPath.$file);
                     $completePath = $destinationPath . $file;
 
@@ -846,10 +817,33 @@ class FilevalidateController extends CommonController
                     return response()->download($completePath, $file, $headers);
                     
                 }    
+                
+                } else if(isset($json[0])) {
+                    
+                    $errorMessagagee= $json[0]['Message']??'';
+                    if(! empty($errorMessagagee)){
+                        Session::flash('reportmsg', $errorMessagagee);
+                        return Redirect::intended('/filelist/');
+                    } else {
+                        Session::flash('reportmsg', 'Requestor Not Authorized to Access Service');
+                        return Redirect::intended('/filelist/');
+                    }
+                    
+                } else {
+                    
+                    $errorMes= $json['Message']??'';
+                    if(empty($errorMes)){
+                        Session::flash('reportmsg', 'URL has been moved');
+                        return Redirect::intended('/filelist/');
+                    } else {
+                        Session::flash('reportmsg', $errorMes);
+                        return Redirect::intended('/filelist/');
+                    }
+                }
             } 
         
         }
-        }catch(\Mockery\CountValidator\Exception $e){
+        }catch(Exception $exception){
             report($exception);
             return parent::render($request, $exception);
         }

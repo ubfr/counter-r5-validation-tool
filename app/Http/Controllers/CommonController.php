@@ -398,7 +398,7 @@ class CommonController extends Controller
             if (isset($jsonReportHeader['Report_Filters'][1])) {
                 $Ename = $jsonReportHeader['Report_Filters'][1]['Name'];
                 
-                if (empty($Ename) || (! ($Ename === 'End_Date'))) {
+                if(empty($Ename) || (! ($Ename === 'End_Date'))) {
                     $warning[$b]["data"] = $Ename;
                     $warning[$b]["error"] = "Name should be 'End_Date' in Report_Filters index[1] of report header";
                     $b ++;
@@ -408,8 +408,12 @@ class CommonController extends Controller
                 $Evalue = $jsonReportHeader['Report_Filters'][1]['Value'];
                 
                 $EndDAte = explode("-",$Evalue??'');
+                
+                
+                if(isset($EndDAte[1])){
+                    
                 $EndDateCheckForMonth = $EndDAte[1];
-                // echo "<pre>";print_r($EndDateCheckForMonth);die;
+                
                 $EndDateArrayOdd = array(
                     '01',
                     '03',
@@ -467,6 +471,16 @@ class CommonController extends Controller
                     }
                 } 
                 
+                }else{
+                   
+                    $warning[$b]["data"] = $Ename;
+                    $warning[$b]["error"] = "Name should be 'End_Date' in Report_Filters index[1] of report header";;
+                    $b ++;
+                    $data_warning ++;
+                    
+                    
+                    
+                }
                  
                 if(isset($EndDAte[2])){
                     $EndDAteValue = $EndDAte[2]??'';
@@ -875,6 +889,10 @@ class CommonController extends Controller
     // ///////////////////-Body Part Dr Validation-///////////////////////
     public function jsonDrValidate($AllDrReport)
     {
+        
+        
+        // die('fjkgh');
+        
         $reportdta = new Filtertype();
         $AllMatricArray = Filtertype::where(array())->orderBy('id', 'asc')
             ->get()
@@ -894,6 +912,7 @@ class CommonController extends Controller
         $jsonReportHeader = 0;
         
         foreach ($AllDrReport as $key => $dataValue) {
+           
             $platformJson = $dataValue['Platform'] ?? '';
             if (empty($platformJson)) {
                 $warning[$b]["data"] = $platformJson;
@@ -1830,8 +1849,7 @@ class CommonController extends Controller
                             $data_warning ++;
                         }
                     }
-                }
-                // performance closed
+                } // performance closed
             }
         }
         $data["error"] = $warning ?? array();

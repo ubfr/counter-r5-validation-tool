@@ -57,7 +57,7 @@ class ShowController extends Controller {
 
             return Redirect::intended('/filelist');
         } else {
-            return view('login');
+            return view('index');
         }
     }
 
@@ -314,14 +314,11 @@ class ShowController extends Controller {
     
         //////////////////Member Retrieving after deletion/////////////
         function refreshMembers($provider='') {
-           // die('bdfhhfhd');
+          // die('bdfhhfhd');
             $user = Session::get('user');
             if ($user['email'] == '') {
                 return Redirect::to('/');
             }
-            
-            Members::where('provider_id', $provider)->delete();
-            
             $data=Provider::select()
             ->where('id',$provider)
             ->get()
@@ -347,58 +344,65 @@ class ShowController extends Controller {
             }
             $file = time() . '_file.json';
             $curl = curl_init($url);
-            curl_setopt($curl, CURLOPT_NOBODY, true);
-            $result = curl_exec($curl);
             
-            if ($result !== false) {
-                
-                $statusCode = curl_getinfo($curl, CURLINFO_HTTP_CODE);
-                if ($statusCode == 404) {
-                    //mark Shushi URL is incorrect and save in Database;
+            
+            curl_setopt($curl, CURLOPT_NOBODY, false);
+            curl_setopt($curl, CURLOPT_SSL_VERIFYPEER, false);
+            curl_setopt($curl,CURLOPT_RETURNTRANSFER,1);
+            curl_setopt($curl, CURLOPT_USERAGENT, "Mozilla/5.0 (Windows; U; Windows NT 5.1; en-US) AppleWebKit/525.13 (KHTML, like Gecko) Chrome/0.A.B.C Safari/525.13");
+        
+            $result = curl_exec($curl);
+            $statusCode = curl_getinfo($curl, CURLINFO_HTTP_CODE);
+            
+            //if(empty($result)){
+            if($statusCode===404){
+              Session::flash('error', 'Member service URL is Wrong.');
+              return Redirect::intended('/member/'.$provider);
+            } else { 
+                $MembersList = json_decode($result);
+                if(empty($MembersList)){
+                 Session::flash('error', 'This URL has been moved.');
+                 return Redirect::intended('/member/'.$provider);
                 } else {
-                    
-                    $opts = [
-                        "http" => [
-                            "method" => "GET",
-                            "header" => "Accept-language: en\r\n"
-                        ]
-                        
-                    ];
-                    $context = stream_context_create($opts);
-                    $dataValue = file_get_contents($url, false, $context);
-                    $MembersList = json_decode($dataValue);
-                    foreach($MembersList as $Member){
-                        
-                        $CustomerId = $Member->Customer_ID??'';
+                if(count($MembersList)>0)
+                {
+                    Members::where('provider_id', $provider)->delete();
+                }
+                foreach($MembersList as $Member){
+                    $CustomerId = $Member->Customer_ID??'';
+                    if(!empty($Member->Requestor_ID)){
                         $RequestorId = $Member->Requestor_ID??'';
-                        $Name = $Member->Name??'';
-                        $Notes = $Member->Notes??'';
-                        $InstitutionIdType = $Member->Institution_ID[0]->Type??'';
-                        
-                        $InstitutionIdvalue = $Member->Institution_ID[0]->Value??'';
-                        $ProviderId = $provider;
-                       
-                        $MembersValue= array(
-                            'customer_id' => $CustomerId,
-                            'requestor_id' => $RequestorId,
-                            'name' => $Name,
-                            'notes' => $Notes,
-                            'institution_id_type' => $InstitutionIdType,
-                            'institution_id_value' => $InstitutionIdvalue,
-                            'provider_id' => $ProviderId,
-                        );
-                        
-                        
-                        if(!empty($MembersValue['customer_id']))
-                        {
-                            
-                                $SaveMemberNew = Members::create($MembersValue);
-                                
-                        }
+                    }else{
+                        $RequestorId = $data['requestor_id']??'';
                     }
+                    $Name = $Member->Name??'';
+                    $Notes = $Member->Notes??'';
+                    $InstitutionIdType = $Member->Institution_ID[0]->Type??'';
+
+                    $InstitutionIdvalue = $Member->Institution_ID[0]->Value??'';
+                    $ProviderId = $provider;
+
+                    $MembersValue= array(
+                        'customer_id' => $CustomerId,
+                        'requestor_id' => $RequestorId,
+                        'name' => $Name,
+                        'notes' => $Notes,
+                        'institution_id_type' => $InstitutionIdType,
+                        'institution_id_value' => $InstitutionIdvalue,
+                        'provider_id' => $ProviderId,
+                    );
+
+                    if(!empty($MembersValue['customer_id']))
+                    {
+
+                            $SaveMemberNew = Members::create($MembersValue);
+
+                    }
+                    }
+              }
+
                 }
                 
-            }
             
             Session::flash('memberfreshmsg', 'Member details successfully refreshed');
             return Redirect::intended('/member/'.$provider);
@@ -921,81 +925,43 @@ class ShowController extends Controller {
             $ClientIp = $this->get_client_ip();
             $ConfigurationId = $AllProvidersList[0]['configuration_id'];
             
-            
-                
             foreach ($AllProvidersList as $ProviderDetail) {
                 if (! in_array($ProviderDetail['id'], $SelectedProviders))
                     continue;
-                // echo "<pre>";print_r($ProviderDetail);die;
-                extract($ProviderDetail);
+//              echo "<pre>";print_r($ProviderDetail);die;
+//                extract($ProviderDetail);
+               $id = $ProviderDetail['id'];
+               $provider_name =  $ProviderDetail['provider_name'];
+               $provider_url = $ProviderDetail['provider_url'];
+               $apikey=$ProviderDetail['apikey'];
+               $requestor_id=$ProviderDetail['requestor_id'];
+               $customer_id=$ProviderDetail['customer_id'];
+                       
                 $ProviderDetailID = $ProviderDetail['id'];
                 $mainURL = $provider_url;
-//                 $fields = array(
-//                     'apikey' => $apikey,
-//                     'customer_id' => $customer_id
-//                 );
                 
                 
-                $fields = array(
-                    'apikey' => $apikey,
-                    'customer_id' => $customer_id,
-                    'requestor_id' => $requestor_id
-                );
-                $fields = array_filter($fields);
-                
-                
-                if(substr($mainURL,-1)=='/')
-                    $url = $mainURL . "members?" . http_build_query($fields, '', "&");
-                else
-                    $url = $mainURL . "/members?" . http_build_query($fields, '', "&");
-				
-                if (! preg_match("~^(?:f|ht)tps?://~i", $url)) {
-                    $url = "https://" . $url;
-                }
                 
                 $file = time() . '_file.json';
-                $curl = curl_init($url);
-                curl_setopt($curl, CURLOPT_NOBODY, true);
-                $result = curl_exec($curl);
-                // echo "<pre>ssdsadd";print_r($result);die;
-                if ($result !== false) {
-                    $statusCode = curl_getinfo($curl, CURLINFO_HTTP_CODE);
-                    if ($statusCode == 404) {
-                        // mark Shushi URL is incorrect and save in Database;
-                    } else {
-                        // $data = json_encode(['Text 1','Text 2','Text 3','Text 4','Text 5']);
-                        $opts = [
-                            "http" => [
-                                "method" => "GET",
-                                "header" => "Accept-language: en\r\n"
-                            ]
-                        ];
-                        $context = stream_context_create($opts);
-                        $AllReportCodes = Reportname::select(array(
+                $AllReportCodes = Reportname::select(array(
                             'report_code'
                         ))->orderBy('id', 'asc')
                             ->get()
                             ->toArray();
-                        // Open the file using the HTTP headers set above
-                        $data = file_get_contents($url, false, $context);
-                        $json = json_decode(($data), true);
-                        // echo "<pre>";print_r($json);die;
-                        
-                        
-                        
+                $json = Members::where('provider_id', $id)->orderBy('id', 'asc')
+                            ->get()
+                            ->toArray();
+                if (count($json)>0) {
                         // member detail creating file
                         $providerNameFolder = str_replace(" ", "_", $provider_name);
-                        // $destinationPath = public_path() . "/upload/json/" . $TransactionId . "/" . $providerNameFolder . "/";
                         $destinationPath = public_path() . "/upload/json/" . $TransactionId . "/";
-                        // $destinationPathCopy = public_path() . "/upload/json/" . $TransactionId . "/" . $providerNameFolder . "/";
                         $destinationPathCopy = public_path() . "/upload/json/" . $TransactionId . "/";
                         $file = $providerNameFolder . "_members.json";
                         if (! is_dir($destinationPath)) {
                             mkdir($destinationPath, 0777, true);
                         }
-                        File::put($destinationPath . $file, $data);
                         
-                        $dataValue = json_decode($data, true);
+                        $dataValue = $json;
                         
                         
                         $filex = $providerNameFolder . "_members";
@@ -1049,7 +1015,11 @@ class ShowController extends Controller {
                             
                             fwrite($myfile, $TsvContentHeader);
                             foreach ($dataValue as $KeyOfMember=>$ContentOfTSV) {
-                                $ContentOfTSV['Institution_ID'] = $ContentOfTSV['Institution_ID'][0]['Type'].':'.$ContentOfTSV['Institution_ID'][0]['Value'];
+                                if(isset($ContentOfTSV['Institution_ID'])){
+                                    $ContentOfTSV['Institution_ID'] = $ContentOfTSV['Institution_ID'][0]['Type'].':'.$ContentOfTSV['Institution_ID'][0]['Value'];
+                                }else{
+                                    $ContentOfTSV['Institution_ID'] = 'N/A';
+                                }
                                 $TsvContentValue = implode("\t", $ContentOfTSV) . "\n";
                                 fwrite($myfile, $TsvContentValue);
                             }
@@ -1071,19 +1041,21 @@ class ShowController extends Controller {
                         // try {
                         foreach ($json as $Member) {
                             $FileNameForSize = '';
-                            if (! in_array($Member['Customer_ID'], $SelectedMembers))
+                            if (! in_array($Member['customer_id'], $SelectedMembers))
                                 continue;
                             // loop for reprt code
                             foreach ($AllReportCodes as $ReportCode) {
                                 if (! in_array($ReportCode['report_code'], $SelectedReport))
                                     continue;
-                                 
-                                extract($Member);
+//                                 extract($Member);
+                                    $customer_id = $Member['customer_id'];
+                                    $requestor_id = $Member['requestor_id'];
+                                    $name =  $Member['name'];
                                 $Mfields = array(
                                     'apikey' => $apikey,
-                                    'customer_id' => $Customer_ID,
+                                    'customer_id' => $customer_id,
                                     'begin_date' => $begin_date,
-                                    'requestor_id' => $Requestor_ID,
+                                    'requestor_id' => $requestor_id,
                                     'end_date' => $end_date
                                 );
                                 $Mfields  =  array_filter($Mfields);
@@ -1094,7 +1066,7 @@ class ShowController extends Controller {
                                     'config_name' => $ConfigurationName,
                                     'client_ip' => $ClientIp,
                                     'provider_name' => $provider_name,
-                                    'member_name' => $Name,
+                                    'member_name' => $name,
                                     'report_id' => $ReportCode['report_code'],
                                     'begin_date' => $begin_date,
                                     'end_date' => $end_date,
@@ -1121,10 +1093,21 @@ class ShowController extends Controller {
                                     $Murl = "https://" . $Murl;
                                 }
                                 $Mfile = $customer_id . '_file.json';
+                                
+                                
+                                
+                                
+                                
                                 $Mcurl = curl_init($Murl);
-                                curl_setopt($Mcurl, CURLOPT_NOBODY, true);
+                                curl_setopt($Mcurl, CURLOPT_NOBODY, false);
+                                curl_setopt($Mcurl, CURLOPT_SSL_VERIFYPEER, false);
+                                curl_setopt($Mcurl,CURLOPT_RETURNTRANSFER,1);
+                                curl_setopt($Mcurl, CURLOPT_USERAGENT, "Mozilla/5.0 (Windows; U; Windows NT 5.1; en-US) AppleWebKit/525.13 (KHTML, like Gecko) Chrome/0.A.B.C Safari/525.13");
+        
                                 
                                 $Mresult = curl_exec($Mcurl);
+                                // echo "<pre>";print_r ($Mresult);die;
+                                
                                 if ($Mresult !== false) {
                                     $statusCode = curl_getinfo($Mcurl, CURLINFO_HTTP_CODE);
                                     if ($statusCode == 404) {
@@ -1133,22 +1116,9 @@ class ShowController extends Controller {
                                         );
                                     } else {
                                         // $data = json_encode(['Text 1','Text 2','Text 3','Text 4','Text 5']);
-                                        $opts = [
-                                            "http" => [
-                                                "method" => "GET",
-                                                "header" => "Accept-language: en\r\n"
-                                            ]
-                                        ];
-                                        
-                                        $context = stream_context_create($opts);
-                                        
-                                        // Open the file using the HTTP headers set above
-                                        $data = file_get_contents($Murl, false, $context);
-                                        // $Mjson = json_decode(($data), true);
-                                        // making directory
                                         $startdatetimstampEnd = date('Y-m-d H:i:s');
-                                        $rundate = date('Y-m-d');
-                                        $file = $provider_name . "_" . $Member['Customer_ID'] . "_" . $ReportCode['report_code'] . "_5_" . $begin_date . "_" . $end_date . "_" . $rundate . ".json";
+                                        $rundate = date('m-d-Y-His A e');
+                                        $file = $provider_name . "_" . $Member['customer_id'] . "_" . $ReportCode['report_code'] . "_5_" . $begin_date . "_" . $end_date . "_" .$rundate. ".json";
                                         // $destinationPath = $destinationPathCopy . "/" . $Member['Customer_ID'] . "/";
                                         $destinationPath = $destinationPathCopy;
                                         // die($destinationPath);
@@ -1157,8 +1127,8 @@ class ShowController extends Controller {
                                             mkdir($destinationPath, 0777, true);
                                         }
                                         
-                                        File::put($destinationPath . $file, $data);
-                                        $dataValue = json_decode($data, true);
+                                        File::put($destinationPath . $file, $Mresult);
+                                        $dataValue = json_decode($Mresult, true);
                                        
                                         // die($selectedFormat);
                                         
@@ -1171,7 +1141,7 @@ class ShowController extends Controller {
                                        // excel start here 
                                         
                                         // $filename = $user['id'] . '_' . date('m-d-Y_hisa') . '_' . 'xlsx';
-                                        $filename = $provider_name . "_" . $Member['Customer_ID'] . "_" . $ReportCode['report_code'] . "_5_" . $begin_date . "_" . $end_date . "_" . $rundate . "";
+                                            $filename = $provider_name . "_" . $Member['customer_id'] . "_" . $ReportCode['report_code'] . "_5_" . $begin_date . "_" . $end_date . "_" .$rundate. "";
                                         $FileNameForSize = $filename;
                                         // echo "<pre>";print_r ($filename);die;
                                         $headerSection = $dataValue['Report_Header'];
@@ -1898,7 +1868,6 @@ class ShowController extends Controller {
                                                             if($updateFlage==0){
                                                                 $SingleColumn['Online_ISSN'] = '';
                                                             }
-                                                            
                                                         }
                                                         
                                                         else if($BodyHeader==='Print_ISSN'){
@@ -2031,8 +2000,8 @@ class ShowController extends Controller {
                                             
                                             
                                         // tsv creation start
-                                        $filenametsv = $provider_name . "_" . $Member['Customer_ID'] . "_" . $ReportCode['report_code'] . "_5_" . $begin_date . "_" . $end_date . "_" . $rundate . ".tsv";
-                                        $FileNameForSize = $filenametsv;
+                                        $filenametsv = $provider_name . "_" . $Member['customer_id'] . "_" . $ReportCode['report_code'] . "_5_" . $begin_date . "_" . $end_date . "_"  .$rundate. ".tsv";
+                                        $FileNameForSize = $filenametsv; 
                                         
                                         $filenametsv = $destinationPath . $filenametsv;
                                         if($Rid === 'TR' || $Rid === 'TR_J1' || $Rid === 'TR_J2' || $Rid === 'TR_J3' || $Rid === 'TR_J4' || $Rid === 'TR_B1' || $Rid === 'TR_B2' || $Rid === 'TR_B3'){
@@ -2655,7 +2624,7 @@ class ShowController extends Controller {
                                             
                                             
                                         // tsv creation start
-                                        $filenametsv = $provider_name . "_" . $Member['Customer_ID'] . "_" . $ReportCode['report_code'] . "_5_" . $begin_date . "_" . $end_date . "_" . $rundate . ".tsv";
+                                        $filenametsv = $provider_name . "_" . $Member['customer_id'] . "_" . $ReportCode['report_code'] . "_5_" . $begin_date . "_" . $end_date . "_" .$rundate. ".tsv";
                                         $FileNameForSize = $filenametsv;
                                         
                                         $filenametsv = $destinationPath . $filenametsv;
@@ -2786,6 +2755,7 @@ class ShowController extends Controller {
                                                 //making duplicate rows for Metric_Type
                                                 if(isset($matricValueFlage) && $matricValueFlage==1){
                                                     $lenghtOfColumn = count($orderDataValue[13]);
+                                                    
                                                     foreach($instanceArray as $valueofInstanceValue){
                                                         $SingleColumnCopy = $SingleColumn;
                                                         $SingleColumnCopy['Metric_Type'] = $valueofInstanceValue['Metric_Type']??'';
@@ -2929,7 +2899,7 @@ class ShowController extends Controller {
                                             unlink($destinationPath . $file);
                                            
                                         } else if($Rid === 'PR' || $Rid === 'PR_P1') {
-                                            
+                                           
                                             $orderDataValue[] = array();
                                             $BodyReportHeading = array(
                                                 'Platform',
@@ -3218,7 +3188,6 @@ class ShowController extends Controller {
                                 }
                             }
                         }
-                    }
                 }
             }
             
@@ -3255,14 +3224,11 @@ class ShowController extends Controller {
                             }
                             
                     }
-                    //echo "<pre>MAHAN";print_r($orderDataValueNew);die;
                     $AllDataValue[$ReportName] = $orderDataValueNew;
-                    //echo $LastIndexOfJsonReport."<pre>Test";print_r($AllDataValue);die;
                 }
                 
                 
                 //writting file
-                //echo "<pre>Yahoo";print_r($AllDataValue);die;
                 foreach($AllDataValue as $keyofReportName=>$valueOfReportFinal){
                 $filenametsv = $destinationPath . $keyofReportName.".tsv";
                 $TsvContentValue = '';
@@ -3272,7 +3238,6 @@ class ShowController extends Controller {
                         $TsvContentValue = implode("\t", $ContentOfTSV) . "\n";
                         fwrite($myfile, $TsvContentValue);
                     }
-                    //echo $myfile."<pre>2345";print_r($valueOfReportFinal);die;
                 } catch (Exception $exception) {
                     report($exception);
                     return parent::render($request, $exception);
@@ -3632,40 +3597,42 @@ class ShowController extends Controller {
                             'requestor_id' => $data['requestor_id']
                         );
                         $fields = array_filter($fields);
-//                         echo "<pre>";print_r($fields);die;
                         $url = $mainURL . "/members?" . http_build_query($fields, '', "&");
-//                         echo "<pre>";print_r($url);die;
                         if (!preg_match("~^(?:f|ht)tps?://~i", $url)) {
                             $url = "https://" . $url;
                         }
                         $file = time() . '_file.json';
                         $curl = curl_init($url);
-                        curl_setopt($curl, CURLOPT_NOBODY, true);
+                        
+                        curl_setopt($curl, CURLOPT_NOBODY, false);
+                        curl_setopt($curl, CURLOPT_SSL_VERIFYPEER, false);
+                        curl_setopt($curl,CURLOPT_RETURNTRANSFER,1);
+                        curl_setopt($curl, CURLOPT_USERAGENT, "Mozilla/5.0 (Windows; U; Windows NT 5.1; en-US) AppleWebKit/525.13 (KHTML, like Gecko) Chrome/0.A.B.C Safari/525.13");
+                        
                         $result = curl_exec($curl);
-                      //  echo "<pre>";print_r($result);die;
+                        
                         if ($result !== false) {
-                           
                             $statusCode = curl_getinfo($curl, CURLINFO_HTTP_CODE);
                             if ($statusCode == 404) {
+                                Session::flash('reportmsg', 'This URL is not exist.');
+                                Session::put('keyurl', 'display');
+                                return Redirect::intended('/filelist/');
                                 //mark Shushi URL is incorrect and save in Database;
                             } else {
                                
-                                // $data = json_encode(['Text 1','Text 2','Text 3','Text 4','Text 5']);
-                                $opts = [
-                                    "http" => [
-                                        "method" => "GET",
-                                        "header" => "Accept-language: en\r\n"
-                                    ]
-                                   
-                                ];
-                                $context = stream_context_create($opts);
-                                $dataValue = file_get_contents($url, false, $context);
-                                $MembersList = json_decode($dataValue);
+                                $MembersList = json_decode($result);
                                 
+                                if(empty($MembersList)){
+                                    Session::flash('reportmsg', 'This URL has been moved.');
+                                    return Redirect::intended('/consortium/');
+                                } else {
                                 foreach($MembersList as $Member){
-                                    
                                      $CustomerId = $Member->Customer_ID??'';
-                                     $RequestorId = $Member->Requestor_ID??'';
+                                    if(!empty($Member->Requestor_ID)){
+                                        $RequestorId = $Member->Requestor_ID??'';
+                                    }else{
+                                        $RequestorId = $data['requestor_id']??'';
+                                    }
                                      $Name = $Member->Name??'';
                                      $Notes = $Member->Notes??'';
                                      $InstitutionIdType = $Member->Institution_ID[0]->Type??'';
@@ -3693,6 +3660,7 @@ class ShowController extends Controller {
                                     // echo "<pre>";print_r($SaveMemberNew);die;
 //                                     $data['allmember'] = $SaveMemberNew;
 
+                            }
                             }
                         }
                 
