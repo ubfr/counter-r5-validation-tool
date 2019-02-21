@@ -719,15 +719,14 @@ class FilevalidateController extends CommonController
                 //checking error in header
                 if(isset($json['Report_Header'])){
                     
-                    
-                    
+                  if(isset($json['Report_Header']['Exceptions'])){
                     if(count($json['Report_Header']['Exceptions'])>0){
                         $errorMessagage = $json['Report_Header']['Exceptions'][0]['Message']??''." and ". $json['Report_Header']['Exceptions'][0]['Data']??'';
                         Session::flash('reportmsg', $errorMessagage);
                         return Redirect::intended('/filelist/');
                     } 
-               
-                
+                  }    
+                  
                 $currentReportID = $jsonReportHeader['Report_ID']??'';
                 if ($currentReportID == 'DR_D1' || $currentReportID == 'DR_D2' || $currentReportID == 'DR') {
 
@@ -789,7 +788,7 @@ class FilevalidateController extends CommonController
                     $destinationPath=public_path()."/upload/json/";
                     if (!is_dir($destinationPath)) {  mkdir($destinationPath,0777,true);  }
                     
-                    File::put($destinationPath.$file,$data);
+                    File::put($destinationPath.$file,$result);
                     
                     $completePath = $destinationPath.$file;
                    
