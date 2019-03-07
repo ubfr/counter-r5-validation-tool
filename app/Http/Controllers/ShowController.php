@@ -552,8 +552,8 @@ class ShowController extends Controller {
         $data['file_detail'] = $filename;
         return view('Uploaded_report', $data);
     }
-	
-	 ///////////////downloading uploaded reports////////////
+    
+     ///////////////downloading uploaded reports////////////
     public function uploadReportsDownload($id=0) {
         $user = Session::get('user');
         if (Session::has('user')) {
@@ -1002,7 +1002,6 @@ class ShowController extends Controller {
                        
                         else if($selectedFormat==='TSV'){
                             // tsv creation start
-                            
                             try {
                             $filenametsv = $providerNameFolder . "_members.tsv";
                             $FileNameForSize = $filenametsv;
@@ -1060,33 +1059,7 @@ class ShowController extends Controller {
                                 );
                                 $Mfields  =  array_filter($Mfields);
                                 $startdatetimstamp = date('Y-m-d H:i:s');
-                                $SaveTransaction = array(
-                                    'user_id' => $user->email,
-                                    'transaction_id' => $TransactionId,
-                                    'config_name' => $ConfigurationName,
-                                    'client_ip' => $ClientIp,
-                                    'provider_name' => $provider_name,
-                                    'member_name' => $name,
-                                    'report_id' => $ReportCode['report_code'],
-                                    'begin_date' => $begin_date,
-                                    'end_date' => $end_date,
-                                    'status' => 1,
-                                    'message' => 'failed',
-                                    'remarks' => $Remarks,
-                                    'exception' => '',
-                                    'details' => 'Incomplete:',
-                                    'file_name' => 'Test.json',
-                                    'file_size' => 0,
-                                    'start_date_time' => $startdatetimstamp
-                                );
                                 
-                                DB::beginTransaction();
-                                try {
-                                $SaveReort = Transactionmasterdetail::create($SaveTransaction);
-                                DB::commit();
-                                } catch(Exception $exception) {
-                                DB::rollback();
-                                }
                                 
                                 $Murl = $mainURL . "/reports/" . strtolower($ReportCode['report_code']) . "?" . http_build_query($Mfields, '', "&");
                                 if (! preg_match("~^(?:f|ht)tps?://~i", $Murl)) {
@@ -1114,7 +1087,67 @@ class ShowController extends Controller {
                                         $Mresult = array(
                                             "Member URL does not exist"
                                         );
+                                        $SaveTransaction = array(
+                                            'user_id' => $user->email,
+                                            'transaction_id' => $TransactionId,
+                                            'config_name' => $ConfigurationName,
+                                            'client_ip' => $ClientIp,
+                                            'provider_name' => $provider_name,
+                                            'member_name' => $name,
+                                            'report_id' => $ReportCode['report_code'],
+                                            'begin_date' => $begin_date,
+                                            'end_date' => $end_date,
+                                            'status' => 0,
+                                            'message' => 'failed',
+                                            'remarks' => $Remarks,
+                                            'exception' => '',
+                                            'details' => 'Incomplete:',
+                                            'file_name' => 'Test.json',
+                                            'file_size' => 0,
+                                            'start_date_time' => $startdatetimstamp
+                                        );
+                                        
+                                        DB::beginTransaction();
+                                        try {
+                                        $SaveReort = Transactionmasterdetail::create($SaveTransaction);
+                                        DB::commit();
+                                        } catch(Exception $exception) {
+                                        DB::rollback();
+                                        }
                                     } else {
+                                        
+                                        
+                                        
+                                        $SaveTransaction = array(
+                                            'user_id' => $user->email,
+                                            'transaction_id' => $TransactionId,
+                                            'config_name' => $ConfigurationName,
+                                            'client_ip' => $ClientIp,
+                                            'provider_name' => $provider_name,
+                                            'member_name' => $name,
+                                            'report_id' => $ReportCode['report_code'],
+                                            'begin_date' => $begin_date,
+                                            'end_date' => $end_date,
+                                            'status' => 1,
+                                            'message' => 'success',
+                                            'remarks' => $Remarks,
+                                            'exception' => '',
+                                            'details' => 'complete:',
+                                            'file_name' => 'Test.json',
+                                            'file_size' => 0,
+                                            'start_date_time' => $startdatetimstamp
+                                        );
+
+                                        DB::beginTransaction();
+                                        try {
+                                        $SaveReort = Transactionmasterdetail::create($SaveTransaction);
+                                        DB::commit();
+                                        } catch(Exception $exception) {
+                                        DB::rollback();
+                                        }
+                                        
+                                        
+                                        
                                         // $data = json_encode(['Text 1','Text 2','Text 3','Text 4','Text 5']);
                                         $startdatetimstampEnd = date('Y-m-d H:i:s');
                                         $rundate = date('m-d-Y-His A e');
@@ -1141,7 +1174,7 @@ class ShowController extends Controller {
                                        // excel start here 
                                         
                                         // $filename = $user['id'] . '_' . date('m-d-Y_hisa') . '_' . 'xlsx';
-                                            $filename = $provider_name . "_" . $Member['customer_id'] . "_" . $ReportCode['report_code'] . "_5_" . $begin_date . "_" . $end_date . "_" .$rundate. "";
+                                        $filename = $provider_name . "_" . $Member['customer_id'] . "_" . $ReportCode['report_code'] . "_5_" . $begin_date . "_" . $end_date . "_" .$rundate. ".tsv";
                                         $FileNameForSize = $filename;
                                         // echo "<pre>";print_r ($filename);die;
                                         $headerSection = $dataValue['Report_Header'];
@@ -1175,7 +1208,7 @@ class ShowController extends Controller {
                                         
                                         // setting header of report
                                         $currentReportID = $headerSection['Report_ID'];
-                                        $ReportBody = $dataValue['Report_Items'];
+                                        $ReportBody = $dataValue['Report_Items']??'';
                                         // $ReportHeader = $datavalue['Report_Header'];
                                         // echo "<pre>";print_r ($ReportBody);die;
                                         if (empty($ReportBody)) {
@@ -1326,7 +1359,8 @@ class ShowController extends Controller {
                                             // getting array for header from JSON Data
                                             $JsonHeaderValues = array();
                                             for($i=0;$i<11;$i++){
-                                                $JsonHeaderValues[$dataValue1[$i][0]] = $dataValue1[$i][1];
+                                                if(array_key_exists(1,$dataValue1[$i]))
+                                                    $JsonHeaderValues[$dataValue1[$i][0]] = $dataValue1[$i][1]??'';
                                             }
                                             
                                             $rname = str_replace('"', '', $JsonHeaderValues['Report_Name']);
@@ -1966,7 +2000,8 @@ class ShowController extends Controller {
                                             // getting array for header from JSON Data
                                             $JsonHeaderValues = array();
                                             for($i=0;$i<11;$i++){
-                                                $JsonHeaderValues[$dataValue1[$i][0]] = $dataValue1[$i][1];
+                                                if(array_key_exists(1,$dataValue1[$i]))
+                                                    $JsonHeaderValues[$dataValue1[$i][0]] = $dataValue1[$i][1]??'';
                                             }
                                             
                                             $orderDataValue = array();
@@ -2586,7 +2621,8 @@ class ShowController extends Controller {
                                             // getting array for header from JSON Data
                                             $JsonHeaderValues = array();
                                             for($i=0;$i<11;$i++){
-                                                $JsonHeaderValues[$dataValue1[$i][0]] = $dataValue1[$i][1];
+                                                if(array_key_exists(1,$dataValue1[$i]))
+                                                    $JsonHeaderValues[$dataValue1[$i][0]] = $dataValue1[$i][1]??'';
                                             }
                                             
                                             $orderDataValue = array();
@@ -2619,7 +2655,8 @@ class ShowController extends Controller {
                                             }
                                             
                                             for($i=0;$i<11;$i++){
-                                                $JsonHeaderValues[$dataValue1[$i][0]] = $dataValue1[$i][1];
+                                                if(array_key_exists(1,$dataValue1[$i]))
+                                                    $JsonHeaderValues[$dataValue1[$i][0]] = $dataValue1[$i][1];
                                             }
                                             
                                             
@@ -3808,13 +3845,15 @@ class ShowController extends Controller {
                 $ConfigName = $sheet->rangeToArray('B1' . ':' . 'B1', NULL, TRUE, FALSE);
                 $ConfigName = $ConfigName[0][0] ?? '';
                 
+                $user = Session::get('user');
                 $reportdta = new Consortium();
                 $ConsortiumDetail = Consortium::where(array(
-                    'configuration_name' => $ConfigName
+                    'configuration_name' => $ConfigName,
+                    'user_id' => $user['id'] 
                 ))->orderBy('id', 'asc')
                     ->get()
                     ->first();
-                // echo"<pre>hjg";print_r($ConsortiumDetail);die;
+                // echo"<pre>hjg";print_r($ConsortiumDetail->user_id);die;
                 $Remarks = $sheet->rangeToArray('D1' . ':' . 'D1', NULL, TRUE, FALSE);
                 $Remarks = $Remarks[0][0] ?? '';
                 // ->toArray();
@@ -3823,15 +3862,16 @@ class ShowController extends Controller {
                     Session::flash('error', 'Invalid Configuration');
                     ?>
                    <script>
-						window.location.href='/consortium';
+                        window.location.href='/consortium';
                         </script>
                  <?php
-                } else if (isset($ConsortiumDetail->id)) {
+                } else if (isset($ConsortiumDetail['user_id'])) {
+                    
                     
                     Session::flash('error', 'Configuration Already Exist');
                     ?>
                   <script>
-						window.location.href='/consortium';
+                        window.location.href='/consortium';
                         </script>
                     <?php
                 } else {
@@ -3840,7 +3880,8 @@ class ShowController extends Controller {
                     $SaveData = array(
                         'configuration_name' => $ConfigName,
                         'remarks' => $Remarks,
-                        'created_by' => $user['email']
+                        'created_by' => $user['email'],
+                        'user_id' => $user['id'] 
                     );
                     
                     DB::beginTransaction();
@@ -3896,8 +3937,7 @@ class ShowController extends Controller {
                        $curl = curl_init($url);
                        curl_setopt($curl, CURLOPT_NOBODY, true);
                        $result = curl_exec($curl);
-                        // echo "<pre>";print_r($result);die;
-                       
+                       // echo "<pre>";print_r($result);die;
                        
                        if ($result !== false) {
                            
@@ -3906,19 +3946,7 @@ class ShowController extends Controller {
                                //mark Shushi URL is incorrect and save in Database;
                            } else {
                                
-                               // $data = json_encode(['Text 1','Text 2','Text 3','Text 4','Text 5']);
-                               $opts = [
-                               "http" => [
-                               "method" => "GET",
-                               "header" => "Accept-language: en\r\n"
-                                         ]
-                                       ];
-                               
-                               $context = stream_context_create($opts);
-                               $dataValue = file_get_contents($url, false, $context);
-                               $MembersList = json_decode($dataValue);
-                               
-                               
+                               $MembersList = json_decode($result);
                                
                                foreach($MembersList as $Member){
                                    
@@ -3930,11 +3958,7 @@ class ShowController extends Controller {
                                    // echo "<pre>";print_r($InstitutionIdType);die;
                                    $InstitutionIdvalue = $Member->Institution_ID[0]->Value??'';
                                    $ProviderId = $ProviderDetailID;
-                                   //echo "<pre>";print_r($ProviderId);die;
-                                   //$InsertedIDOfProvider
-                                   
-                                   // echo "<pre>";print_r($CustomerId);die;
-                                   
+                                 
                                    $MembersValue= array(
                                    'customer_id' => $CustomerId,
                                    'requestor_id' => $RequestorId,
@@ -3964,7 +3988,7 @@ class ShowController extends Controller {
                         Session::flash('colupdatemsg', 'Provider Imported Successfully');
                         ?>
                         <script>
-						window.location.href='/consortium';
+                        window.location.href='/consortium';
                         </script>
                         <?php
                     }
