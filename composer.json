@@ -7,13 +7,20 @@
 	],
 	"license" : "MIT",
 	"type" : "project",
+	"repositories" : [
+		{
+			"type": "vcs",
+			"url": "https://git.ub.uni-freiburg.de/c5tools"
+		}
+	],
 	"require" : {
-		"php" : "^7.1.3",
-		"fideloper/proxy" : "^4.0",
-		"laravel/framework" : "5.6.*",
-		"laravel/tinker" : "^1.0",
-		"maatwebsite/excel" : "~2.1.0",
-		"buzz/laravel-google-captcha": "2.*"
+		"php": "^7.1.3",
+		"buzz/laravel-google-captcha": "2.*",
+		"fideloper/proxy": "^4.0",
+		"laravel/framework": "5.6.*",
+		"laravel/tinker": "^1.0",
+		"maatwebsite/excel": "~2.1.0",
+		"ubfr/c5tools": "dev-master"
 	},
 	"require-dev" : {
 		"filp/whoops" : "^2.0",
