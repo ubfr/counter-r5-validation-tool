@@ -63,10 +63,10 @@ function () {
 //     'as' => 'admin.invoices.downloadfile',
 //     'uses' => 'FilevalidateController@downloadfile'
 // ]); 
-Route::get('/email/{file_id}', [
-    'as' => 'admin.invoices.emailfile',
-    'uses' => 'FilevalidateController@emailfile'
-    ]);
+//Route::get('/email/{file_id}', [
+//    'as' => 'admin.invoices.emailfile',
+//    'uses' => 'FilevalidateController@emailfile'
+//    ]);
 });
 
 // /////////////////////////////Show admin Rule Management////////////////////////////////////////////////////
@@ -133,7 +133,10 @@ Route::group([
             'as' => 'admin.invoices.downloadfile',
             'uses' => 'FilevalidateController@downloadfile'
         ]);
-        
+        Route::get('/email/{file_id}', [
+            'as' => 'admin.invoices.emailfile',
+            'uses' => 'FilevalidateController@emailfile'
+        ]);
         
 Route::get('consortium/{id}','ShowController@harvetsingvalidate');
 Route::get('delete_transaction/{id}', 'ShowController@delete_transaction');
