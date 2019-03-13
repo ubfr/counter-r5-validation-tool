@@ -602,9 +602,25 @@ class ShowController extends Controller {
                 ->toArray();
                
                 if($AllArray == array()){
-                    Session::flash('useralertmsg', 'No Reports Available');
+                    Session::flash('error', 'No Reports Available');
                     return Redirect::intended('/consortium');
                 }
+            } else {
+                
+                // echo "<pre>";print_r($user);die;
+                
+                $AllArray = Transactionmasterdetail::where('user_id', $user['email'])->orderBy('time_stamp', 'desc')
+                ->get()
+                ->toArray();
+                
+                // echo "<pre>";print_r($AllUserArray);die;
+                
+                 if($AllArray == array()){
+                    Session::flash('error', 'No Reports Available');
+                    return Redirect::intended('/consortium');
+                }
+                
+                
             }
             
             $reportHeader[] = array_keys($AllArray[0]);
@@ -805,7 +821,7 @@ class ShowController extends Controller {
             // echo "<pre>";print_r($Limit);die;
             $TotalRequest = Transactionmasterdetail::where('user_id',$email)->distinct('transaction_id')->count('transaction_id');
             if( $TotalRequest >  $Limit  &&  $user['utype']!='admin'){
-                Session::flash('error', 'Limit Exceed. Please Contact Administrator');
+                Session::flash('error', 'Limit Exceeded. Please Contact Administrator');
                 return Redirect::intended('/consortium');
                 
             } 
@@ -883,9 +899,10 @@ class ShowController extends Controller {
         //die("Processed  Done for no of records.");
     }
     
-    // /////////Run Consortium///////////////////////////////
+    ////////////Run Consortium///////////////////////////////
     function runConsortium($id = 0, $TransactionId = '', $begin_date = '', $end_date = '', $selectedReport = '', $selectedProviders = '', $selectedMembers = '', $selectedFormat = '')
     {
+      
         $user = Session::get('user');
         if ($user['email'] == '') {
             return Redirect::to('/');
@@ -1077,7 +1094,7 @@ class ShowController extends Controller {
                                 curl_setopt($Mcurl,CURLOPT_RETURNTRANSFER,1);
                                 curl_setopt($Mcurl, CURLOPT_USERAGENT, "Mozilla/5.0 (Windows; U; Windows NT 5.1; en-US) AppleWebKit/525.13 (KHTML, like Gecko) Chrome/0.A.B.C Safari/525.13");
         
-                                
+                                sleep(1);
                                 $Mresult = curl_exec($Mcurl);
                                 // echo "<pre>";print_r ($Mresult);die;
                                 
@@ -1174,17 +1191,22 @@ class ShowController extends Controller {
                                        // excel start here 
                                         
                                         // $filename = $user['id'] . '_' . date('m-d-Y_hisa') . '_' . 'xlsx';
-                                        $filename = $provider_name . "_" . $Member['customer_id'] . "_" . $ReportCode['report_code'] . "_5_" . $begin_date . "_" . $end_date . "_" .$rundate. ".tsv";
+                                        $filename = $provider_name . "_" . $Member['customer_id'] . "_" . $ReportCode['report_code'] . "_5_" . $begin_date . "_" . $end_date . "_" .$rundate. "";
                                         $FileNameForSize = $filename;
                                         // echo "<pre>";print_r ($filename);die;
-                                        $headerSection = $dataValue['Report_Header'];
                                         
+                                        $headerSection = $dataValue['Report_Header'];
+                                       
                                         foreach ($headerSection as $keyofreport => $reportvalue) {
                                             if (is_array($reportvalue)) {
                                                 if ($keyofreport == 'Institution_ID') {
                                                     $reportvalueforexcel = $reportvalue[0]['Type'] . ':' . $reportvalue[0]['Value'];
                                                 } else if ($keyofreport == 'Report_Filters') {
-                                                    $reportvalueforexcel = $reportvalue[0]['Name'] . '=' . $reportvalue[0]['Value'] . ';' . $reportvalue[1]['Name'] . '=' . $reportvalue[1]['Value'];
+                                                    if(isset($reportvalue[0])){
+                                                        $reportvalueforexcel = $reportvalue[0]['Name'] . '=' . $reportvalue[0]['Value'] . ';' . $reportvalue[1]['Name'] . '=' . $reportvalue[1]['Value'];
+                                                    }else{
+                                                       $reportvalueforexcel = ''; 
+                                                    } 
                                                 } else if ($keyofreport == 'Report_Attributes') {
                                                     $valuekey = $reportvalue[0]['Name'] ?? '';
                                                     $valueofAttr = $reportvalue[0]['Value'] ?? '';
@@ -1288,7 +1310,11 @@ class ShowController extends Controller {
                                                             $PerformanceValue = $RowValue[0]??'';
                                                             $finalString = serialize($PerformanceValue);
                                                         }
-                                                        $NewSingleRow[$headerFixedValueAll[$KeyOfRow]] = $finalString;
+                                                        if(isset($headerFixedValueAll[$KeyOfRow])){
+                                                            $NewSingleRow[$headerFixedValueAll[$KeyOfRow]] = $finalString;
+                                                        } else {
+                                                           $NewSingleRow['N/A'] = ''; 
+                                                        }
                                                     } else {
                                                         $NewSingleRow[$headerFixedValueAll[$KeyOfRow]] = $RowValue;
                                                     }
@@ -1323,9 +1349,16 @@ class ShowController extends Controller {
                                                             $PerformanceValue = $RowValue[0]??'';
                                                             $finalString = serialize($PerformanceValue);
                                                         }
-                                                        $NewSingleRow[$headerFixedValueAll[$KeyOfRow]] = $finalString;
+                                                        if(isset($headerFixedValueAll[$KeyOfRow])){
+                                                            $NewSingleRow[$headerFixedValueAll[$KeyOfRow]] = $finalString;
+                                                        } else {
+                                                            $NewSingleRow['N/A'] = ''; 
+                                                        }
                                                     } else {
-                                                        $NewSingleRow[$headerFixedValueAll[$KeyOfRow]] = $RowValue;
+                                                        if(isset($headerFixedValueAll[$KeyOfRow]))
+                                                            $NewSingleRow[$headerFixedValueAll[$KeyOfRow]] = $RowValue;
+                                                        else
+                                                            $NewSingleRow['N/A'] = $RowValue;
                                                     }
                                                 }
                                                 $dataValue1[] = $NewSingleRow;
@@ -1359,7 +1392,7 @@ class ShowController extends Controller {
                                             // getting array for header from JSON Data
                                             $JsonHeaderValues = array();
                                             for($i=0;$i<11;$i++){
-                                                if(array_key_exists(1,$dataValue1[$i]))
+                                                if(isset($dataValue1[$i]) && array_key_exists(1,$dataValue1[$i]))
                                                     $JsonHeaderValues[$dataValue1[$i][0]] = $dataValue1[$i][1]??'';
                                             }
                                             
@@ -1370,17 +1403,22 @@ class ShowController extends Controller {
                                             foreach($CorrectHeaderSequence as $HeaderHeading){
                                                 if($HeaderHeading=='Reporting_Period'){
                                                     //echo "<pre>";print_r($JsonHeaderValues);die;
-                                                    $makecompatibleDate = explode(";",$JsonHeaderValues['Report_Filters']);
-                                                    $BeginDate = explode("=",$makecompatibleDate[0]);
-                                                    $EndDate = explode("=",$makecompatibleDate[1]);
-                                                    
-                                                    $start_date = $BeginDate[1];
-                                                    $end_date = $EndDate[1];
-                                                    $BeginDate[1] = date("Y-m-t", strtotime($start_date));
-                                                    $EndDate[1] = date("Y-m-t", strtotime($end_date));
-                                                    $FilterValueDate = implode('=',$BeginDate)."; ".implode('=',$EndDate);
+                                                        if(isset($JsonHeaderValues['Report_Filters']) && !empty($JsonHeaderValues['Report_Filters'])){
+                                                        $makecompatibleDate = explode(";",$JsonHeaderValues['Report_Filters']);
+                                                        $BeginDate = explode("=",$makecompatibleDate[0]);
+                                                        $EndDate = explode("=",$makecompatibleDate[1]);
+
+                                                        $start_date = $BeginDate[1];
+                                                        $end_date = $EndDate[1];
+                                                        $BeginDate[1] = date("Y-m-t", strtotime($start_date));
+                                                        $EndDate[1] = date("Y-m-t", strtotime($end_date));
+                                                        $FilterValueDate = implode('=',$BeginDate)."; ".implode('=',$EndDate);
+                                                    }else{
+                                                       $FilterValueDate = ''; 
+                                                    }
                                                     //$orderDataValue[] =  array($HeaderHeading,$JsonHeaderValues['Report_Filters']??'');
                                                     $orderDataValue[] =  array($HeaderHeading,$FilterValueDate??'');
+                                                    
                                                     
                                                 } else {
                                                     if($HeaderHeading=='Report_Filters'){
@@ -2000,7 +2038,7 @@ class ShowController extends Controller {
                                             // getting array for header from JSON Data
                                             $JsonHeaderValues = array();
                                             for($i=0;$i<11;$i++){
-                                                if(array_key_exists(1,$dataValue1[$i]))
+                                                if(isset($dataValue1[$i]) && array_key_exists(1,$dataValue1[$i]))
                                                     $JsonHeaderValues[$dataValue1[$i][0]] = $dataValue1[$i][1]??'';
                                             }
                                             
@@ -2010,15 +2048,19 @@ class ShowController extends Controller {
                                             foreach($CorrectHeaderSequence as $HeaderHeading){
                                                 if($HeaderHeading=='Reporting_Period'){
                                                     //echo "<pre>";print_r($JsonHeaderValues);die;
-                                                    $makecompatibleDate = explode(";",$JsonHeaderValues['Report_Filters']);
-                                                    $BeginDate = explode("=",$makecompatibleDate[0]);
-                                                    $EndDate = explode("=",$makecompatibleDate[1]);
-                                                    
-                                                    $start_date = $BeginDate[1];
-                                                    $end_date = $EndDate[1];
-                                                    $BeginDate[1] = date("Y-m-t", strtotime($start_date));
-                                                    $EndDate[1] = date("Y-m-t", strtotime($end_date));
-                                                    $FilterValueDate = implode('=',$BeginDate)."; ".implode('=',$EndDate);
+                                                    if(isset($JsonHeaderValues['Report_Filters']) && !empty($JsonHeaderValues['Report_Filters'])){
+                                                        $makecompatibleDate = explode(";",$JsonHeaderValues['Report_Filters']);
+                                                        $BeginDate = explode("=",$makecompatibleDate[0]);
+                                                        $EndDate = explode("=",$makecompatibleDate[1]);
+
+                                                        $start_date = $BeginDate[1];
+                                                        $end_date = $EndDate[1];
+                                                        $BeginDate[1] = date("Y-m-t", strtotime($start_date));
+                                                        $EndDate[1] = date("Y-m-t", strtotime($end_date));
+                                                        $FilterValueDate = implode('=',$BeginDate)."; ".implode('=',$EndDate);
+                                                    }else{
+                                                        $FilterValueDate = '';
+                                                    }
                                                     //$orderDataValue[] =  array($HeaderHeading,$JsonHeaderValues['Report_Filters']??'');
                                                     $orderDataValue[] =  array($HeaderHeading,$FilterValueDate??'');
                                                     
@@ -2621,7 +2663,7 @@ class ShowController extends Controller {
                                             // getting array for header from JSON Data
                                             $JsonHeaderValues = array();
                                             for($i=0;$i<11;$i++){
-                                                if(array_key_exists(1,$dataValue1[$i]))
+                                                if(isset($dataValue1[$i]) && array_key_exists(1,$dataValue1[$i]))
                                                     $JsonHeaderValues[$dataValue1[$i][0]] = $dataValue1[$i][1]??'';
                                             }
                                             
@@ -2630,18 +2672,23 @@ class ShowController extends Controller {
                                             
                                             foreach($CorrectHeaderSequence as $HeaderHeading){
                                                 if($HeaderHeading=='Reporting_Period'){
-                                                    //echo "<pre>";print_r($JsonHeaderValues);die;
-                                                    $makecompatibleDate = explode(";",$JsonHeaderValues['Report_Filters']);
-                                                    $BeginDate = explode("=",$makecompatibleDate[0]);
-                                                    $EndDate = explode("=",$makecompatibleDate[1]);
-                                                    
-                                                    $start_date = $BeginDate[1];
-                                                    $end_date = $EndDate[1];
-                                                    $BeginDate[1] = date("Y-m-t", strtotime($start_date));
-                                                    $EndDate[1] = date("Y-m-t", strtotime($end_date));
-                                                    $FilterValueDate = implode('=',$BeginDate)."; ".implode('=',$EndDate);
+                                                        //echo "<pre>";print_r($JsonHeaderValues);die;
+                                                        $makecompatibleDate = explode(";",$JsonHeaderValues['Report_Filters']);
+                                                        if(isset($JsonHeaderValues['Report_Filters']) && !empty($JsonHeaderValues['Report_Filters'])){
+                                                        $BeginDate = explode("=",$makecompatibleDate[0]);
+                                                        $EndDate = explode("=",$makecompatibleDate[1]);
+
+                                                        $start_date = $BeginDate[1];
+                                                        $end_date = $EndDate[1];
+                                                        $BeginDate[1] = date("Y-m-t", strtotime($start_date));
+                                                        $EndDate[1] = date("Y-m-t", strtotime($end_date));
+                                                        $FilterValueDate = implode('=',$BeginDate)."; ".implode('=',$EndDate);
+                                                    }else{
+                                                        $FilterValueDate = '';
+                                                    }
                                                     //$orderDataValue[] =  array($HeaderHeading,$JsonHeaderValues['Report_Filters']??'');
                                                     $orderDataValue[] =  array($HeaderHeading,$FilterValueDate??'');
+                                                    
                                                     
                                                 } else {
                                                     if($HeaderHeading=='Report_Filters'){
@@ -2655,7 +2702,7 @@ class ShowController extends Controller {
                                             }
                                             
                                             for($i=0;$i<11;$i++){
-                                                if(array_key_exists(1,$dataValue1[$i]))
+                                                if(isset($dataValue1[$i]) && array_key_exists(1,$dataValue1[$i]))
                                                     $JsonHeaderValues[$dataValue1[$i][0]] = $dataValue1[$i][1];
                                             }
                                             
@@ -2736,15 +2783,21 @@ class ShowController extends Controller {
                                                             $ReportingPeriodFlag = 1;
                                                         }
                                                     }
+                                                    
+                                                    
                                                     else if($BodyHeader==='DOI'){
                                                         $updateFlage = 0;
+                                                        
+                                                        if(isset($CurrentRowValues['Item_ID'])){
                                                         $ItemIdValue = unserialize($CurrentRowValues['Item_ID']);
                                                         foreach($ItemIdValue as $dataValueOfColumn){
                                                             if($dataValueOfColumn['Type']=='DOI'){
                                                                 $SingleColumn[$dataValueOfColumn['Type']] = $dataValueOfColumn['Value']??'';
                                                                 $updateFlage = 1;
                                                             }
-                                                            
+                                                          }
+                                                        } else {
+                                                             $updateFlage = 0;
                                                         }
                                                         if($updateFlage==0){
                                                             $SingleColumn['DOI'] = '';
@@ -2754,13 +2807,17 @@ class ShowController extends Controller {
                                                     
                                                     else if($BodyHeader==='Online_ISSN'){
                                                         $updateFlage = 0;
+                                                        
+                                                        if(isset($CurrentRowValues['Item_ID'])){
                                                         $ItemIdValue = unserialize($CurrentRowValues['Item_ID']);
                                                         foreach($ItemIdValue as $dataValueOfColumn){
                                                             if($dataValueOfColumn['Type']=='Online_ISSN'){
                                                                 $SingleColumn[$dataValueOfColumn['Type']] = $dataValueOfColumn['Value']??'';
                                                                 $updateFlage = 1;
                                                             }
-                                                            
+                                                          }
+                                                        } else {
+                                                            $updateFlage = 0;
                                                         }
                                                         if($updateFlage==0){
                                                             $SingleColumn['Online_ISSN'] = '';
@@ -2770,13 +2827,17 @@ class ShowController extends Controller {
                                                     
                                                     else if($BodyHeader==='Print_ISSN'){
                                                         $updateFlage = 0;
+                                                        
+                                                        if(isset($CurrentRowValues['Item_ID'])){
                                                         $ItemIdValue = unserialize($CurrentRowValues['Item_ID']);
                                                         foreach($ItemIdValue as $dataValueOfColumn){
                                                             if($dataValueOfColumn['Type']=='Print_ISSN'){
                                                                 $SingleColumn[$dataValueOfColumn['Type']] = $dataValueOfColumn['Value']??'';
                                                                 $updateFlage = 1;
                                                             }
-                                                            
+                                                          }
+                                                        } else {
+                                                             $updateFlage = 0;
                                                         }
                                                         if($updateFlage==0){
                                                             $SingleColumn['Print_ISSN'] = '';
@@ -3131,13 +3192,17 @@ class ShowController extends Controller {
                                                         }
                                                     }
                                                     
-                                                    else if($BodyHeader==='DOI' || $BodyHeader==='Online_ISSN' || $BodyHeader==='Print_ISSN'){
+                                                    else if($BodyHeader==='DOI' || $BodyHeader==='Online_ISSN' || $BodyHeader === 'Print_ISSN') {
                                                         $ItemIdValue = unserialize($CurrentRowValues['Item_ID']);
-                                                        foreach($ItemIdValue as $dataValueOfColumn){
-                                                            $SingleColumn[$dataValueOfColumn['Type']] = $dataValueOfColumn['Value'];
+                                                        if (is_array($ItemIdValue)) {
+                                                            foreach ($ItemIdValue as $dataValueOfColumn) {
+                                                                $SingleColumn[$dataValueOfColumn['Type']] = $dataValueOfColumn['Value'];
+                                                            }
+                                                        } else {
+                                                            $SingleColumn[$dataValueOfColumn['Type']] = '';
                                                         }
                                                     } else {
-                                                        $SingleColumn[$BodyHeader] = $CurrentRowValues[$BodyHeader]??'';
+                                                        $SingleColumn[$BodyHeader] = $CurrentRowValues[$BodyHeader] ?? '';
                                                     }
                                                 }
                                                 //making duplicate rows for Metric_Type
@@ -3623,7 +3688,7 @@ class ShowController extends Controller {
                
             
             $InsertedIDOfProvider = $newUser->id;
-//          echo "<pre>";print_r($newUser);die;
+// echo "<pre>";print_r($newUser);die;
             if ($newUser) {
                 Session::flash('colupdatemsg', 'Provider Added Successfully');
                 
@@ -3925,33 +3990,52 @@ class ShowController extends Controller {
                        $mainURL =$provider['provider_url'];
                        $fields = array(
                            'apikey' => $provider['apikey'],
-                           'customer_id' => $provider['customer_id']
+                           'customer_id' => $provider['customer_id'],
+                           'requestor_id' => $provider['requestor_id']  
                        );
+                       
+                       $fields = array_filter($fields);
                        //echo "<pre>";print_r($fields);die;
                        $url = $mainURL . "/members?" . http_build_query($fields, '', "&");
-                       //                         echo "<pre>";print_r($url);die;
+                       // echo "<pre>";print_r($url);die;
                        if (!preg_match("~^(?:f|ht)tps?://~i", $url)) {
                            $url = "https://" . $url;
                        }
                        $file = time() . '_file.json';
                        $curl = curl_init($url);
-                       curl_setopt($curl, CURLOPT_NOBODY, true);
-                       $result = curl_exec($curl);
-                       // echo "<pre>";print_r($result);die;
+                       
+                        curl_setopt($curl, CURLOPT_NOBODY, false);
+                        curl_setopt($curl, CURLOPT_SSL_VERIFYPEER, false);
+                        curl_setopt($curl,CURLOPT_RETURNTRANSFER,1);
+                        curl_setopt($curl, CURLOPT_USERAGENT, "Mozilla/5.0 (Windows; U; Windows NT 5.1; en-US) AppleWebKit/525.13 (KHTML, like Gecko) Chrome/0.A.B.C Safari/525.13");
+                      
+                        $result = curl_exec($curl);
+                        // echo "<pre>";print_r($result);die;
                        
                        if ($result !== false) {
                            
                            $statusCode = curl_getinfo($curl, CURLINFO_HTTP_CODE);
                            if ($statusCode == 404) {
+                                Session::flash('reportmsg', 'This URL is not exist.');
+                                Session::put('keyurl', 'display');
+                                return Redirect::intended('/filelist/');
                                //mark Shushi URL is incorrect and save in Database;
                            } else {
                                
                                $MembersList = json_decode($result);
+                               if(empty($MembersList)){
+                                    Session::flash('reportmsg', 'This URL has been moved.');
+                                    return Redirect::intended('/consortium/');
+                                } else {
                                
                                foreach($MembersList as $Member){
                                    
                                    $CustomerId = $Member->Customer_ID??'';
-                                   $RequestorId = $Member->Requestor_ID??'';
+                                    if(!empty($Member->Requestor_ID)){
+                                        $RequestorId = $Member->Requestor_ID??'';
+                                    }else{
+                                        $RequestorId = $data['requestor_id']??'';
+                                    }
                                    $Name = $Member->Name??'';
                                    $Notes = $Member->Notes??'';
                                    $InstitutionIdType = $Member->Institution_ID[0]->Type??'';
@@ -3981,6 +4065,7 @@ class ShowController extends Controller {
                                        
                                    }
                                }
+                             }
                            }
                            
                        }

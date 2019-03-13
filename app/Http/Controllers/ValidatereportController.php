@@ -64,8 +64,9 @@ class ValidatereportController extends FilevalidateController {
 
         return $columns;
     }
-
-    function JournalReport1R4($sheet, $highestRow, $highestColumn, $error, $warning) {
+    
+    //this function is using for validate excel and csv
+    function validateExcelOrCsv($sheet, $highestRow, $highestColumn, $error, $warning) {
         $string_check = 0;
         $a = 0;
         $b = 0;

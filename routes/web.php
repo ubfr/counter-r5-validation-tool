@@ -47,7 +47,7 @@ Route::post('forgetpassword', array(
 Route::get('password/reset/{token}', 'Auth\ResetPasswordController@showResetForm')->name('password.reset');
 Route::post('reset/password/{token}', array('as' => 'reset', 'uses' => 'Auth\UserPasswordController@postReset'));
 Route::post('/password/reset/', array('as' => 'reset', 'uses' => 'Auth\UserPasswordController@postReset'));
-
+Route::get('consortium/id','ShowController@TransactionListsDownload');
 
 
 // ///////////////////////////////Login user information//////////////////////////////////////////////////////
@@ -107,7 +107,7 @@ Route::get('uploadedreports','ShowController@uploaded_report');
 Route::get('uploadedreports/id','ShowController@uploadReportsDownload');
 Route::get('delete_upload_report/{id}','ShowController@delete_upload_report');
 
-Route::get('consortium/id','ShowController@TransactionListsDownload');
+
 // Route::get('/download','FilevalidateController@downloadfile');
  Route::get('/download/{file_id}/{filename}', [
     'as' => 'admin.invoices.downloadfile',
@@ -163,6 +163,8 @@ Route::get('member/{provider_id}', 'ShowController@memberListing');
 Route::get('delete_members/{id}/{provider_id}', 'ShowController@deleteMembers');
 Route::get('refresh_members/{provider_id}', 'ShowController@refreshMembers');
 Route::get('/downloadfront/{file_id}/{filename}',  'CommonController@downloadfileFront');
+Route::get('/downloadfront/{file_id}/',  'CommonController@downloadfileFrontforid');
+
 Route::get('sushirequest', 'FilevalidateController@sushiRequest');
 Route::get('delete_sushi_request/{id}', 'FilevalidateController@delete_sushi_request');
 

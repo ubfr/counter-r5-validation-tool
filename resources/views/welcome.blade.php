@@ -89,22 +89,31 @@ foreach ($reportsname as $reportDetails) {
 									<tbody>
 										<?php
         
-        if (isset($file_detail)) {
-            
-            foreach ($file_detail as $filedetails) {
-                ?>
+                                        if (isset($file_detail)) {
+                                            
+                                            //  echo "<pre>";print_r($file_detail->toArray());die;     
+
+                                            foreach ($file_detail as $filedetails) {
+                                                ?>
+                                                                       
+                                                                     @if(empty($filedetails['filename']))
+                                                                     
+                                                                     
+                                                                     @else
         										<tr>
 											<td><?php echo $filedetails->file_type;?></td>
 											<td><?php echo $filedetails->filename;?></td>
+                                                                                        
 											<td class="td-actions"><a
-												href="download/{{$filedetails->id}}/{{$filedetails->filename}}"><i
-													class="fa fa-download" aria-hidden="true"></i></a></td>
-										</tr>
-										<?php
-            }
-        }
-        ?>
-									</tbody>
+											    href="download/{{$filedetails->id}}/{{$filedetails->filename}}"><i
+											    class="fa fa-download" aria-hidden="true"></i></a></td>
+										         </tr>
+                                                                    @endif                     
+                                                                                                           <?php
+                                                                                        }
+                                                                                    }
+                                                                                    ?>
+                                                                                      </tbody>
 								</table>
 							</div>
 							<!-- /widget-content -->

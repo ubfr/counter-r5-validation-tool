@@ -1966,6 +1966,67 @@ class CommonController extends Controller
         }
     }
 
+    // 01/03/2019
+    function downloadfileFrontforid($file_user_id)
+    {
+         // die('herererereer');
+        $user = Session::get('user');
+        // Execute the query used to retrieve the data. In this example
+        // we're joining hypothetical users and payments tables, retrieving
+        // the payments table's primary key, the user's first and last name,
+        // the user's e-mail address, the amount paid, and the payment
+        // timestamp.
+        $payments = Filename::join('validateerrors', 'validateerrors.file_id', '=', 'filenames.id')->select('validateerrors.type', 'validateerrors.error_data', 'validateerrors.error_remark', 'validateerrors.entry_time')
+            ->where('validateerrors.file_id', '=', $file_user_id)
+            ->get();
+        
+        
+       //  echo "<pre>";print_r($payments);die;
+        // Initialize the array which will be passed into the Excel
+        // generator.
+        $paymentsArray = [];
+        
+        // Define the Excel spreadsheet headers
+        $paymentsArray[] = [
+            'Error type',
+            'Error data',
+            'Error Remark',
+            'Validation Date & Time'
+        ];
+        
+        // Convert each member of the returned collection into an array,
+        // and append it to the payments array.
+        foreach ($payments as $payment) {
+            $paymentsArray[] = $payment->toArray();
+        }
+        
+        // echo "<pre>";print_r($paymentsArray);die;
+        
+        $filename = $file_user_id.time();
+        try {
+            // Generate and return the spreadsheet
+            Excel::create($filename, function ($excel) use ($paymentsArray) {
+                
+                // Set the spreadsheet title, creator, and description
+                $excel->setTitle('Error Report');
+                $excel->setCreator('Laravel')->setCompany('Counter Project');
+                $excel->setDescription('Error Report file');
+                
+                // Build the spreadsheet, passing in the payments array
+                $excel->sheet('sheet1', function ($sheet) use ($paymentsArray) {
+                    $sheet->fromArray($paymentsArray, null, 'A1', false, false);
+                });
+            })->download('xlsx');
+        } catch (Exception $exception) {
+            report($exception);
+            
+            return parent::render($request, $exception);
+        }
+    }
+    
+    
+    
+    
     // /////////////////////////////////////////////////////////////////////
     // //////////function for send Email with attachment Error file/////////
     function emailfile($file_user_id)
