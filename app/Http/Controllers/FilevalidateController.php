@@ -27,6 +27,11 @@ use App\Sushitransaction;
 use Exception;
 use Session;
 use DB;
+use ubfr\c5tools\CheckResult;
+use ubfr\c5tools\Report;
+use ubfr\c5tools\ParseException;
+use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
+
 // phpinfo();die;
 // set_error_handler(null);
 // set_exception_handler(null);
@@ -42,8 +47,64 @@ class FilevalidateController extends CommonController
     protected $action_URL = "";
 
     // ///////////////////////////////////////validate file///////////////////////////////////////////////////////
+    public function filevalidate_ubfr()
+    {
+        if(!Session::has('user')) {
+            return Redirect::to('login');
+        }
+        $user = Session::get('user');
+        
+        if (Input::hasFile('import_file')) {
+            $file = Input::file('import_file');
+            $extension = $file->getClientOriginalExtension();
+            $report = null;
+            try {
+                $report = Report::createFromFile($file->getRealPath(), $extension);
+                $checkResult = $report->getcheckResult();
+            } catch (Exception $e) {
+                $checkResult = new CheckResult();
+                try {
+                    $checkResult->fatalError($e->getMessage(), $e->getMessage());
+                } catch (ParseException $e) {
+                    // ignore expected exceptio
+                }
+            }
+            if ($report !== null) {
+                $result = $report->getCheckResultAsSpreadsheet();
+                $reportName = $report->getReportName();
+                $reportId = $report->getReportId();
+            } else {
+                $result = $checkResult->asSpreadsheet();
+                $reportName = 'unknown';
+                $reportId = 'unknown';
+            }
+            
+            $publicDir = app_path() . DIRECTORY_SEPARATOR . 'public' . DIRECTORY_SEPARATOR;
+            $reportFilename = date('Ymd-His') . '-' . $user['id'] . '-' . $file->getClientOriginalName();
+            $file->move($publicDir . 'reports', $reportFilename);
+           
+            $resultFilename = pathinfo($reportFilename, PATHINFO_FILENAME) . '-Validation-Result.xlsx';
+            $xlsxWriter = new Xlsx($result);
+            $xlsxWriter->save($publicDir . 'results' . DIRECTORY_SEPARATOR . $resultFilename);
+            
+            $fileId = $this->fileinsert($user['id'], $reportFilename, $extension, '', '', $reportName, $reportId);
+            
+            $data = [
+                'checkResult' => $checkResult,
+                'userDisplayName' => $user['display_name'],
+                'utype' => $user['utype'],
+                'fileId' => $fileId,
+                'filename' => $reportFilename,
+                'originalFilename' => $file->getClientOriginalName()
+            ];
+            return view('validate_report_ubfr', $data);
+        }
+    }
+    
     public function filevalidate()
     {
+        return $this->filevalidate_ubfr();
+
         $excel = [];
         $err = [];
         $warning = [];

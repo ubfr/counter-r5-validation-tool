@@ -21,6 +21,7 @@ use Illuminate\Support\Facades\Storage;
 use App\Reportname;
 use App\Filtertype;
 use Exception;
+use Illuminate\Support\Facades\Response;
 
 // use App\Http\Controllers\CommonController\emailfile;
 class CommonController extends Controller
@@ -1864,8 +1865,35 @@ class CommonController extends Controller
 
     // //////////////////////////////////////////////////////////////////////
     // ////////////////////function for download file//////////////////////////
+    
+    function downloadfile_ubfr($fileId)
+    {
+        if(!Session::has('user')) {
+            return Redirect::to('login');
+        }
+        $user = Session::get('user');
+        
+        $fileInfo = Filename::where('id', $fileId)->firstOrFail();
+        if($fileInfo->user_id !== $user['id'] && $user['utype'] !== 'admin') {
+            // TODO: exception is not rendered, user is redirected to /filelist
+            abort(403, 'You are not authorized to download this validation result.');
+        }
+        
+        $resultsDir = implode(DIRECTORY_SEPARATOR, [ app_path(), 'public', 'results', '' ]);
+        $resultFilename = pathinfo($fileInfo->filename, PATHINFO_FILENAME) . '-Validation-Result.xlsx';
+        if(!file_exists($resultsDir . $resultFilename)) {
+            // TODO: exception is not rendered, user is redirected to /filelist
+            abort(404, 'Validation result not found.');
+        }
+
+        return response()->download($resultsDir . $resultFilename, $resultFilename,
+            [ 'Content-Type: application/vnd.openxmlformats-officedocument.spreadsheetml.sheet']);
+    }
+    
     function downloadfile($file_user_id, $filename)
     {
+        return $this->downloadfile_ubfr($file_user_id);
+        
         $user = Session::get('user');
         // Execute the query used to retrieve the data. In this example
         // we're joining hypothetical users and payments tables, retrieving
@@ -2029,8 +2057,53 @@ class CommonController extends Controller
     
     // /////////////////////////////////////////////////////////////////////
     // //////////function for send Email with attachment Error file/////////
+    function emailfile_ubfr($fileId)
+    {
+        if(!Session::has('user')) {
+            return Redirect::to('login');
+        }
+        $user = Session::get('user');
+        
+        $fileInfo = Filename::where('id', $fileId)->firstOrFail();
+        if($fileInfo->user_id !== $user['id']) {
+            // TODO: exception is not rendered, user is redirected to /filelist
+            abort(403, 'You are not authorized to download this validation result.');
+        }
+        
+        $resultsDir = implode(DIRECTORY_SEPARATOR, [ app_path(), 'public', 'results', '' ]);
+        $resultFilename = pathinfo($fileInfo->filename, PATHINFO_FILENAME) . '-Validation-Result.xlsx';
+        if(!file_exists($resultsDir . $resultFilename)) {
+            // TODO: exception is not rendered, user is redirected to /filelist
+            abort(404, 'Validation result not found.');
+        }
+        $originalFilename = substr($fileInfo->filename, 17 + strlen($user['id']));
+
+        $title = 'Hi ' . $user['display_name'] . ',';
+        $content = 'here is the validation result for the report ' . $originalFilename .
+            ' uploaded on ' . $fileInfo->upload_date . '.';
+        $emailTo = $user['email'];
+        
+        try {
+            Mail::send('emails.result', [
+                'title' => $title,
+                'content' => $content
+            ], function ($message) use ($resultsDir, $resultFilename, $emailTo) {
+                $message->subject('COUNTER Release 5 Report Validation Result');
+                $message->attach($resultsDir . $resultFilename);
+                $message->to($emailTo);
+            });
+            Session::flash('emailMsg', 'Email was sent to ' . $emailTo . '.');
+        } catch (Exception $exception) {
+            report($exception);
+        }
+        
+        return Redirect::to('filelist');
+    }
+    
     function emailfile($file_user_id)
     {
+        return $this->emailfile_ubfr($file_user_id);
+        
         // echo $file_user_id;die;
         $user = Session::get('user');
         // Execute the query used to retrieve the data. In this example
