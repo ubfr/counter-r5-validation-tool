@@ -1,2 +1,7 @@
-ALTER TABLE ‘consortium_configuration’ ADD ‘user_id’ INT NULL AFTER ‘time_stamp’;
+ALTER TABLE `consortium_configuration` ADD `user_id` INT NOT NULL AFTER `time_stamp`;
+
 ALTER TABLE `users` ADD `newsletter` TINYINT(4) NULL DEFAULT '0' AFTER `password`, ADD `commercial` TINYINT(4) NULL DEFAULT '0' AFTER `newsletter`;
+
+UPDATE consortium_configuration INNER JOIN users
+    ON `consortium_configuration`.`created_by` COLLATE utf8_general_ci = `users`.`email` COLLATE utf8_general_ci
+SET consortium_configuration.user_id = users.id;
