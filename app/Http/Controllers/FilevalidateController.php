@@ -188,23 +188,23 @@ class FilevalidateController extends CommonController
                 }
                 
                  } else {
+
+// 01.03.2019
                      $user = Session::get('user'); 
-                     $data['warning_details'] =array();
-                     $data['structure_error'] = '0';
-                     $data['error_details'] = array(array('data'=>'', 'error'=>'Report_Header is in incorrect format or not available in this Report'));
-                     $data['structure_warning'] = '0';
-                     $data['data_warning'] = 0;
-                     $data['userDisplayName'] = $user['display_name'];
-                     $data['utype'] = $user['utype'];
-                     $data['uploaded_file'] = $upload_file ?? '';
-                     $data['data_error'] = 'Header Missing';
+                     $dataIncludeHeader['warning_details'] =array();
+                     $dataIncludeHeader['structure_error'] = '0';
+                     $dataIncludeHeader['error_details'] = array(array('data'=>'', 'error'=>'Report_Header is in incorrect format or not available in this Report'));
+                     $dataIncludeHeader['structure_warning'] = '0';
+                     $dataIncludeHeader['data_warning'] = 0;
+                     $dataIncludeHeader['userDisplayName'] = $user['display_name'];
+                     $dataIncludeHeader['utype'] = $user['utype'];
+                     $dataIncludeHeader['uploaded_file'] = $upload_file ?? '';
+                     $dataIncludeHeader['data_error'] = 'Header Missing';
                      //echo "<pre>REPORT!!!";print_r($data);die;
-                    //$inserterror_warning = $this->inserterror('', $data['warning_details'], $user['id'], $upload_file, $extension, $currentReportName, $currentMasterID);
-                     $data['file_id'] ='';
+                     $inserterror_warning = $this->inserterror($dataIncludeHeader['error_details'], $dataIncludeHeader['warning_details'], $user['id'], $upload_file??'', $extension, $currentReportName??'', $currentMasterID??'');
+                     $dataIncludeHeader['file_id'] =$inserterror_warning;
                      
-                     return view('validate_report', $data);
-                     
-                     
+                     return view('validate_report', $dataIncludeHeader); 
                  }
                  
             } else {
@@ -234,7 +234,7 @@ class FilevalidateController extends CommonController
                         
                         foreach ($rowData as $detail) {
                             $test = new ValidatereportController();
-                            $validatereport = $test->JournalReport1R4($sheet, $highestRow, $highestColumn, $err, $warning, $Reportname1, $getreportCode); 
+                            $validatereport = $test->validateExcelOrCsv($sheet, $highestRow, $highestColumn, $err, $warning, $Reportname1, $getreportCode); 
                         }
                     }
                     // Loop through each row of the worksheet in turn
