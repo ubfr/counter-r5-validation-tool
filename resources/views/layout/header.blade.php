@@ -82,8 +82,10 @@
         				<ul class="nav navbar-nav">
         				    <li><a href="{{url('filelist')}}">File Validation</a></li>
         					<li><a href="{{url('userlist')}}">User Management</a></li>
+        				      <!-- disabled, has no effect on ubfr/c5tools
         					<li><a href="{{url('reporthistory')}}">Report Management</a></li>
         					<li><a href="{{url('rulemanagement')}}">Rule Management</a></li>
+        				      -->
         					<li><a href="{{url('uploadedreports')}}">Uploaded Reports</a></li>
         				  <?php if(Config::get('c5tools.enableConsortiumTool')) {?>
         					<li><a href="{{url('consortium')}}">Consortium Tool</a></li>
