@@ -61,7 +61,9 @@
         			<div class="container-fluid">
         				<ul class="nav navbar-nav">
         				    <li><a href="{{url('filelist')}}">File Validation</a></li>
+        				  <?php if(Config::get('c5tools.enableConsortiumTool')) {?>
         				    <li><a href="{{url('consortium')}}">Consortium Tool</a></li>
+        				  <?php }?>
         				     <li><a href="{{url('showreport')}}">User's Reports</a></li>
         				    </ul>
         				<ul class="nav navbar-nav pull-right">
@@ -83,7 +85,9 @@
         					<li><a href="{{url('reporthistory')}}">Report Management</a></li>
         					<li><a href="{{url('rulemanagement')}}">Rule Management</a></li>
         					<li><a href="{{url('uploadedreports')}}">Uploaded Reports</a></li>
+        				  <?php if(Config::get('c5tools.enableConsortiumTool')) {?>
         					<li><a href="{{url('consortium')}}">Consortium Tool</a></li>
+        				  <?php }?>
         				</ul>
         				<ul class="nav navbar-nav pull-right" style="margin-top:15px;">
         			     <li><i class="fa fa-user" aria-hidden="true"></i> <?php  echo "Welcome ".$userDisplayName;?></li>
