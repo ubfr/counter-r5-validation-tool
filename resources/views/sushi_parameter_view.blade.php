@@ -2,7 +2,7 @@
 <!--========================login form start here======================================-->
 <div class="row">
 <div class="col-xs-12 col-sm-121 col-md-12 ">
-            <form id="getsushireport" name="getsushireport" method="post" class="file-uploader1" action="/getsushireport" enctype="multipart/form-data">
+            <form id="getsushireport" name="getsushireport" method="post" class="file-uploader1" action="{{ url('/getsushireport') }}" enctype="multipart/form-data">
                 <input type="hidden" name="_token" value="<?php echo csrf_token() ?>">
                 <input type="hidden" name="Requestorurl" value="<?php echo $Requestorurl ?? ''; ?>">
                 <input type="hidden" name="APIkey" value="<?php echo $apikey ?? ''; ?>">

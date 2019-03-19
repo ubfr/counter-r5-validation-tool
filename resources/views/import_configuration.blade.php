@@ -26,7 +26,7 @@
 					<h3><strong>Import COUNTER Configuration</strong></h3>
 						<hr class="colorgraph">
 						<form name="importconfiguration" method="post" class="file-uploader"
-							action="/consortiumimport" enctype="multipart/form-data">
+							action="{{ url('/consortiumimport') }}" enctype="multipart/form-data">
 							<input type="hidden" name="_token"
 								value="<?php echo csrf_token() ?>">
 								
@@ -70,7 +70,7 @@
 										
         										<tr>
         										
-											<td><a href="/sample/Template for import configuration.xlsx"><i class="fa fa-download"
+											<td><a href="{{ url('/sample/Template for import configuration.xlsx') }}"><i class="fa fa-download"
 												aria-hidden="true"></i>	</a></td>
 										</tr>
 									

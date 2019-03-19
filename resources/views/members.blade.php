@@ -78,7 +78,7 @@
 							        <td class="" >
 							        	<a
 											onclick="return confirm('Are you sure for delete this member?')"
-											href="/delete_members/<?php echo $member['id']."/".$SingleProvder->id; ?>"><i
+											href="{{ url('/delete_members') }}/<?php echo $member['id']."/".$SingleProvder->id; ?>"><i
 												class="fa fa-trash" aria-hidden="true"></i></a>
 						        	</td>
                                     

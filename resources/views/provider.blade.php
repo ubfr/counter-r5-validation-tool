@@ -26,7 +26,7 @@
                                     <!-- Div for border -->
                                     <div class="col-md-12">
                                     <div class="col-md-12"><h3><a href="{{url('consortium')}}" class="btn btn-info" role="button">Back </a> &nbsp;&nbsp;<?php echo isset($SingleProvder['id'])?'Update':'Enter'; ?> Provider Details For : {{$information->configuration_name}}  ||  {{$information->remarks}}</h3><hr class="colorgraph"></div>
-                                    <form name="save_provider" method="post" class="file-uploader1" action="/save_provider" enctype="multipart/form-data">
+                                    <form name="save_provider" method="post" class="file-uploader1" action="{{ url('/save_provider') }}" enctype="multipart/form-data">
                                       
                                         <input type="hidden" name="_token" value="<?php echo csrf_token() ?>">
                                         <input type="hidden" name="configuration_id" value="{{$id}}">
@@ -121,8 +121,8 @@
                                         <td>{{ $provider->requestor_id }}</td>
                                         <td>{{ $provider->customer_id}}</td>
                                         <td>
-                                            <a href="/edit_provider/{{$information->id}}/{{$provider->id}}"><i class="fa fa-edit" aria-hidden="true"></i></a>&nbsp;&nbsp;
-                                            <a onclick="return confirm('Are you sure for delete this provider?')" href="/delete_provider/{{$provider->id}}/{{$information->id}}"><i
+                                            <a href="{{ url('/edit_provider') }}/{{$information->id}}/{{$provider->id}}"><i class="fa fa-edit" aria-hidden="true"></i></a>&nbsp;&nbsp;
+                                            <a onclick="return confirm('Are you sure for delete this provider?')" href="{{ url('/delete_provider') }}/{{$provider->id}}/{{$information->id}}"><i
                                                             class="fa fa-trash" aria-hidden="true"></i></a></td>
                                         </tr>
                                         @endforeach

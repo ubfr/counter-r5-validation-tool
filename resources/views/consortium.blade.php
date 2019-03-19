@@ -116,7 +116,7 @@ div {
 							<div>
 								<h3>Consortium Configuration</h3>
 								<form name="saveconsortium" method="post" class="file-uploader1"
-									action="/saveconsortium" enctype="multipart/form-data">
+									action="{{ url('/saveconsortium') }}" enctype="multipart/form-data">
 									<input type="hidden" name="_token"
 										value="<?php echo csrf_token() ?>">
                                         <?php
@@ -198,15 +198,15 @@ div {
                                             <tr>
 										<td><?php echo $i++; ?></td>
 										<td><?php echo $filedetails['configuration_name']; ?></td>
-										<td><?php echo $filedetails['providers']==''?'&nbsp;<a class="btn btn-primary" href="add_provider/'.$filedetails['id'].'">Add Provider</a>':$filedetails['providers'].'&nbsp;<a class="btn btn-primary" href="/add_provider/'.$filedetails['id'].'"> Add More/View</a>';?></td>
+										<td><?php echo $filedetails['providers']==''?'&nbsp;<a class="btn btn-primary" href="add_provider/'.$filedetails['id'].'">Add Provider</a>':$filedetails['providers'].'&nbsp;<a class="btn btn-primary" href="'.url('/add_provider').'/'.$filedetails['id'].'"> Add More/View</a>';?></td>
 										<td><?php echo $filedetails['remarks']; ?></td>
 										<td class="td-actions"><a
-											href="/consortium/<?php echo $filedetails['id']; ?>"><i
+											href="{{ url('/consortium') }}/<?php echo $filedetails['id']; ?>"><i
 												class="fa fa-edit" aria-hidden="true"></i></a>&nbsp;&nbsp; <a
 											onclick="return confirm('Are you sure for delete this configuration?')"
 											href="delete_consortium/<?php echo $filedetails['id']; ?>"><i
 												class="fa fa-trash" aria-hidden="true"></i></a>&nbsp;&nbsp;<a
-											href="/downloadconfiguration/<?php echo $filedetails['id']; ?>"><i
+											href="{{ url('/downloadconfiguration') }}/<?php echo $filedetails['id']; ?>"><i
 												class="fa fa-download" aria-hidden="true"></i></a></td>
 									</tr>
                                             <?php
@@ -279,7 +279,7 @@ div {
 										<td><?php echo $TransactionSingle['message']; ?></td>
 										
 										@if($TransactionSingle['message'] == 'success')  
-		                                <td><a href="/upload/json/<?php echo $TransactionSingle['transaction_id']; ?>.zip"><i class="fa fa-download"
+		                                <td><a href="{{ url('/upload/json') }}/<?php echo $TransactionSingle['transaction_id']; ?>.zip"><i class="fa fa-download"
 				                               aria-hidden="true"></i>	</a></td>       
                                          @else
                                          <td><i class="fa fa-download"aria-hidden="true"></i></td>

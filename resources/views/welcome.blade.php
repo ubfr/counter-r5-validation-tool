@@ -124,11 +124,11 @@ foreach ($reportsname as $reportDetails) {
 				</div>
 				<div id="menu1" class="tab-pane fade">
 					<div class="col-xs-12 col-sm-12 col-md-12">
-						<form id='frmshushivalidate' name="sushi_validation" method="post" class="file-uploader1" action="/sushiValidate" enctype="multipart/form-data">
+						<form id='frmshushivalidate' name="sushi_validation" method="post" class="file-uploader1" action="{{ url('/sushiValidate') }}" enctype="multipart/form-data">
 							<fieldset>
                                                             <h3>Requestor</h3>
                                                             <div class="col-xs-3 col-sm-3 col-md-3 pull-right">
-                                                                <a href="/sushirequest" class="btn btn-primary btn-block">View Requests</a>
+                                                                <a href="{{ url('/sushirequest') }}" class="btn btn-primary btn-block">View Requests</a>
                                                             </div>
 								<hr class="colorgraph">
 

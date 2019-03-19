@@ -42,11 +42,11 @@
         <div class="col-md-3 pull-right pt-3" style="padding-top:25px">
        <div class="row">
         <div class="col-md-6" >
-        <a href="{{url('/')}}"> <img title="Project Counter" alt="Project Counter" src="/assets/image/OCLC_Logo.jpg" style="width: 100%;"></a>
+        <a href="{{url('/')}}"> <img title="Project Counter" alt="Project Counter" src="{{ url('/assets/image/OCLC_Logo.jpg') }}" style="width: 100%;"></a>
         </div>
         
        <div class="col-md-6" style="padding-top:7px">
-     	<a href="{{url('/')}}"><img title="Project Counter" alt="Project Counter" src="/assets/image/rel_logo.png" style=" width: 100%;"></a>
+     	<a href="{{url('/')}}"><img title="Project Counter" alt="Project Counter" src="{{ url('/assets/image/rel_logo.png') }}" style=" width: 100%;"></a>
         </div> 
   
         
