@@ -346,7 +346,7 @@ div {
 <script>
 $('.openBtn').on('click',function(){
 var CurrentConsortiumId = $(this).attr('rel');
-$('.modal-body').load('\/showprogressnew/'+CurrentConsortiumId,function(){
+$('.modal-body').load('\{{ url('/showprogressnew') }}/'+CurrentConsortiumId,function(){
 $('#myModal').modal({
 	
 	backdrop: 'static',

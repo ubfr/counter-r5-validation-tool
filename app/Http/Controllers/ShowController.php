@@ -3356,7 +3356,7 @@ class ShowController extends Controller {
             $ZipFileName = $TransactionId . ".zip";
             $resonse = $this->convertZipFile($TransactionId, $publicpathforzip, $publicpathforzipNew . "/" . $ZipFileName);
             $this->removeDirectory($publicpathforzip);
-            echo "/upload/json/" . $ZipFileName;
+            echo url('/upload/json/' . $ZipFileName);
             die();
             // return response()->download($publicpathforzipNew . "/" . $ZipFileName);
             // return view('harvesting_report', $dataforpassing);

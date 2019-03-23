@@ -45,7 +45,8 @@
 <script src="{{URL::asset('assets/js/jquery.min.js')}}"></script>
 
 <?php
-if($_SERVER['REQUEST_URI']==='/consortium' || $_SERVER['REQUEST_URI']==='/filelist'){
+print "<!-- " . Request::path() . " -->\n";
+if(Request::path()==='consortium' || Request::path()==='filelist'){
 ?>
 <script type="text/javascript">
 var jQuery_1_3_2 = $.noConflict(true);
@@ -54,7 +55,7 @@ var jQuery_1_3_2 = $.noConflict(true);
 }
 ?>
 <?php
-if($_SERVER['REQUEST_URI']==='/'){
+if(Request::path()==='/'){
 ?>
  <script src="{{URL::asset('assets/js/popper.min.js')}}"></script>  
 <script src="{{URL::asset('assets/js/bootstrap.min.js')}}"></script>
