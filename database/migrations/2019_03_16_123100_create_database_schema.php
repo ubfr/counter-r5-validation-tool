@@ -220,7 +220,7 @@ class CreateDatabaseSchema extends Migration
                 $table->string('report_name')->nullable();
                 $table->string('report_id')->nullable();
                 $table->string('file_type');
-                $table->integer('user_id');
+                $table->integer('user_id')->unsigned();
                 $table->text('filename');
                 $table->timestamp('upload_date')->useCurrent();
 
@@ -242,8 +242,8 @@ class CreateDatabaseSchema extends Migration
                 $table->collation = 'utf8_unicode_ci';
 
                 $table->increments('id');
-                $table->integer('user_id');
-                $table->integer('file_id');
+                $table->integer('user_id')->unsigned();
+                $table->integer('file_id')->unsigned();
                 $table->string('type', 20);
                 $table->text('error_data')->nullable();
                 $table->text('error_remark')->nullable();
@@ -269,7 +269,7 @@ class CreateDatabaseSchema extends Migration
                 $table->charset = 'utf8';
                 $table->collation = 'utf8_unicode_ci';
 
-                $table->increments('id');
+                $table->bigIncrements('id');
                 $table->string('user_email');
                 $table->string('session_id');
                 $table->string('sushi_url', 1024)->nullable();
