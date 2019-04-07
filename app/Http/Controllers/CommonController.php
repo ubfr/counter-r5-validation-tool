@@ -2182,6 +2182,24 @@ class CommonController extends Controller
         return Redirect::to('filelist');
     }
 
+    public function deleteReportfile($id)
+    {
+        if(! Session::has('user')) {
+            return Redirect::to('login');
+        }
+        $user = Session::get('user');
+        
+        $reportfile = Reportfile::where('id', $id)->firstOrFail();
+        if($reportfile->reportfile->user_id !== $user['id'] && $user['utype'] !== 'admin') {
+            // TODO: exception is not rendered, user is redirected to /filelist
+            abort(403, 'You are not authorized to delete this report file.');
+        }
+        $reportfile->delete();
+        
+        Session::flash('userupdatemsg', 'Uploaded report and validation result successfully deleted');
+        return back();
+    }
+    
     // /////////////////////////////////////////////////////////////////////
     // ///////////////For TSV File Reading//////////////////////////////
     public function tsvconverttoxls($filename)

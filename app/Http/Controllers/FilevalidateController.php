@@ -74,7 +74,7 @@ class FilevalidateController extends CommonController
                     $checkResult, $user['id']);
             } catch (\Exception $e) {
                 report($e);
-                Session::flash('error', 'Error while storing validation result: ' . $e->getMessage());
+                Session::flash('reportmsg', 'Error while storing validation result: ' . $e->getMessage());
                 return Redirect::to('filelist');
             }
             

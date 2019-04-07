@@ -16,7 +16,7 @@ class CreateReportfilesTable extends Migration
         Schema::create('reportfiles',
             function (Blueprint $table) {
                 $table->increments('id');
-                $table->integer('reportfile_id')->unsigned();
+                $table->integer('reportfile_id')->unsigned()->nullable();
                 $table->integer('checkresult_id')->unsigned();
                 $table->string('release')->nullable();
                 $table->string('reportname')->nullable();

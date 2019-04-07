@@ -61,6 +61,16 @@ class Storedfile extends Model
         return $this->typeNames;
     }
 
+    public function reportfile()
+    {
+        return $this->hasOne('App\Reportfile', 'reportfile_id');
+    }
+
+    public function checkresult()
+    {
+        return $this->hasOne('App\Checkresult', 'resultfile_id');
+    }
+
     public function delete()
     {
         Storage::delete($this->location);

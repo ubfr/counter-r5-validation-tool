@@ -46,7 +46,8 @@ foreach ($reportsname as $reportDetails) {
 			</ul>
 			<div class="tab-content">
 				<div id="file1" class="tab-pane fade in active">
-					<div class="col-md-6">
+					<div class="col-md-2"></div>
+					<div class="col-md-8">
 						@if (Session::has('emailMsg'))
 						<div class="alert alert-success">{{ Session::get('emailMsg') }}</div>
 						@endif
@@ -70,50 +71,49 @@ foreach ($reportsname as $reportDetails) {
 
 						</form>
 					</div>
-					<div class="col-md-6">
+					<div class="col-md-12">
 						<div class="widget stacked widget-table action-table">
 							<div class="widget-header">
 								<i class="fa fa-tasks" aria-hidden="true"></i>
-								<h3>Old Downloads</h3>
+								<h3>Recently Uploaded Files</h3>
 							</div>
 							<!-- /widget-header -->
 							<div class="widget-content">
 								<table class="table table-striped table-bordered">
 									<thead>
 										<tr>
-											<th>File Type</th>
-											<th>File Name</th>
-											<th class="td-actions">Download</th>
+											<th>Uploaded</th>
+											<th>Filename</th>
+											<th>Report</th>
+											<th>Validation Result</th>
+											<th>#Errors</th>
+											<th>#Warnings</th>
+											<th class="td-actions">Actions</th>
 										</tr>
 									</thead>
 									<tbody>
 										<?php
-        
-                                        if (isset($file_detail)) {
-                                            
-                                            //  echo "<pre>";print_r($file_detail->toArray());die;     
-
-                                            foreach ($file_detail as $filedetails) {
-                                                ?>
-                                                                       
-                                                                     @if(empty($filedetails['filename']))
-                                                                     
-                                                                     
-                                                                     @else
-        										<tr>
-											<td><?php echo $filedetails->file_type;?></td>
-											<td><?php echo $filedetails->filename;?></td>
-                                                                                        
-											<td class="td-actions"><a
-											    href="download/{{$filedetails->id}}/{{$filedetails->filename}}"><i
-											    class="fa fa-download" aria-hidden="true"></i></a></td>
-										         </tr>
-                                                                    @endif                     
-                                                                                                           <?php
-                                                                                        }
-                                                                                    }
-                                                                                    ?>
-                                                                                      </tbody>
+										foreach($recentReports as $recentReport) {
+										    $reportfile = $recentReport->reportfile;
+										    $checkresult = $reportfile->checkresult;
+                                        ?>
+        								<tr>
+											<td>{{$recentReport->created_at}}</td>
+											<td><a href="download/{{$recentReport->id}}">{{$recentReport->filename}}</a></td>
+											<td>{{$reportfile->reportid}}</td>
+											<td>{{$checkresult->getResult()}}</td>
+											<td>{{$checkresult->getNumberOfErrors()}}</td>
+											<td>{{$checkresult->getNumberOfWarnings()}}</td>
+											<td class="td-actions">
+												<a href="download/{{$checkresult->resultfile->id}}" title="Download Validation Result"><i class="fa fa-download" aria-hidden="true"></i></a>
+												&nbsp;
+												<a onclick="confirm_delete_reportfile({{$reportfile->id}});" title="Delete Uploaded File and Validation Result"><i class="fa fa-trash-o trashIcon" aria-hidden="true"></i></a>
+											</td>
+										</tr>
+                                        <?php
+                                        }
+                                        ?>
+                                    </tbody>
 								</table>
 							</div>
 							<!-- /widget-content -->
@@ -548,4 +548,10 @@ function check()
 
 <!---=======================javascripts comes in bottom============================-->
 
-
+<script>
+  function confirm_delete_reportfile(id){
+    if(confirm('Do you really want to delete the uploaded report and the validation result?')) {
+      window.location.href = "delete_reportfile/"+id;
+    }
+  }
+</script>

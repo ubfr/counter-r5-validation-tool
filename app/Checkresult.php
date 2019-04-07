@@ -8,6 +8,8 @@ use Illuminate\Support\Facades\Session;
 class Checkresult extends Model
 {
 
+    protected $numberOfMessages = null;
+
     public function checkdetails()
     {
         return $this->hasMany('App\Checkdetail');
@@ -18,14 +20,65 @@ class Checkresult extends Model
         return $this->belongsTo('App\Storedfile');
     }
 
-    public function disconnectFromResultfile()
+    public function delete()
     {
         if ($this->resultfile_id === null) {
             return true;
         }
 
+        // Checkresults are never deleted, only the associated files are deleted
+        $resultfile = $this->resultfile;
         $this->resultfile_id = null;
-        return $this->save();
+        return ($this->save() && $resultfile->delete());
+    }
+
+    protected function computeNumberOfMessages()
+    {
+        if ($this->numberOfMessages === null) {
+            $this->numberOfMessages = [];
+            $levelTotals = Checkdetail::select(DB::raw('level, sum(number) as total'))->where('checkresult_id',
+                $this->id)
+                ->groupBy('level')
+                ->orderBy('level', 'desc')
+                ->get();
+            foreach ($levelTotals as $levelTotal) {
+                $this->numberOfMessages[$levelTotal['level']] = $levelTotal['total'];
+            }
+        }
+    }
+
+    public function getNumberOfMessages($level)
+    {
+        $this->computeNumberOfMessages();
+
+        return ($this->numberOfMessages[$level] ?? 0);
+    }
+
+    public function getResult()
+    {
+        $this->computeNumberOfMessages();
+
+        if (empty($this->numberOfMessages)) {
+            $level = \ubfr\c5tools\CheckResult::CR_PASSED;
+        } else {
+            reset($this->numberOfMessages);
+            $level = key($this->numberOfMessages);
+        }
+        $levelNames = \ubfr\c5tools\CheckResult::getLevelNames();
+
+        return $levelNames[$level];
+    }
+
+    public function getNumberOfErrors()
+    {
+        return $this->getNumberOfMessages(\ubfr\c5tools\CheckResult::CR_FATAL) +
+            $this->getNumberOfMessages(\ubfr\c5tools\CheckResult::CR_CRITICAL) +
+            $this->getNumberOfMessages(\ubfr\c5tools\CheckResult::CR_ERROR);
+    }
+
+    public function getNumberOfWarnings()
+    {
+        return $this->getNumberOfMessages(\ubfr\c5tools\CheckResult::CR_WARNING);
     }
 
     public static function store($report, $filename, $result, $source, $userId)

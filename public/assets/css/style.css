@@ -71,7 +71,11 @@ a.footer-logo img{width:100%;}
 .bf-right {
     float: right;
 }
- .tab-content{border:1px solid #ddd;padding:10px; }
+ .tab-content{
+	border: 1px solid #ddd;
+	padding: 10px;
+	padding-bottom: 20px;
+}
  .ulTabs{border-bottom:0px;}
  
  
@@ -130,7 +134,6 @@ a.footer-logo img{width:100%;}
 }
 
 .file-uploader {
-  max-width: 500px;
   height: auto;
   margin: 2em auto;
 }

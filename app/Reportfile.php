@@ -18,6 +18,18 @@ class Reportfile extends Model
         return $this->belongsTo('App\Checkresult');
     }
 
+    public function delete()
+    {
+        if ($this->reportfile_id === null) {
+            return true;
+        }
+        
+        // Reportfiles are never deleted, only the associated files are deleted
+        $reportfile = $this->reportfile;
+        $this->reportfile_id = null;
+        return ($this->save() && $reportfile->delete() && $this->checkresult->delete());
+    }
+    
     public static function store($report, $file, $filename, $source, $result, $userId)
     {
         if ($report !== null && ! ($report instanceof \ubfr\c5tools\Report)) {
@@ -59,11 +71,7 @@ class Reportfile extends Model
                     $storedReport->delete();
                 }
                 if ($storedResult !== null) {
-                    $resultfile = $storedResult->resultfile;
-                    $storedResult->disconnectFromResultfile();
-                    if ($resultfile !== null) {
-                        $resultfile->delete();
-                    }
+                    $storedResult->deleteResultfile();
                 }
             } catch (\Exception $de) {
                 report($de);

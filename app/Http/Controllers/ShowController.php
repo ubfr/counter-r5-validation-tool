@@ -16,7 +16,7 @@ use App\Consortium;
 use App\Provider;
 use Illuminate\Http\Request;
 use Maatwebsite\Excel\Facades\Excel;
-use File;
+use Illuminate\Http\File;
 use App\Transactionmaster;
 use App\Transactionmasterdetail;
 use App\Members;
@@ -30,9 +30,10 @@ use PHPExcel_Cell;
 use PHPExcel_Cell_DataType;
 use App\Sushitransaction;
 use App\Transactiondetailtemp;
-use Session;
-use DB;
-
+use Illuminate\Support\Facades\Session;
+use Illuminate\Support\Facades\DB;
+use App\Reportfile;
+use App\Storedfile;
 
 
 class ShowController extends Controller {
@@ -80,9 +81,12 @@ class ShowController extends Controller {
         // ///////////show file upload list/////////////
         $user = Session::get('user');
         
-        $filename = Filename::where('user_id', $user['id'])->orderBy('id', 'desc')
-        ->take(10)
-        ->get();
+        $recentReports = Storedfile::with('reportfile', 'reportfile.checkresult')->where('user_id', $user['id'])
+            ->where('source', Storedfile::SOURCE_FILE_VALIDATE)
+            ->where('type', Storedfile::TYPE_REPORT)
+            ->orderBy('created_at', 'desc')
+            ->limit(5)
+            ->get();
         
         $AllReports = Reportname::where(array())->orderBy('report_name', 'asc')->get();
         $data['reportsname'] = $AllReports;
@@ -92,7 +96,7 @@ class ShowController extends Controller {
         }
         $data['userDisplayName'] = $user['display_name'];
         $data['utype'] = $user['utype'];
-        $data['file_detail'] = $filename;
+        $data['recentReports'] = $recentReports;
         return view('welcome', $data);
     }
     

@@ -167,6 +167,7 @@ Route::get('delete_members/{id}/{provider_id}', 'ShowController@deleteMembers');
 Route::get('refresh_members/{provider_id}', 'ShowController@refreshMembers');
 //Route::get('/downloadfront/{file_id}/{filename}',  'CommonController@downloadfileFront');
 //Route::get('/downloadfront/{file_id}/',  'CommonController@downloadfileFrontforid');
+Route::get('delete_reportfile/{id}', 'CommonController@deleteReportfile');
 
 Route::get('sushirequest', 'FilevalidateController@sushiRequest');
 Route::get('delete_sushi_request/{id}', 'FilevalidateController@delete_sushi_request');
