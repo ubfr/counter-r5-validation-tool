@@ -1,5 +1,7 @@
 <!DOCTYPE HTML>
 <?php
+$reportfileName = $reportfile->reportfile->filename;
+
 $crFatal = $checkResult->getNumberOfMessages(\ubfr\c5tools\CheckResult::CR_FATAL);
 $crErrors = $crFatal + $checkResult->getNumberOfMessages(\ubfr\c5tools\CheckResult::CR_CRITICAL) + $checkResult->getNumberOfMessages(\ubfr\c5tools\CheckResult::CR_ERROR);
 $crWarnings = $checkResult->getNumberOfMessages(\ubfr\c5tools\CheckResult::CR_WARNING);
@@ -28,14 +30,14 @@ $now = date('Y-m-d H:i:s');
         <div class="validationReport">
           <div class="col-md-6">
   @if($crFatal !== 0)
-            <p>The validation of the report {{$originalFilename}} failed with a fatal error at {{$now}}, please review the errors and warnings.</p>
+            <p>The validation of the report {{$reportfileName}} failed with a fatal error at {{$now}}, please review the errors and warnings.</p>
   @elseif($crErrors + $crWarnings > 0)
-            <p>The report {{$originalFilename}} did not pass the validation at {{$now}}, please review the errors and warnings.</p>
+            <p>The report {{$reportfileName}} did not pass the validation at {{$now}}, please review the errors and warnings.</p>
   @else
-            <p>The report {{$originalFilename}} passed the (not yet complete) validation at {{$now}}.</p>
+            <p>The report {{$reportfileName}} passed the (not yet complete) validation at {{$now}}.</p>
   @endif
             <p class="marTop20">
-              <a href="email/{{$fileId}}" class="btn btn-primary btnBlockxs"><i class="fa fa-envelope"></i>Email Validation Result</a>&nbsp;<a href="download/{{$fileId}}/{{$filename}}" class="btn btn-primary btnBlockxs"><i class="fa fa-cloud-download"></i>Download Validation Result</a>
+              <a href="email/{{$reportfile->id}}" class="btn btn-primary btnBlockxs"><i class="fa fa-envelope"></i>Email Validation Result</a>&nbsp;<a href="download/{{$reportfile->checkresult->resultfile->id}}" class="btn btn-primary btnBlockxs"><i class="fa fa-cloud-download"></i>Download Validation Result</a>
             </p>
           </div>
           <div class="col-md-6">

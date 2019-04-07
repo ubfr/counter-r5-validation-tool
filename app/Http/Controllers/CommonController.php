@@ -6,9 +6,9 @@ use App\Http\Controllers\ValidatereportController;
 use App\Http\Requests;
 use App\Validateerror;
 use App\Filename;
-Use Session;
+Use Illuminate\Support\Facades\Session;
 Use Excel;
-Use Mail;
+use Illuminate\Support\Facades\Mail;
 use DateTime;
 use App\Http\Manager\SubscriptionManager;
 use Validator;
@@ -22,6 +22,8 @@ use App\Reportname;
 use App\Filtertype;
 use Exception;
 use Illuminate\Support\Facades\Response;
+use App\Reportfile;
+use App\Storedfile;
 
 // use App\Http\Controllers\CommonController\emailfile;
 class CommonController extends Controller
@@ -1866,33 +1868,30 @@ class CommonController extends Controller
     // //////////////////////////////////////////////////////////////////////
     // ////////////////////function for download file//////////////////////////
     
-    function downloadfile_ubfr($fileId)
+    function downloadfile_ubfr($storedfileId)
     {
-        if(!Session::has('user')) {
+        if(! Session::has('user')) {
             return Redirect::to('login');
         }
         $user = Session::get('user');
         
-        $fileInfo = Filename::where('id', $fileId)->firstOrFail();
-        if($fileInfo->user_id !== $user['id'] && $user['utype'] !== 'admin') {
+        $storedfile = Storedfile::where('id', $storedfileId)->firstOrFail();
+        if($storedfile->user_id !== $user['id'] && $user['utype'] !== 'admin') {
             // TODO: exception is not rendered, user is redirected to /filelist
             abort(403, 'You are not authorized to download this validation result.');
         }
-        
-        $resultsDir = implode(DIRECTORY_SEPARATOR, [ app_path(), 'public', 'results', '' ]);
-        $resultFilename = pathinfo($fileInfo->filename, PATHINFO_FILENAME) . '-Validation-Result.xlsx';
-        if(!file_exists($resultsDir . $resultFilename)) {
+        if(! Storage::exists($storedfile->location)) {
             // TODO: exception is not rendered, user is redirected to /filelist
             abort(404, 'Validation result not found.');
         }
 
-        return response()->download($resultsDir . $resultFilename, $resultFilename,
-            [ 'Content-Type: application/vnd.openxmlformats-officedocument.spreadsheetml.sheet']);
+        return Storage::download($storedfile->location, $storedfile->filename,
+            [ 'Content-Type: ' . $storedfile->getMimeType() ]);
     }
     
-    function downloadfile($file_user_id, $filename)
+    function downloadfile($storedfileId)
     {
-        return $this->downloadfile_ubfr($file_user_id);
+        return $this->downloadfile_ubfr($storedfileId);
         
         $user = Session::get('user');
         // Execute the query used to retrieve the data. In this example
@@ -2057,39 +2056,39 @@ class CommonController extends Controller
     
     // /////////////////////////////////////////////////////////////////////
     // //////////function for send Email with attachment Error file/////////
-    function emailfile_ubfr($fileId)
+    function emailfile_ubfr($reportfileId)
     {
-        if(!Session::has('user')) {
+        if(! Session::has('user')) {
             return Redirect::to('login');
         }
         $user = Session::get('user');
         
-        $fileInfo = Filename::where('id', $fileId)->firstOrFail();
-        if($fileInfo->user_id !== $user['id']) {
+        $reportfile = Reportfile::where('id', $reportfileId)->firstOrFail();
+        $resultfile = $reportfile->checkresult->resultfile;
+        if($resultfile->user_id !== $user['id']) {
             // TODO: exception is not rendered, user is redirected to /filelist
             abort(403, 'You are not authorized to download this validation result.');
         }
-        
-        $resultsDir = implode(DIRECTORY_SEPARATOR, [ app_path(), 'public', 'results', '' ]);
-        $resultFilename = pathinfo($fileInfo->filename, PATHINFO_FILENAME) . '-Validation-Result.xlsx';
-        if(!file_exists($resultsDir . $resultFilename)) {
+        if(! Storage::exists($resultfile->location)) {
             // TODO: exception is not rendered, user is redirected to /filelist
             abort(404, 'Validation result not found.');
         }
-        $originalFilename = substr($fileInfo->filename, 17 + strlen($user['id']));
 
         $title = 'Hi ' . $user['display_name'] . ',';
-        $content = 'here is the validation result for the report ' . $originalFilename .
-            ' uploaded on ' . $fileInfo->upload_date . '.';
+        $content = 'here is the validation result for the report ' . $reportfile->reportfile->filename .
+            ' uploaded on ' . $resultfile->created_at . '.';
         $emailTo = $user['email'];
         
         try {
             Mail::send('emails.result', [
                 'title' => $title,
                 'content' => $content
-            ], function ($message) use ($resultsDir, $resultFilename, $emailTo) {
+            ], function ($message) use ($resultfile, $emailTo) {
                 $message->subject('COUNTER Release 5 Report Validation Result');
-                $message->attach($resultsDir . $resultFilename);
+                $message->attach(storage_path('app' . DIRECTORY_SEPARATOR . $resultfile->location), [
+                    'as' => $resultfile->filename,
+                    'mime' => $resultfile->getMimeType()
+                ]);
                 $message->to($emailTo);
             });
             Session::flash('emailMsg', 'Email was sent to ' . $emailTo . '.');
@@ -2100,9 +2099,9 @@ class CommonController extends Controller
         return Redirect::to('filelist');
     }
     
-    function emailfile($file_user_id)
+    function emailfile($reportfileId)
     {
-        return $this->emailfile_ubfr($file_user_id);
+        return $this->emailfile_ubfr($reportfileId);
         
         // echo $file_user_id;die;
         $user = Session::get('user');

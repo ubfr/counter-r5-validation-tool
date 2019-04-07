@@ -25,12 +25,11 @@ use App\Http\Controllers\CommonController;
 use Illuminate\Support\Facades\File;
 use App\Sushitransaction;
 use Exception;
-use Session;
-use DB;
-use ubfr\c5tools\CheckResult;
-use ubfr\c5tools\Report;
-use ubfr\c5tools\ParseException;
+use Illuminate\Support\Facades\Session;
+use Illuminate\Support\Facades\DB;
 use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
+use App\Storedfile;
+use App\Reportfile;
 
 // phpinfo();die;
 // set_error_handler(null);
@@ -59,43 +58,31 @@ class FilevalidateController extends CommonController
             $extension = $file->getClientOriginalExtension();
             $report = null;
             try {
-                $report = Report::createFromFile($file->getRealPath(), $extension);
+                $report = \ubfr\c5tools\Report::createFromFile($file->getRealPath(), $extension);
                 $checkResult = $report->getcheckResult();
             } catch (Exception $e) {
-                $checkResult = new CheckResult();
+                $checkResult = new \ubfr\c5tools\CheckResult();
                 try {
                     $checkResult->fatalError($e->getMessage(), $e->getMessage());
-                } catch (ParseException $e) {
+                } catch (\ubfr\c5tools\ParseException $e) {
                     // ignore expected exceptio
                 }
             }
-            if ($report !== null) {
-                $result = $report->getCheckResultAsSpreadsheet();
-                $reportName = $report->getReportName();
-                $reportId = $report->getReportId();
-            } else {
-                $result = $checkResult->asSpreadsheet();
-                $reportName = 'unknown';
-                $reportId = 'unknown';
+            
+            try {
+                $reportfile = Reportfile::store($report, $file, $file->getClientOriginalName(), Storedfile::SOURCE_FILE_VALIDATE,
+                    $checkResult, $user['id']);
+            } catch (\Exception $e) {
+                report($e);
+                Session::flash('error', 'Error while storing validation result: ' . $e->getMessage());
+                return Redirect::to('filelist');
             }
             
-            $publicDir = app_path() . DIRECTORY_SEPARATOR . 'public' . DIRECTORY_SEPARATOR;
-            $reportFilename = date('Ymd-His') . '-' . $user['id'] . '-' . $file->getClientOriginalName();
-            $file->move($publicDir . 'reports', $reportFilename);
-           
-            $resultFilename = pathinfo($reportFilename, PATHINFO_FILENAME) . '-Validation-Result.xlsx';
-            $xlsxWriter = new Xlsx($result);
-            $xlsxWriter->save($publicDir . 'results' . DIRECTORY_SEPARATOR . $resultFilename);
-            
-            $fileId = $this->fileinsert($user['id'], $reportFilename, $extension, '', '', $reportName, $reportId);
-            
             $data = [
+                'reportfile' => $reportfile,
                 'checkResult' => $checkResult,
                 'userDisplayName' => $user['display_name'],
-                'utype' => $user['utype'],
-                'fileId' => $fileId,
-                'filename' => $reportFilename,
-                'originalFilename' => $file->getClientOriginalName()
+                'utype' => $user['utype']
             ];
             return view('validate_report_ubfr', $data);
         }

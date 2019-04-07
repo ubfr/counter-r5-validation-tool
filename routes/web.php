@@ -109,7 +109,7 @@ Route::get('delete_upload_report/{id}','ShowController@delete_upload_report');
 
 
 // Route::get('/download','FilevalidateController@downloadfile');
- Route::get('/download/{file_id}/{filename}', [
+ Route::get('/download/{file_id}', [
     'as' => 'admin.invoices.downloadfile',
     'uses' => 'FilevalidateController@downloadfile'
 ]); 
@@ -129,7 +129,7 @@ Route::group([
 ],
     function () {
  
-        Route::get('/download/{file_id}/{filename}', [
+        Route::get('/download/{file_id}', [
             'as' => 'admin.invoices.downloadfile',
             'uses' => 'FilevalidateController@downloadfile'
         ]);
@@ -165,8 +165,8 @@ Route::post('consortiumimport', 'ShowController@readConfigurationFile');
 Route::get('member/{provider_id}', 'ShowController@memberListing');
 Route::get('delete_members/{id}/{provider_id}', 'ShowController@deleteMembers');
 Route::get('refresh_members/{provider_id}', 'ShowController@refreshMembers');
-Route::get('/downloadfront/{file_id}/{filename}',  'CommonController@downloadfileFront');
-Route::get('/downloadfront/{file_id}/',  'CommonController@downloadfileFrontforid');
+//Route::get('/downloadfront/{file_id}/{filename}',  'CommonController@downloadfileFront');
+//Route::get('/downloadfront/{file_id}/',  'CommonController@downloadfileFrontforid');
 
 Route::get('sushirequest', 'FilevalidateController@sushiRequest');
 Route::get('delete_sushi_request/{id}', 'FilevalidateController@delete_sushi_request');
