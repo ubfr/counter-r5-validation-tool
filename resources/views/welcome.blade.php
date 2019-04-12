@@ -88,7 +88,7 @@ foreach ($reportsname as $reportDetails) {
 											<th>Validation Result</th>
 											<th>#Errors</th>
 											<th>#Warnings</th>
-											<th class="td-actions">Actions</th>
+											<th>Actions</th>
 										</tr>
 									</thead>
 									<tbody>
@@ -114,7 +114,9 @@ foreach ($reportsname as $reportDetails) {
 											<td>{{$checkresult->getNumberOfWarnings()}}</td>
 											<td class="td-actions">
 												<a href="download/{{$checkresult->resultfile->id}}" title="Download Validation Result"><i class="fa fa-download" aria-hidden="true"></i></a>
-												&nbsp;&nbsp;
+												&nbsp;
+												<a href="email/{{$reportfile->id}}" title="Email Validation Result"><i class="fa fa-envelope-o" aria-hidden="true"></i></a>
+												&nbsp;
 												<a onclick="confirm_delete_reportfile({{$reportfile->id}});" title="Delete Uploaded File and Validation Result"><i class="fa fa-trash-o trashIcon" aria-hidden="true"></i></a>
 											</td>
 										</tr>

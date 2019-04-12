@@ -28,10 +28,10 @@
     
     <div class="row">
         <div class="col-sm-12">
-            <div id="example_wrapper" class="dataTables_wrapper form-inline dt-bootstrap">
+            <div id="filehistory_wrapper" class="dataTables_wrapper form-inline dt-bootstrap">
                 <div class="row">
                     <div class="col-sm-12">
-                        <table id="example" class="table table-striped table-bordered dataTable" cellspacing="0" width="100%" role="grid" aria-describedby="example_info" style="width: 100%;">
+                        <table id="filehistory" class="table table-striped table-bordered dataTable" cellspacing="0" width="100%" role="grid" style="width: 100%;">
                             <thead>
                                 <tr role="row">
                                     <th class="sorting" aria-label="Time: activate to sort column ascending">Time</th>
@@ -44,7 +44,7 @@
                                     <th class="sorting" aria-label="Validation Result: activate to sort column">Validation Result</th>
                                     <th class="sorting" aria-label="Number of Errors: activate to sort column">#Errors</th>
                                     <th class="sorting" aria-label="Number of Warnings: activate to sort column">#Warnings</th>
-                                    <th class="sorting" aria-label="Actions: activate to sort column ascending">Actions</th>
+                                    <th class="sorting" aria-label="Actions: activate to sort column ascending" style="width: 96px;">Actions</th>
                                 </tr>
                             </thead>
                             <tfoot>
@@ -90,7 +90,9 @@
                                     <td>{{$checkresult->getNumberOfWarnings()}}</td>
                                     <td>
                                         <a href="download/{{$checkresult->resultfile->id}}" title="Download Validation Result"><i class="fa fa-download" aria-hidden="true"></i></a>
-                                        &nbsp;&nbsp;
+                                        &nbsp;
+                                        <a href="email/{{$reportfile->id}}" title="Email Validation Result"><i class="fa fa-envelope-o" aria-hidden="true"></i></a>
+                                        &nbsp;
                                         <a onclick="confirm_delete_reportfile({{$reportfile->id}});" title="Delete Uploaded File and Validation Result"><i class="fa fa-trash-o trashIcon" aria-hidden="true"></i></a>
                                     </td>
                                 </tr>
@@ -106,7 +108,7 @@
     </div>
     <div class="row">
         <div class="col-sm-7">
-            <div class="dataTables_paginate paging_simple_numbers" id="example_paginate">
+            <div class="dataTables_paginate paging_simple_numbers" id="filehistory_paginate">
             </div>
         </div>
     </div>
@@ -130,16 +132,16 @@
 
 $(document).ready(function() {
     
-    $('#example').DataTable( {
-         "searching": true,
+    $('#filehistory').DataTable( {
+        "searching": true,
         "language": {
-            "lengthMenu": "Show entries _MENU_ ",
+            "lengthMenu": "Show entries: _MENU_ ",
             "zeroRecords": "No data available in table",
             "info": "Showing _START_ to _END_ of _TOTAL_ entries",
             "infoEmpty": "No data available in table",
             "infoFiltered": "(filtered from _MAX_ total records)",
         },
-        "order": [[ 1, "desc" ]]
+        "order": [ [ 0, "desc" ] ]
     } );
      
 } );
