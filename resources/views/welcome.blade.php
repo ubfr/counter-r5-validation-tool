@@ -95,7 +95,15 @@ foreach ($reportsname as $reportDetails) {
 										<?php
 										foreach($recentReports as $recentReport) {
 										    $reportfile = $recentReport->reportfile;
+										    // if something goes wrong while storing the report or check result,
+										    // reportfile or checkresult might be missing, so just in case...
+										    if($reportfile === null) {
+										        continue;
+										    }
 										    $checkresult = $reportfile->checkresult;
+										    if($checkresult === null) {
+										        continue;
+										    }
                                         ?>
         								<tr>
 											<td>{{$recentReport->created_at}}</td>
@@ -106,7 +114,7 @@ foreach ($reportsname as $reportDetails) {
 											<td>{{$checkresult->getNumberOfWarnings()}}</td>
 											<td class="td-actions">
 												<a href="download/{{$checkresult->resultfile->id}}" title="Download Validation Result"><i class="fa fa-download" aria-hidden="true"></i></a>
-												&nbsp;
+												&nbsp;&nbsp;
 												<a onclick="confirm_delete_reportfile({{$reportfile->id}});" title="Delete Uploaded File and Validation Result"><i class="fa fa-trash-o trashIcon" aria-hidden="true"></i></a>
 											</td>
 										</tr>

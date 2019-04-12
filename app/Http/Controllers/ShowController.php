@@ -99,8 +99,7 @@ class ShowController extends Controller {
         $data['recentReports'] = $recentReports;
         return view('welcome', $data);
     }
-    
-    
+
     function downloadExcelConfig($configurationId='')
     {
         $user = Session::get('user');
@@ -557,7 +556,33 @@ class ShowController extends Controller {
         return view('Uploaded_report', $data);
     }
     
-     ///////////////downloading uploaded reports////////////
+    public function fileHistory()
+    {
+        if(! Session::has('user')) {
+            return Redirect::to('login');
+        }
+        $user = Session::get('user');
+        
+        $filehistoryQuery = Storedfile::with('user', 'reportfile', 'reportfile.checkresult', 'sushiresponse',
+            'sushiresponse.checkresult');
+        if($user['utype'] !== 'admin') {
+            $filehistoryQuery->where('user_id', $user['id']);
+        }
+        $filehistoryQuery->where('type', Storedfile::TYPE_REPORT)
+            ->whereIn('source', [
+               Storedfile::SOURCE_FILE_VALIDATE,
+                Storedfile::SOURCE_SUSHI_VALIDATE
+            ]);
+        
+        return view('file_history',
+            [
+                'userDisplayName' => $user['display_name'],
+                'utype' => $user['utype'],
+                'filehistory' => $filehistoryQuery->get()
+            ]);
+    }
+    
+    ///////////////downloading uploaded reports////////////
     public function uploadReportsDownload($id=0) {
         $user = Session::get('user');
         if (Session::has('user')) {

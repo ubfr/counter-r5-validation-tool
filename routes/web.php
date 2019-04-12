@@ -176,7 +176,8 @@ Route::get('showshushiparameter/{Requestorurl}/{apikey}/{CustomerId}/{PlateformI
 Route::post('getsushireport', 'FilevalidateController@getSushiReport');
 Route::get('sushirequest/{id}', 'ShowController@sushiReportRequest');
 Route::get('filelist', 'ShowController@showvalidate');
-        
+Route::get('filehistory', 'ShowController@fileHistory');
+
         
     });
    

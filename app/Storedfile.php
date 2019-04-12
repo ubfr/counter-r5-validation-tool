@@ -61,14 +61,24 @@ class Storedfile extends Model
         return $this->typeNames;
     }
 
+    public function user()
+    {
+        return $this->belongsTo('App\User');
+    }
+    
+    public function checkresult()
+    {
+        return $this->hasOne('App\Checkresult', 'resultfile_id');
+    }
+    
     public function reportfile()
     {
         return $this->hasOne('App\Reportfile', 'reportfile_id');
     }
-
-    public function checkresult()
+    
+    public function sushiresponse()
     {
-        return $this->hasOne('App\Checkresult', 'resultfile_id');
+        return $this->hasOne('App\Sushiresponse', 'responsefile_id');
     }
 
     public function delete()
@@ -78,6 +88,11 @@ class Storedfile extends Model
         return parent::delete();
     }
 
+    public function getSourceName()
+    {
+        return self::$sourceNames[$this->source];
+    }
+    
     public static function store($file, $filename, $source, $type, $userId)
     {
         if (! is_string($file) && ! ($file instanceof File) && ! ($file instanceof UploadedFile)) {

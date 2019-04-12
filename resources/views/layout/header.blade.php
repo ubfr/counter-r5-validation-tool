@@ -35,6 +35,11 @@
 <div class="container">
     <header>
     	<div class="row">
+    		<div class="col-md-12">
+    			<p class="preview">The is a preview of the COUNTER R5 Validation Tool. The tool is still under development, so there are checks missing, especially for the Item Reports and for SUSHI. All data in the preview will be deleted when the final version of the tool becomes available. Feedback...</p>
+    		</div>
+    	</div>
+    	<div class="row">
     	<div class="col-md-3">
         	<h1 class="logoBlock"><a href="https://www.projectcounter.org/"><img title="Project Counter" alt="Project Counter" src="https://www.projectcounter.org/wp-content/themes/project-counter-2016/images/logo.png"></a></h1>
         </div>
@@ -61,10 +66,13 @@
         			<div class="container-fluid">
         				<ul class="nav navbar-nav">
         				    <li><a href="{{url('filelist')}}">File Validation</a></li>
+        					<li><a href="{{url('filehistory')}}">Report History</a></li>
         				  <?php if(Config::get('c5tools.enableConsortiumTool')) {?>
         				    <li><a href="{{url('consortium')}}">Consortium Tool</a></li>
         				  <?php }?>
+        				      <!-- replaced by report history
         				     <li><a href="{{url('showreport')}}">User's Reports</a></li>
+        				      -->
         				    </ul>
         				<ul class="nav navbar-nav pull-right">
         			     <li><a href="{{url('useredit')}}" ><i class="fa fa-user" aria-hidden="true"></i> <?php  echo "Welcome ".$userDisplayName?></a></li>
@@ -81,12 +89,15 @@
         			<div class="container-fluid">
         				<ul class="nav navbar-nav">
         				    <li><a href="{{url('filelist')}}">File Validation</a></li>
+        					<li><a href="{{url('filehistory')}}">Report History</a></li>
         					<li><a href="{{url('userlist')}}">User Management</a></li>
         				      <!-- disabled, has no effect on ubfr/c5tools
         					<li><a href="{{url('reporthistory')}}">Report Management</a></li>
         					<li><a href="{{url('rulemanagement')}}">Rule Management</a></li>
         				      -->
+        				      <!-- replaced by report history
         					<li><a href="{{url('uploadedreports')}}">Uploaded Reports</a></li>
+        				      -->
         				  <?php if(Config::get('c5tools.enableConsortiumTool')) {?>
         					<li><a href="{{url('consortium')}}">Consortium Tool</a></li>
         				  <?php }?>
