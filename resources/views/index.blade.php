@@ -56,17 +56,16 @@
                         <input type="password" name="password" id="password" class="form-control input-lg" placeholder="Password">
 						<span style="color:#ff0000">{{ $errors->login->first('password') }}</span> 
                     </div>
-                     
                         <span class="checkbox">
+                        <!-- option isn't working correctly
                           <label><input type="checkbox" name="remember" value="">Remember Me</label>
+                        -->
                            <a href="forgetpassword" class="btn-link pull-right">Forgot Password?</a>
                         </span>
-                         
                        
                        @if (Session::has('error'))
     <span style="color:#ff0000">{{ Session::get('error') }}</span>
 @endif
-                    <hr class="colorgraph">
                     <div class="row">
                         <div class="col-xs-6 col-sm-6 col-md-6">
 						<input type="submit" value="Sign In" class="btn btn-lg btn-primary btn-block">
