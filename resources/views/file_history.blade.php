@@ -25,6 +25,12 @@
             {{ Session::get('userupdatemsg') }}
         </div>
     @endif
+
+	@if (Session::has('emailMsg'))
+		<div class="alert alert-success">
+		    {{ Session::get('emailMsg') }}
+		</div>
+	@endif
     
     <div class="row">
         <div class="col-sm-12">

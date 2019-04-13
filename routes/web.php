@@ -30,7 +30,8 @@ Route::post('/registeradmin', array(
 Route::get('login', 'ShowController@checkview');
 Route::post('register', 'UsersController@register');
 
-Route::post('/fileValidate', 'FilevalidateController@filevalidate');
+Route::get('fileValidate', 'FilevalidateController@filevalidate');
+Route::post('fileValidate', 'FilevalidateController@filevalidate');
 Route::get('logout', 'UsersController@logout');
 Route::post('sushiValidate', 'FilevalidateController@sushiValiate');
 // /////////////////////////////////////////forget password link///////////////////////////////////////////////////////////

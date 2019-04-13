@@ -22,6 +22,7 @@ use App\Reportname;
 use App\Filtertype;
 use Exception;
 use Illuminate\Support\Facades\Response;
+use Illuminate\Support\Facades\URL;
 use App\Reportfile;
 use App\Storedfile;
 
@@ -2096,7 +2097,7 @@ class CommonController extends Controller
             report($exception);
         }
         
-        return Redirect::to('filelist');
+        return back();
     }
     
     function emailfile($reportfileId)

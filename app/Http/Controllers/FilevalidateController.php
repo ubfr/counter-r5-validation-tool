@@ -85,7 +85,11 @@ class FilevalidateController extends CommonController
                 'utype' => $user['utype']
             ];
             return view('validate_report_ubfr', $data);
+        } else if(Session::has('emailMsg')) {
+            Session::flash('emailMsg', Session::get('emailMsg'));
         }
+        
+        return Redirect::to('filelist');
     }
     
     public function filevalidate()
