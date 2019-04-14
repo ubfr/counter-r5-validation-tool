@@ -679,7 +679,7 @@ class FilevalidateController extends CommonController
         $file = new \Illuminate\Http\File($tmpFilename);
 
         $filename = date('YmdHis') . '_' . parse_url($parameters['api_url'], PHP_URL_HOST);
-        if($parameters['platform'] !== '') {
+        if($parameters['platform'] !== null && $parameters['platform'] !== '') {
             $filename .= '_' . $parameters['platform'];
         }
         $filename .= '_' . $parameters['ReportName'] . '_' . $parameters['customer_id'] . '.json';
