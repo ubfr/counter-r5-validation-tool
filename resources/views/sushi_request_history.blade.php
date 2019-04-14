@@ -39,111 +39,104 @@
             {{ Session::get('RegisterMsg') }}
         </div>
 @endif
-	 <div class="row">
-		<div class="col-sm-6"  >
-			<a href="{{url('filelist')}}" class="btn btn-primary btnBlockxs ">Back</a>
-			
-		</div>
-    
-    
-	<div class="col-sm-6 text-right"  >
-       <a class="btn btn-primary getShushiValue" rel="getall" href="sushirequest/id">Download</a>
-	</div>
-	</div>
-	
 	 
-				<div class="row">
-					<div class="col-sm-12" id="example_wrapper">
-					<div style="overflow-x:auto;">
-						<table  id="example" class="table table-striped table-bordered  " cellspacing="0" width="100%" role="grid" aria-describedby="example_info" style="width: 100%;">
-							<thead>
-								<tr role="row">
-									<th class="sorting" tabindex="0" aria-controls="example" rowspan="1" colspan="1" aria-label="Name: activate to sort column ascending" style="width: 148px;">User Email</th>
-									<th class="sorting" tabindex="1" aria-controls="example" rowspan="1" colspan="1" aria-label="Position: activate to sort column ascending" style="width: 233px;">Name</th>
-									<th class="sorting" tabindex="2" aria-controls="example" rowspan="1" colspan="1" aria-label="Position: activate to sort column ascending" style="width: 233px;">SUSHI URL</th>
-									<th class="sorting" tabindex="3" aria-controls="example" rowspan="1" colspan="1" aria-label="Office: activate to sort column ascending" style="width: 108px;">Request Name</th>
-									<th class="sorting" tabindex="4" aria-controls="example" rowspan="1" colspan="1" aria-label="Office: activate to sort column ascending" style="width: 108px;">Platform</th>
-									<th class="sorting" tabindex="5" aria-controls="example" rowspan="1" colspan="1" aria-label="Office: activate to sort column ascending" style="width: 108px;">Report ID</th>
-									<th class="sorting" tabindex="6" aria-controls="example" rowspan="1" colspan="1" aria-label="Office: activate to sort column ascending" style="width: 108px;">Report Format</th>
-									<th class="sorting" tabindex="7" aria-controls="example" rowspan="1" colspan="1" aria-label="Start date: activate to sort column ascending" style="width: 99px;">Success</th>
-								    <th class="sorting" tabindex="8" aria-controls="example" rowspan="1" colspan="1" aria-label="Start date: activate to sort column ascending" style="width: 99px;">#Errors</th>
-								    <th class="sorting" tabindex="9" aria-controls="example" rowspan="1" colspan="1" aria-label="Start date: activate to sort column ascending" style="width: 99px;">Date Time</th>
-								    <th class="sorting" tabindex="10" aria-controls="example" rowspan="1" colspan="1" aria-label="Start date: activate to sort column ascending" style="width: 99px;">Delete</th>
-								</tr>
-							
-							</thead>
-							<tfoot>
-								<tr>
-									<th rowspan="1" colspan="1">User Email</th>
-									<th rowspan="1" colspan="1">Name</th>
-									<th rowspan="1" colspan="1">SUSHI URL</th>
-									<th rowspan="1" colspan="1">Request Name</th>
-									<th rowspan="1" colspan="1">Platform</th>
-									<th rowspan="1" colspan="1">Report ID</th>
-									<th rowspan="1" colspan="1">Report Format</th>
-									<th rowspan="1" colspan="1">Success</th>
-									<th rowspan="1" colspan="1">#Errors</th>
-									<th rowspan="1" colspan="1">Date Time</th>
-									<th rowspan="1" colspan="1">Delete</th>
-								</tr>
-							</tfoot>
-							<tbody> 
-								<?php 
-                                                                $DisplayValueOfMethod = array(
-                                                                                            'getverify'=>'Verify Credential',
-                                                                                            'getstatus'=>'Get Status',
-                                                                                            'getmembers'=>'Get Members',
-                                                                                            'getsupportedreports'=>'Get Supported Reports List',
-                                                                                            'getall'=>'Get All',
-                                                                                            'fail'=>'Get Report/SUSHI Verification Failed',
-                                                                                            'getreport'=>'Get Report/SUSHI Verified',
-                                                                                            'getreportrequest'=>'Get Report'
-                                                                                            );
-								//echo'<pre>'; print_r($sushi_detail);  die();
-								foreach($sushi_detail as $sushi_details){?>
-								<tr role="row" class="even">
-									<td class=""><?php echo $sushi_details->user_email;?></td>
-									<td class=""><?php echo $sushi_details->session_id;?></td>
-									<td class=""><?php echo $sushi_details->sushi_url;?></td>
-									<td class=""><?php echo $DisplayValueOfMethod[$sushi_details->request_name];?></td>
-									<td class=""><?php echo $DisplayValueOfMethod[$sushi_details->platform];?></td>
-									<td class=""><?php echo $sushi_details->report_id;?></td>
-									<td class=""><?php echo $sushi_details->report_format;?></td>
-									<td class=""><?php echo $sushi_details->success;?></td>
-									<td class=""><?php echo $sushi_details->number_of_errors;?></td>
-									<td class=""><?php echo $sushi_details->date_time;?></td>
-									<td class=""><a onclick="return confirm('Are you sure for delete?')" 
-										href="delete_sushi_request/<?php echo $sushi_details['id'];?>">
-										<i class="fa fa-trash-o trashIcon" style="font-size: 15px;padding-right: 10px;"></i></a></td>
-								</tr>
-		
-								<?php }?>
-							</tbody>
-						</table> 
-					</div>
-				 
-			</div>
-        
+    <div class="row">
+        <div class="col-sm-12">
+            <h3>SUSHI History for the past {{Config::get('c5tools.clearAfter')}}</h3>
+            <hr class="colorgraph" />
+        </div>
+        <div class="col-sm-12">
+            <div id="sushihistory_wrapper" class="dataTables_wrapper form-inline dt-bootstrap">
+                <div class="row">
+                    <div class="col-sm-12">
+                        <table id="sushihistory" class="table table-striped table-bordered" cellspacing="0" width="100%" role="grid" style="width: 100%;">
+                            <thead>
+                                <tr role="row">
+                                    <th class="sorting" aria-label="Time: activate to sort column">Time</th>
+                                    <?php if ($utype === 'admin') { ?>
+                                    <th class="sorting" aria-label="Email Address: activate to sort column">Email Address</th>
+                                    <?php } ?>
+                                    <th class="sorting" aria-label="SUSHI Server: activate to sort column">SUSHI Server</th>
+                                    <th class="sorting" aria-label="Platform: activate to sort column ascending">Platform</th>
+                                    <th class="sorting" aria-label="Request: activate to sort column ascending">Request</th>
+                                    <th class="sorting" aria-label="Report ID: activate to sort column ascending">Report ID</th>
+                                    <!-- Does this make sense? The format always should be JSON...
+                                    <th class="sorting" aria-label="Report Format: activate to sort column ascending">Report Format</th>
+                                    -->
+                                    <th class="sorting" aria-label="Success: activate to sort column ascending">Success</th>
+                                    <!-- must be fixed
+                                    <th>Actions</th>
+                                    -->
+                                </tr>
+                            </thead>
+                            <tfoot>
+                                <tr>
+                                    <th>Time</th>
+                                    <?php if ($utype === 'admin') { ?>
+                                    <th>Email Address</th>
+                                    <?php } ?>
+                                    <th>SUSHI Server</th>
+                                    <th>Platform</th>
+                                    <th>Request</th>
+                                    <th>Report ID</th>
+                                    <!-- Does this make sense? The format always should be JSON...
+                                    <th>Report Format</th>
+                                    -->
+                                    <th>Success</th>
+                                    <!-- must be fixed
+                                    <th>Actions</th>
+                                    -->
+                                </tr>
+                            </tfoot>
+                            <tbody> 
+                                <?php 
+                                $DisplayValueOfMethod = [
+                                    'getstatus'=>'Get Status',
+                                    'getmembers'=>'Get Members',
+                                    'getreports'=>'Get Supported Reports',
+                                    'getreport'=>'Get Report'
+                                ];
+                                foreach($sushi_detail as $sushi_details) {
+                                ?>
+                                <tr role="row">
+                                    <td>{{$sushi_details->date_time}}</td>
+                                    <?php if ($utype === 'admin') { ?>
+                                    <td class="">{{$sushi_details->user_email}}</td>
+                                    <?php } ?>
+                                    <td>{{$sushi_details->sushi_url}}</td>
+                                    <td>{{$sushi_details->platform}}</td>
+                                    <td>{{$DisplayValueOfMethod[$sushi_details->request_name]??''}}</td>
+                                    <td>{{$sushi_details->report_id}}</td>
+                                    <!-- Does this make sense? The format always should be JSON...
+                                    <td>{{$sushi_details->report_format}}</td>
+                                    -->
+                                    <td>{{$sushi_details->success === 'Y' ? 'Yes' : 'No'}}</td>
+                                    <!-- must be fixed
+                                    <td><a onclick="return confirm('Do you really want to delete this entry?')" 
+                                            href="delete_sushi_request/{{$sushi_details['id']}}">
+                                            <i class="fa fa-trash-o trashIcon" style="font-size: 15px;padding-right: 10px;"></i>
+                                        </a>
+                                    </td>
+                                    -->
+                                </tr>
+                                <?php } ?>
+                            </tbody>
+                        </table> 
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="row">
+        <div class="col-sm-7">
+            <div class="dataTables_paginate paging_simple_numbers" id="sushihistory_paginate">
+            </div>
+        </div>
+    </div>
 
-    
-   
-
-</div>
-</div>
+    @endsection
 
 
-
-   
-
-
-  
-  
-
-
-
-
-    <!--========================login form END here======================================-->
-@endsection
 <!---=======================javascripts comes in bottom============================-->
 
 @section("additionaljs")
@@ -167,19 +160,16 @@
 
 
 	
-	$('#example').DataTable( {
-		 "searching": true,
-                 "ordering":  false,
+	$('#sushihistory').DataTable( {
+		"searching": true,
         "language": {
-			
-            "lengthMenu": "Show entry _MENU_ ",
+            "lengthMenu": "Show entries: _MENU_ ",
             "zeroRecords": "No data available in table",
             "info": "Showing _START_ to _END_ of _TOTAL_ entries",
             "infoEmpty": "No data available in table",
             "infoFiltered": "(filtered from _MAX_ total records)",
-	       
-        }
-		
+        },
+        "order": [ [ 0, "desc" ] ]
     } );
 	 
 } );

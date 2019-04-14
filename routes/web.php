@@ -29,11 +29,11 @@ Route::post('/registeradmin', array(
 
 Route::get('login', 'ShowController@checkview');
 Route::post('register', 'UsersController@register');
-
-Route::get('fileValidate', 'FilevalidateController@filevalidate');
-Route::post('fileValidate', 'FilevalidateController@filevalidate');
 Route::get('logout', 'UsersController@logout');
+
+Route::post('fileValidate', 'FilevalidateController@filevalidate');
 Route::post('sushiValidate', 'FilevalidateController@sushiValiate');
+
 // /////////////////////////////////////////forget password link///////////////////////////////////////////////////////////
 
 Route::get('forgetpassword', array(
@@ -173,7 +173,7 @@ Route::get('delete_reportfile/{id}', 'CommonController@deleteReportfile');
 Route::get('sushirequest', 'FilevalidateController@sushiRequest');
 Route::get('delete_sushi_request/{id}', 'FilevalidateController@delete_sushi_request');
 
-Route::get('showshushiparameter/{Requestorurl}/{apikey}/{CustomerId}/{PlateformID}/{RequestorIdInner}', 'FilevalidateController@sushiRequestParameter');
+Route::post('showshushiparameter', 'FilevalidateController@sushiRequestParameter');
 Route::post('getsushireport', 'FilevalidateController@getSushiReport');
 Route::get('sushirequest/{id}', 'ShowController@sushiReportRequest');
 Route::get('filelist', 'ShowController@showvalidate');

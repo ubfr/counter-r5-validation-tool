@@ -3,7 +3,7 @@
 		<meta name="viewport" content="width=device-width, initial-scale=1.0,maximum-scale=1.0, user-scalable=0"/>
 		<meta name="viewport" content="width=device-width" />
 
-		<meta name="copyright" content="Copyright 2016 Project Counter. All rights reserved." />
+		<meta name="copyright" content="Copyright 2019 Project Counter. All rights reserved." />
 		<meta name="resource-type" content="DOCUMENT" />
 		<meta name="distribution" content="GLOBAL" />
 		<meta name="rating" content="GENERAL" />
@@ -36,7 +36,9 @@
     <header>
     	<div class="row">
     		<div class="col-md-12">
-    			<p class="preview">The is a preview of the COUNTER R5 Validation Tool. The tool is still under development, so there are checks missing, especially for the Item Reports and for SUSHI. All data in the preview will be deleted when the final version of the tool becomes available. Feedback...</p>
+    			<p class="preview">The is a preview of the COUNTER R5 Validation Tool which is still under development.
+    			    There are still checks missing, especially for Item Reports and SUSHI. All data in this preview
+    			    will be deleted when the final version of Validation Tool is made available. Feedback...</p>
     		</div>
     	</div>
     	<div class="row">
@@ -65,14 +67,12 @@
         		<nav class="navbar navbar-inverse">
         			<div class="container-fluid">
         				<ul class="nav navbar-nav">
-        				    <li><a href="{{url('filelist')}}">File Validation</a></li>
+        				    <li><a href="{{url('filelist')}}">File / SUSHI Validate</a></li>
         					<li><a href="{{url('filehistory')}}">Report History</a></li>
-        				  <?php if(Config::get('c5tools.enableConsortiumTool')) {?>
+        					<li><a href="{{url('sushirequest')}}">SUSHI History</a></li>
+        				    <?php if(Config::get('c5tools.enableConsortiumTool')) {?>
         				    <li><a href="{{url('consortium')}}">Consortium Tool</a></li>
-        				  <?php }?>
-        				      <!-- replaced by report history
-        				     <li><a href="{{url('showreport')}}">User's Reports</a></li>
-        				      -->
+        				    <?php }?>
         				    </ul>
         				<ul class="nav navbar-nav pull-right">
         			     <li><a href="{{url('useredit')}}" ><i class="fa fa-user" aria-hidden="true"></i> <?php  echo "Welcome ".$userDisplayName?></a></li>
@@ -88,19 +88,13 @@
         		<nav class="navbar navbar-inverse">
         			<div class="container-fluid">
         				<ul class="nav navbar-nav">
-        				    <li><a href="{{url('filelist')}}">File Validation</a></li>
+        				    <li><a href="{{url('filelist')}}">File / SUSHI Validate</a></li>
         					<li><a href="{{url('filehistory')}}">Report History</a></li>
-        					<li><a href="{{url('userlist')}}">User Management</a></li>
-        				      <!-- disabled, has no effect on ubfr/c5tools
-        					<li><a href="{{url('reporthistory')}}">Report Management</a></li>
-        					<li><a href="{{url('rulemanagement')}}">Rule Management</a></li>
-        				      -->
-        				      <!-- replaced by report history
-        					<li><a href="{{url('uploadedreports')}}">Uploaded Reports</a></li>
-        				      -->
-        				  <?php if(Config::get('c5tools.enableConsortiumTool')) {?>
+        					<li><a href="{{url('sushirequest')}}">SUSHI History</a></li>
+        				    <?php if(Config::get('c5tools.enableConsortiumTool')) {?>
         					<li><a href="{{url('consortium')}}">Consortium Tool</a></li>
-        				  <?php }?>
+        				    <?php }?>
+        					<li><a href="{{url('userlist')}}">User Management</a></li>
         				</ul>
         				<ul class="nav navbar-nav pull-right" style="margin-top:15px;">
         			     <li><i class="fa fa-user" aria-hidden="true"></i> <?php  echo "Welcome ".$userDisplayName;?></li>
@@ -121,12 +115,3 @@
         <?php }?>
         <div class="container">
         <!-- <small>Note: If the SUSHI Service you are testing is restricted by IP address, you will need to make sure that IP 82.145.59.15 is authorized for access to use this utility.</small>  -->
-		        
-	
-		
-	 
-
-		
-		
-	
-	

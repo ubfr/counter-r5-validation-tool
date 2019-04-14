@@ -4,34 +4,36 @@
 <div class="col-xs-12 col-sm-121 col-md-12 ">
             <form id="getsushireport" name="getsushireport" method="post" class="file-uploader1" action="{{ url('/getsushireport') }}" enctype="multipart/form-data">
                 <input type="hidden" name="_token" value="<?php echo csrf_token() ?>">
-                <input type="hidden" name="Requestorurl" value="<?php echo $Requestorurl ?? ''; ?>">
-                <input type="hidden" name="APIkey" value="<?php echo $apikey ?? ''; ?>">
-                <input type="hidden" name="CustomerId" value="<?php echo $CustomerId ?? ''; ?>">
-                <input type="hidden" name="RequestorId" value="<?php echo $RequestorIdInner ?? ''; ?>">
+                <input type="hidden" name="api_url" value="<?php echo $api_url ?? ''; ?>">
                 <input type="hidden" name="platform" value="<?php echo $platform ?? ''; ?>">
+                <input type="hidden" name="customer_id" value="<?php echo $customer_id ?? ''; ?>">
+                <input type="hidden" name="requestor_id" value="<?php echo $requestor_id ?? ''; ?>">
+                <input type="hidden" name="api_key" value="<?php echo $api_key ?? ''; ?>">
                 <div class="row">
                     <div class="col-xs-12 col-md-6">
-                            Begin Date: <input type="text" autocomplete="off" name="startmonth" id="datepicker-12" class="date-picker">
+                        <label for="datepicker-12">Begin Date:</label>
+                        <input type="text" autocomplete="off" name="startmonth" id="datepicker-12" class="date-picker">
                     </div>
                     <div class="col-xs-12 col-md-6">
-                            End Date: <input type="text" autocomplete="off" name="endmonth" id="datepicker-10" class="date-picker">
+                        <label for="datepicker-10">End Date:</label>
+                        <input type="text" autocomplete="off" name="endmonth" id="datepicker-10" class="date-picker">
                     </div>
                 </div>
                 <div class="clearfix"></div>
                 <hr>
                 <div class="row">
                     <div class="col-xs-12 col-md-6">
-                    Reports:&nbsp;&nbsp;&nbsp;
-                    <select id="reportsmater" name="ReportName" onchange="showDiv(this.value)">
-                        <option  value="">Select Report</option>
-                        @foreach($allreports as $report)
-                        <option  value="{{$report['report_code']}}">{{$report['report_code']}}</option>
-                        @endforeach
-                    </select>
+                        <label for="reportsmater">Reports:</label>
+                        <select id="reportsmater" name="ReportName" onchange="showDiv(this.value)">
+                            <option  value="">Select Report</option>
+                            @foreach($allreports as $report)
+                            <option  value="{{$report['report_code']}}">{{$report['report_code']}}</option>
+                            @endforeach
+                        </select>
                     </div>
                     <div id='secondpart' style="display: none;">
                     <div class="col-xs-12 col-md-6">
-                        Metric Type:&nbsp;&nbsp;&nbsp;
+                        <label for="Metric_Type">Metric Type:</label>
                         <?php
                         $allMatricType = array(
                             'Searches_Automated',
@@ -61,7 +63,7 @@
                 
                  <div class="row">
                     <div class="col-xs-12 col-md-6">
-                    Data Type:&nbsp;&nbsp;&nbsp;
+                        <label for="Data_Type">Data Type:</label>
                     <?php
                         $allDataType = array(
                             'Article',
@@ -86,7 +88,7 @@
                         </select>
                     </div>
                     <div class="col-xs-12 col-md-6">
-                        Access Type:&nbsp;&nbsp;&nbsp;
+                        <label for="Access_Type">Access Type:</label>
                         <?php
                         $AllAccessType = array(
                                                 'Controlled',
@@ -104,31 +106,34 @@
                 
                 <div class="row">
                     <div class="col-xs-12 col-md-6">
-                    Access Method:&nbsp;&nbsp;&nbsp;
+                    <label for="Access_Method">Access Method:</label>
                      <?php
                         $AllAcessMethod = array(
                                                 'Regular',
                                                 'TDM',
                                                 );
                         ?>
-                    <select id="Access_Type" name="accessMethod[]" multiple class="multiselectoption">
+                    <select id="Access_Method" name="accessMethod[]" multiple class="multiselectoption">
                             <?php foreach($AllAcessMethod as $reportval){?>
                             <option  value="<?php echo $reportval; ?>"><?php echo $reportval; ?></option>
                             <?php } ?>
                         </select>
                     </div>
                     <div class="col-xs-12 col-md-6">
-                       Yop:&nbsp;&nbsp;&nbsp;
-                       <input type="text" name="yopparameter" value="" /> 
+                       <label for="yop">Yop:</label>
+                       <input id="yop" type="text" name="yop" value="" /> 
                     </div>
                 </div>
                 
+                <div class="row">
+                  <div class="col-xs-12 col-md-6 help-block">TODO: Add missing Filters and Attributes</div>
+                </div>
                 </div>
                 
                 <div class="clearfix"></div>
                 
                 <div class="modal-footer">
-                    <a	class="btn btn-primary" onclick="validateDateNew()" href="javascript:void(0)">Download Report</a>
+                    <a	class="btn btn-primary" onclick="validateDateNew()" href="javascript:void(0)">Get Report</a>
                                 <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
                             </div>
 
@@ -170,13 +175,13 @@
         var date2 = $("#datepicker-10").val();
         var reports = $("#reportsmater").val();
         if (!reports) {
-            alert("Please select at least one report");
+            alert("Please select a report!");
             return false;
         } else if (!date1) {
-            alert("Please select begin date");
+            alert("Please select a begin date!");
             return false;
         } else if (!date2) {
-            alert("Please select end date");
+            alert("Please select an end date!");
             return false;
         } else {
             $("#getsushireport").submit();

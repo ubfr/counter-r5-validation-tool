@@ -31,13 +31,17 @@
 		    {{ Session::get('emailMsg') }}
 		</div>
 	@endif
-    
+
     <div class="row">
+        <div class="col-sm-12">
+            <h3>Report History for the past {{Config::get('c5tools.clearAfter')}}</h3>
+            <hr class="colorgraph" />
+        </div>
         <div class="col-sm-12">
             <div id="filehistory_wrapper" class="dataTables_wrapper form-inline dt-bootstrap">
                 <div class="row">
                     <div class="col-sm-12">
-                        <table id="filehistory" class="table table-striped table-bordered dataTable" cellspacing="0" width="100%" role="grid" style="width: 100%;">
+                        <table id="filehistory" class="table table-striped table-bordered" cellspacing="0" width="100%" role="grid" style="width: 100%;">
                             <thead>
                                 <tr role="row">
                                     <th class="sorting" aria-label="Time: activate to sort column ascending">Time</th>
@@ -50,7 +54,7 @@
                                     <th class="sorting" aria-label="Validation Result: activate to sort column">Validation Result</th>
                                     <th class="sorting" aria-label="Number of Errors: activate to sort column">#Errors</th>
                                     <th class="sorting" aria-label="Number of Warnings: activate to sort column">#Warnings</th>
-                                    <th class="sorting" aria-label="Actions: activate to sort column ascending" style="width: 96px;">Actions</th>
+                                    <th style="width: 96px;">Actions</th>
                                 </tr>
                             </thead>
                             <tfoot>
@@ -70,7 +74,7 @@
                             </tfoot>
                             <tbody> 
                                 <?php
-                                foreach($filehistory as $row => $file) {
+                                foreach($filehistory as $file) {
                                     $reportfile = $file->reportfile;
                                     // if something goes wrong while storing the report or check result,
                                     // reportfile or checkresult might be missing, so just in case...
@@ -81,9 +85,8 @@
                                     if($checkresult === null) {
                                         continue;
                                     }
-                                    $rowClass = ($row % 2 ? 'even' : 'odd');
-                                	?>
-                                <tr role="row" class="{{$rowClass}}">
+                                ?>
+                                <tr role="row">
                                     <td>{{$file->created_at}}</td>
                                     <?php if($utype === 'admin') { ?>
                                     <td>{{$file->user->email}}</td>
@@ -102,9 +105,7 @@
                                         <a onclick="confirm_delete_reportfile({{$reportfile->id}});" title="Delete Uploaded File and Validation Result"><i class="fa fa-trash-o trashIcon" aria-hidden="true"></i></a>
                                     </td>
                                 </tr>
-                                <?php
-                                }
-                                ?>
+                                <?php } ?>
                             </tbody>
                         </table>
                     </div>
@@ -282,14 +283,12 @@ $(function() {
 });
 </script>
 <script>
- function show_confirm(id){
-    //alert(id);
-  if(confirm('Do You Really Want To Delete Uploaded report'))
-  {
-   window.location.href = "delete_upload_report/"+id;
+  function confirm_delete_reportfile(id){
+    if(confirm('Do you really want to delete the uploaded report and the validation result?')) {
+      window.location.href = "delete_reportfile/"+id;
+    }
   }
- }
- </script>
+</script>
  <script>
  function check()
 {

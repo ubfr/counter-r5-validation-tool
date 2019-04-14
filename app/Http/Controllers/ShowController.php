@@ -80,15 +80,29 @@ class ShowController extends Controller {
     function showvalidate() {
         // ///////////show file upload list/////////////
         $user = Session::get('user');
+
+        $context = Input::get('context');
+        if(!in_array($context, [ 'file', 'sushi'])) {
+            $context = 'file';
+        }
         
-        $recentReports = Storedfile::with('reportfile', 'reportfile.checkresult')->where('user_id', $user['id'])
+        $AllReports = Reportname::where(array())->orderBy('report_name', 'asc')->get();
+        
+        $fileReports = Storedfile::with('reportfile', 'reportfile.checkresult')->where('user_id', $user['id'])
             ->where('source', Storedfile::SOURCE_FILE_VALIDATE)
             ->where('type', Storedfile::TYPE_REPORT)
             ->orderBy('created_at', 'desc')
             ->limit(5)
             ->get();
-        
-        $AllReports = Reportname::where(array())->orderBy('report_name', 'asc')->get();
+
+        $sushiReports = Storedfile::with('reportfile', 'reportfile.checkresult')->where('user_id', $user['id'])
+            ->where('source', Storedfile::SOURCE_SUSHI_VALIDATE)
+            ->where('type', Storedfile::TYPE_REPORT)
+            ->orderBy('created_at', 'desc')
+            ->limit(5)
+            ->get();
+
+        $data = [];
         $data['reportsname'] = $AllReports;
         $AllParents = Parentreport::get()->toArray();
         foreach ($AllParents as $parentSingle) {
@@ -96,7 +110,10 @@ class ShowController extends Controller {
         }
         $data['userDisplayName'] = $user['display_name'];
         $data['utype'] = $user['utype'];
-        $data['recentReports'] = $recentReports;
+        $data['fileReports'] = $fileReports;
+        $data['sushiReports'] = $sushiReports;
+        $data['context'] = $context;
+
         return view('welcome', $data);
     }
 

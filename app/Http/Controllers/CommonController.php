@@ -2063,6 +2063,17 @@ class CommonController extends Controller
             return Redirect::to('login');
         }
         $user = Session::get('user');
+    
+        $context = Input::get('context');
+        $redirectTo = null;
+        if($context === null) {
+            $flash = 'emailMsg';
+        } else {
+            $flash = $context . '_ok';
+            if($context === 'file' || $context === 'sushi') {
+                $redirectTo = 'filelist';
+            }
+        }
         
         $reportfile = Reportfile::where('id', $reportfileId)->firstOrFail();
         $resultfile = $reportfile->checkresult->resultfile;
@@ -2077,7 +2088,7 @@ class CommonController extends Controller
 
         $title = 'Hi ' . $user['display_name'] . ',';
         $content = 'here is the validation result for the report ' . $reportfile->reportfile->filename .
-            ' uploaded on ' . $resultfile->created_at . '.';
+            ' validated on ' . $resultfile->created_at . '.';
         $emailTo = $user['email'];
         
         try {
@@ -2092,12 +2103,16 @@ class CommonController extends Controller
                 ]);
                 $message->to($emailTo);
             });
-            Session::flash('emailMsg', 'Email was sent to ' . $emailTo . '.');
+            Session::flash($flash, 'Email was sent to ' . $emailTo . '.');
         } catch (Exception $exception) {
             report($exception);
         }
         
-        return back();
+        if($redirectTo !== null) {
+            return Redirect::to($redirectTo);
+        } else {
+            return back();
+        }
     }
     
     function emailfile($reportfileId)

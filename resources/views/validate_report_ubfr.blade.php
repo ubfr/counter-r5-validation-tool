@@ -24,7 +24,7 @@ $now = date('Y-m-d H:i:s');
           <h3>Validation Result</h3>
         </div>
         <div class="pull-right">
-          <h3><a href="welcome" class="btn btn-primary btnBlockxs ">Validate New File</a></h3>
+          <h3><a href="{{url('filelist')}}?context={{$context}}" class="btn btn-primary btnBlockxs ">Validate New Report</a></h3>
         </div>
         <div class="clearfix"></div>
         <div class="validationReport">
@@ -37,7 +37,7 @@ $now = date('Y-m-d H:i:s');
             <p>The report {{$reportfileName}} passed the (not yet complete) validation at {{$now}}.</p>
   @endif
             <p class="marTop20">
-              <a href="email/{{$reportfile->id}}" class="btn btn-primary btnBlockxs"><i class="fa fa-envelope"></i>Email Validation Result</a>&nbsp;<a href="download/{{$reportfile->checkresult->resultfile->id}}" class="btn btn-primary btnBlockxs"><i class="fa fa-cloud-download"></i>Download Validation Result</a>
+              <a href="email/{{$reportfile->id}}?context={{$context}}" class="btn btn-primary btnBlockxs"><i class="fa fa-envelope"></i>Email Validation Result</a>&nbsp;<a href="download/{{$reportfile->checkresult->resultfile->id}}" class="btn btn-primary btnBlockxs"><i class="fa fa-cloud-download"></i>Download Validation Result</a>
             </p>
           </div>
           <div class="col-md-6">

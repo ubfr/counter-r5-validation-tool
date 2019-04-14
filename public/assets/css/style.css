@@ -319,6 +319,16 @@ tfoot {
 	display: none;
 }
 
+.form-control::placeholder {
+	color: #888;
+}
+.form-control::-moz-placeholder {
+	color: #888;
+}
+.form-control::-webkit-placeholder {
+	color: #888;
+}
+
 .widget .widget-header h3 {
  
 position: relative;
