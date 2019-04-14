@@ -438,7 +438,7 @@ class FilevalidateController extends CommonController
                 $json = null;
             }
             if($json === null) {
-                $sushi_error .= ' and no exception.';
+                $sushi_error .= ' and no exception or no well-formed JSON.';
             } elseif(is_object($json) && isset($json->Code) && isset($json->Severity) && isset($json->Message)) {
                 $sushi_error .= " and exception {$json->Severity} {$json->Code}: {$json->Message}";
                 if(isset($json->Data)) {
@@ -456,7 +456,7 @@ class FilevalidateController extends CommonController
                 $json = null;
             }
             if($json === null) {
-                $sushi_error = 'The SUSHI server returned HTTP code 200 (OK) but no valid JSON.';
+                $sushi_error = 'The SUSHI server returned HTTP code 200 (OK) but no well-formed JSON.';
             } else {
                 $transaction['success'] = 'Y';
                 
