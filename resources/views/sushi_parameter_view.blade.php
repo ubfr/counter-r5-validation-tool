@@ -3,12 +3,12 @@
 <div class="row">
 <div class="col-xs-12 col-sm-121 col-md-12 ">
             <form id="getsushireport" name="getsushireport" method="post" class="file-uploader1" action="{{ url('/getsushireport') }}" enctype="multipart/form-data">
-                <input type="hidden" name="_token" value="<?php echo csrf_token() ?>">
-                <input type="hidden" name="api_url" value="<?php echo $api_url ?? ''; ?>">
-                <input type="hidden" name="platform" value="<?php echo $platform ?? ''; ?>">
-                <input type="hidden" name="customer_id" value="<?php echo $customer_id ?? ''; ?>">
-                <input type="hidden" name="requestor_id" value="<?php echo $requestor_id ?? ''; ?>">
-                <input type="hidden" name="api_key" value="<?php echo $api_key ?? ''; ?>">
+                <input type="hidden" name="_token" value="{{csrf_token()}}">
+                <input type="hidden" name="api_url" value="{{$api_url ?? ''}}">
+                <input type="hidden" name="platform" value="{{$platform ?? ''}}">
+                <input type="hidden" name="customer_id" value="{{$customer_id ?? ''}}">
+                <input type="hidden" name="requestor_id" value="{{$requestor_id ?? ''}}">
+                <input type="hidden" name="api_key" value="{{$api_key ?? ''}}">
                 <div class="row">
                     <div class="col-xs-12 col-md-6">
                         <label for="datepicker-12">Begin Date:</label>
@@ -52,7 +52,7 @@
                         ?>
                         <select id="Metric_Type" name="metricType[]" multiple class="multiselectoption">
                             <?php foreach($allMatricType as $matric){?>
-                            <option  value="<?php echo $matric; ?>"><?php echo $matric; ?></option>
+                            <option  value="{{$matric}}">{{$matric}}</option>
                             <?php } ?>
                         </select>
                     </div>
@@ -83,7 +83,7 @@
                         ?>
                     <select id="Data_Type" name="data_type[]" multiple class="multiselectoption">
                             <?php foreach($allDataType as $reportval){?>
-                            <option  value="<?php echo $reportval; ?>"><?php echo $reportval; ?></option>
+                            <option  value="{{$reportval}}">{{$reportval}}</option>
                             <?php } ?>
                         </select>
                     </div>
@@ -98,7 +98,7 @@
                         ?>
                         <select id="Access_Type" name="accessType[]" multiple class="multiselectoption">
                             <?php foreach($AllAccessType as $reportval){?>
-                            <option  value="<?php echo $reportval; ?>"><?php echo $reportval; ?></option>
+                            <option  value="{{$reportval}}">{{$reportval}}</option>
                             <?php } ?>
                         </select>
                     </div>
@@ -115,7 +115,7 @@
                         ?>
                     <select id="Access_Method" name="accessMethod[]" multiple class="multiselectoption">
                             <?php foreach($AllAcessMethod as $reportval){?>
-                            <option  value="<?php echo $reportval; ?>"><?php echo $reportval; ?></option>
+                            <option  value="{{$reportval}}">{{$reportval}}</option>
                             <?php } ?>
                         </select>
                     </div>

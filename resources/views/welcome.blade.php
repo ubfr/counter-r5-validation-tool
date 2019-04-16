@@ -54,7 +54,7 @@ foreach ($reportsname as $reportDetails) {
 						<form name="file_valid" method="post" class="file-uploader"
 							action="fileValidate" enctype="multipart/form-data">
 							<input type="hidden" name="_token"
-								value="<?php echo csrf_token() ?>">
+								value="{{csrf_token()}}">
 							<div class="file-uploader__message-area">
 								<p>Upload File Here</p>
 							</div>
