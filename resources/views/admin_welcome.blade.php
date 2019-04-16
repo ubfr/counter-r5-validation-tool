@@ -38,60 +38,59 @@
 	
 	<div class="row">
         <div class="col-sm-12">
-			<div id="example_wrapper" class="dataTables_wrapper form-inline dt-bootstrap">
+			<div id="userlist_wrapper" class="dataTables_wrapper form-inline dt-bootstrap">
 				<div class="row">
 					<div class="col-xs-3 col-sm-3 col-md-3  pull-right">
-                            <a  data-toggle="modal" data-target="#myModal" class="btn btn-primary btn-block">Add New Admin</a>
-                        </div>
+                        <a data-toggle="modal" data-target="#myModal" class="btn btn-primary btn-block">Add New Admin</a>
+                    </div>
 					<div class="col-sm-12">
-						<table id="example" class="table table-striped table-bordered dataTable" cellspacing="0" width="100%" role="grid" aria-describedby="example_info" style="width: 100%;">
+						<table id="userlist" class="table table-striped table-bordered dataTable" cellspacing="0" width="100%" role="grid" style="width: 100%;">
 							<thead>
 								<tr role="row">
-									<th class="sorting" tabindex="0" aria-controls="example" rowspan="1" colspan="1" aria-label="Name: activate to sort column ascending" style="width: 148px;">Email ID</th>
-									<th class="sorting" tabindex="0" aria-controls="example" rowspan="1" colspan="1" aria-label="Position: activate to sort column ascending" style="width: 233px;">First Name</th>
-									<th class="sorting" tabindex="0" aria-controls="example" rowspan="1" colspan="1" aria-label="Position: activate to sort column ascending" style="width: 233px;">Display Name</th>
-									<th class="sorting" tabindex="0" aria-controls="example" rowspan="1" colspan="1" aria-label="Office: activate to sort column ascending" style="width: 108px;">Last Name</th>
-									<th class="sorting" tabindex="0" aria-controls="example" rowspan="1" colspan="1" aria-label="Office: activate to sort column ascending" style="width: 108px;">User Type</th>
-									<th class="sorting" tabindex="0" aria-controls="example" rowspan="1" colspan="1" aria-label="Start date: activate to sort column ascending" style="width: 99px;">Action</th>
-								    <th class="sorting" tabindex="0" aria-controls="example" rowspan="1" colspan="1" aria-label="Start date: activate to sort column ascending" style="width: 99px;">Delete</th>
-								    <th class="sorting" tabindex="0" aria-controls="example" rowspan="1" colspan="1" aria-label="Start date: activate to sort column ascending" style="width: 99px;">Status</th>
-								    
+									<th class="sorting" aria-label="Registered: activate to sort column">Registered</th>
+									<th class="sorting" aria-label="Email Address: activate to sort column">Email Address</th>
+									<th class="sorting" aria-label="First Name: activate to sort column">First Name</th>
+									<th class="sorting" aria-label="Last Name: activate to sort column">Last Name</th>
+									<th class="sorting" aria-label="Display Name: activate to sort column">Display Name</th>
+									<th class="sorting" aria-label="User Type: activate to sort column">User Type</th>
+									<th>Edit</th>
+								    <th>Delete</th>
+								    <th>Status</th>
 								</tr>
-							
 							</thead>
 							<tfoot>
 								<tr>
-									<th rowspan="1" colspan="1">Email ID</th>
-									<th rowspan="1" colspan="1">First Name</th>
-									<th rowspan="1" colspan="1">Display Name</th>
-									<th rowspan="1" colspan="1">Last Name</th>
-									<th rowspan="1" colspan="1">User Type</th>
-									<th rowspan="1" colspan="1">Action</th>
-									<th rowspan="1" colspan="1">Delete</th>
-									<th rowspan="1" colspan="1">Status</th>
+									<th>Registered</th>
+									<th>Email Address</th>
+									<th>First Name</th>
+									<th>Last Name</th>
+									<th>Display Name</th>
+									<th>User Type</th>
+									<th>Edit</th>
+									<th>Delete</th>
+									<th>Status</th>
 								</tr>
 							</tfoot>
 							<tbody> 
 								<?php 
-								//echo'<pre>'; print_r($user_detail);  die();
-								foreach($user_detail as $user_details){?>
+								foreach($user_detail as $user_details) {
+								?>
 								<tr role="row" class="even">
-									<td class=""><?php echo $user_details->email;?></td>
-									<td class=""><?php echo $user_details->first_name;?></td>
-									<td class=""><?php echo $user_details->display_name;?></td>
-									<td class=""><?php echo $user_details->last_name;?></td>
-									<td class=""><?php echo $user_details->utype;?></td>
-									<td class="" ><a href='edituser/<?php echo $user_details->id;?>'><i class="fa fa-pencil-square-o" style="font-size: 19px;padding-right: 10px;"></i></a></td>
-							        <td class="" data-toggle="modal" data-target="#newModal1">
-							        	<a onclick='show_confirm(<?php echo $user_details->id;?>);'>
+									<td>{{$user_details->created_at}}</td>
+									<td>{{$user_details->email}}</td>
+									<td>{{$user_details->first_name}}</td>
+									<td>{{$user_details->last_name}}</td>
+									<td>{{$user_details->display_name}}</td>
+									<td>{{$user_details->utype}}</td>
+									<td><a href="{{url('edituser')}}/{{$user_details->id}}"><i class="fa fa-pencil-square-o" style="font-size: 19px; padding-right: 10px;"></i></a></td>
+							        <td data-toggle="modal" data-target="#newModal1">
+							        	<a onclick="show_confirm({{$user_details->id}});">
 							        		<i class="fa fa-trash-o trashIcon" style="font-size: 15px;padding-right: 10px;"></i>
 							        	</a>
 						        	</td>
-									<td class=""><input type="checkbox" class="activecheckbox" id="checkbox1" name="Active" <?php echo $user_details->status=='1'?'checked':'';?> value="<?php echo $user_details->id;?>"></td>
-                                 
+									<td><input type="checkbox" class="activecheckbox" id="checkbox1" name="Active" {{$user_details->status===1?'checked':''}} value="{{$user_details->id}}"></td>
 								</tr>
-		
-								<?php }?>
+								<?php } ?>
 							</tbody>
 						</table> 
 					</div>
@@ -99,17 +98,13 @@
 			</div>
         </div>
     </div>
-  
+    <div class="row">
+        <div class="col-sm-7">
+            <div class="dataTables_paginate paging_simple_numbers" id="userlist_paginate">
+            </div>
+        </div>
+    </div>
 
-    
-	 <div class="row">
-                  
-                  <div class="col-sm-7">
-                <div class="dataTables_paginate paging_simple_numbers" id="example_paginate">
-                      
-                    </div>
-              </div>
-                </div>
     <!-- Modal Admin for registration -->
 <div id="myModal" class="modal fade" role="dialog">
   <div class="modal-dialog">
@@ -124,7 +119,7 @@
        		 <div class="row">
     <div class="col-xs-12 col-sm-121 col-md-12 ">
 		<form action="registeradmin" method="post">
-		<input type="hidden" name="_token" value="<?php echo csrf_token() ?>">
+		<input type="hidden" name="_token" value="{{csrf_token()}}">
 			<h2>Please Add Admin</h2>
 			<hr class="colorgraph">
 			<div class="row">
@@ -172,17 +167,9 @@
 	</div>
 </div>
       </div>
-      
     </div>
-
   </div>
 </div>
-
-
-
-
-
-
 
     <!-- Modal For deleting the user -->
 <div id="newModal1" class="modal fade" role="dialog">
@@ -192,18 +179,16 @@
     <div class="modal-content">
       <div class="modal-header">
         <button type="button" class="close" data-dismiss="modal">&times;</button>
-       
       </div>
       <div class="modal-body">
        		 <div class="row">
     <div class="col-xs-12 col-sm-121 col-md-12 ">
 		<form id="delet_form" action="delete_user" method="post">
-		<input type="hidden" name="_token" value="<?php echo csrf_token() ?>">
+		<input type="hidden" name="_token" value="{{csrf_token()}}">
 			<h2>Please Enter the Password</h2>
 			<hr class="colorgraph">
 			<div class="row"> 
 				<div class="col-xs-12 col-sm-6 col-md-6">
-				
 					<div class="form-group">
 						<input type="password" name="pass" id="pass" class="form-control input-lg" placeholder="Password" tabindex="5" required>
 						<input type="hidden" id="deleteuseriddiv" name="deleteuseriddiv">
@@ -212,7 +197,6 @@
 						<hr class="colorgraph">
 			            <div class="row">
 				        <div class="col-xs-12 col-md-6"><input type="submit" value="Delete User" class="btn btn-primary btn-block btn-lg" tabindex="7"></div>
-						
 					</div>
 				</div>
              </div>
@@ -266,14 +250,14 @@
             if(confirm("Are you sure to activate this user?")){
 
                 
-                window.location.href = "/user_status/"+id+"/1";
+                window.location.href = "{{url('user_status')}}/"+id+"/1";
             }else{
             	$(this).attr('checked', false);
             }
             
         }else{
         	if(confirm("Are you sure to de-activate this user?")){
-        		window.location.href = "/user_status/"+id+"/0";
+        		window.location.href = "{{url('user_status')}}/"+id+"/0";
             }else{
                 //alert("asdf");
             	$(this).attr('checked', true);
@@ -286,18 +270,16 @@
 
 
 	
-	$('#example').DataTable( {
-		 "searching": true,
+	$('#userlist').DataTable( {
+		"searching": true,
         "language": {
-			
-            "lengthMenu": "Show entry _MENU_ ",
+            "lengthMenu": "Show entries: _MENU_ ",
             "zeroRecords": "No data available in table",
             "info": "Showing _START_ to _END_ of _TOTAL_ entries",
             "infoEmpty": "No data available in table",
             "infoFiltered": "(filtered from _MAX_ total records)",
-	       
-        }
-		
+        },
+        "order": [ [ 0, "desc" ] ]
     } );
 	 
 } );

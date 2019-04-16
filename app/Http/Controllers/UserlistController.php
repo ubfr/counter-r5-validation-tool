@@ -34,7 +34,7 @@ class UserlistController extends Controller
         public function  userlist(){
             if (Session::has('user')){
                 $user = Session::get('user');
-                $Userdetail=User::select('id','first_name','display_name','last_name','utype','email','status')
+                $Userdetail=User::select('id','first_name','display_name','last_name','utype','email','status','created_at')
                 ->orderBy('id','desc')->get();
                 $data['utype']=$user['utype'];
                 $data['userDisplayName']= $user['display_name'];
