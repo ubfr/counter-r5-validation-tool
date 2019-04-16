@@ -42,7 +42,7 @@ class Storedfile extends Model
         self::TYPE_CHECK_RESULT => 'Validation Result'
     ];
 
-    protected static $extension2contenttype = [
+    protected static $extension2mimetype = [
         'csv' => 'text/csv',
         'json' => 'application/json',
         'ods' => 'application/vnd.oasis.opendocument.spreadsheet',
@@ -134,29 +134,25 @@ class Storedfile extends Model
         return $storedfile;
     }
 
-    public function getTemporaryFile()
+    public function get()
     {
-        $tmpFilename = tempnam(sys_get_temp_dir(), 'c5fv');
-        File::put($tmpFilename, bzdecompress(Crypt::decrypt(Storage::get($this->location), false)));
-        $file = new \Illuminate\Http\File($tmpFilename);
-        
-        return $file;
+        return bzdecompress(Crypt::decrypt(Storage::get($this->location), false));
     }
     
     public function download()
     {
-        $tmpFile = $this->getTemporaryFile();
-        
-        return response()->download($tmpFile->path(), $this->filename, [
-            'Content-Type: ' . $this->getMimeType()
+        return response()->streamDownload(function() {
+            echo $this->get();
+        }, $this->filename, [
+            'Content-Type' => $this->getMimeType()
         ]);
     }
     
     public function getMimeType()
     {
         $extension = pathinfo($this->filename, PATHINFO_EXTENSION);
-        if (isset($this->extension2mimetype[$extension])) {
-            return $this->extension2mimetype[$extension];
+        if (isset(self::$extension2mimetype[$extension])) {
+            return self::$extension2mimetype[$extension];
         } else {
             return 'application/octet-stream';
         }

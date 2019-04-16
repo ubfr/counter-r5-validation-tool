@@ -2095,10 +2095,8 @@ class CommonController extends Controller
                 'title' => $title,
                 'content' => $content
             ], function ($message) use ($resultfile, $emailTo) {
-                $tmpAttachFile = $resultfile->getTemporaryFile();
                 $message->subject('COUNTER Release 5 Report Validation Result');
-                $message->attach($tmpAttachFile->path(), [
-                    'as' => $resultfile->filename,
+                $message->attachData($resultfile->get(), $resultfile->filename, [
                     'mime' => $resultfile->getMimeType()
                 ]);
                 $message->to($emailTo);
