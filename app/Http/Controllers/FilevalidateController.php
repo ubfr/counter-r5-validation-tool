@@ -459,32 +459,27 @@ class FilevalidateController extends CommonController
                 $sushi_error = 'The SUSHI server returned HTTP code 200 (OK) but no well-formed JSON.';
             } else {
                 $transaction['success'] = 'Y';
-                
-                $destinationPath = public_path() . "/upload/json/";
-                if (!is_dir($destinationPath)) {
-                    mkdir($destinationPath, 0777, true);
-                }
 
-                $file = time() . '_' . $user['id'] . '_file.json';
-                File::put($destinationPath . $file, $result);
-                $completePath = $destinationPath . $file;
+                $tmpFilename = tempnam(sys_get_temp_dir(), 'c5fv');
+                File::put($tmpFilename, $result);
+                $file = new \Illuminate\Http\File($tmpFilename);
+
+                $filename = date('Ymd-His') . '-' . parse_url($parameters['api_url'], PHP_URL_HOST);
+                if($parameters['platform'] !== null && $parameters['platform'] !== '') {
+                    $filename .= '-' . $parameters['platform'];
+                }
+                $filename .= '-' . substr($parameters['method'], 3) . '-' . $parameters['customer_id'] . '.json';
             }
         }
 
-        DB::beginTransaction();
-        try {
-            Sushitransaction::create($transaction);
-            DB::commit();
-        } catch(\Exception $exception) {
-            DB::rollback();
-        }
+        Sushitransaction::create($transaction);
 
         if($sushi_error !== null) {
             Session::flash('sushi_error', $sushi_error);
             return Redirect::back()->withInput();
         }
         
-        return response()->download($completePath, $file, [ 'Content-Type: application/json' ]);
+        return response()->download($file, $filename, [ 'Content-Type: application/json' ]);
     }
     
     public function sushiRequest() {
