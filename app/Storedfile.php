@@ -2,8 +2,8 @@
 namespace App;
 
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Http\File;
-use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Facades\Crypt;
+use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Storage;
 
 class Storedfile extends Model
@@ -81,6 +81,10 @@ class Storedfile extends Model
         return $this->hasOne('App\Sushiresponse', 'responsefile_id');
     }
 
+    protected function __construct() {
+        return parent::__construct();
+    }
+    
     public function delete()
     {
         Storage::delete($this->location);
@@ -88,6 +92,11 @@ class Storedfile extends Model
         return parent::delete();
     }
 
+    public function exists()
+    {
+        return Storage::exists($this->location);
+    }
+    
     public function getSourceName()
     {
         return self::$sourceNames[$this->source];
@@ -95,8 +104,8 @@ class Storedfile extends Model
     
     public static function store($file, $filename, $source, $type, $userId)
     {
-        if (! is_string($file) && ! ($file instanceof File) && ! ($file instanceof UploadedFile)) {
-            throw new \InvalidArgumentException("file invalid, expecting string, File or UploadedFile");
+        if (! ($file instanceof \Illuminate\Http\File) && ! ($file instanceof \Illuminate\Http\UploadedFile)) {
+            throw new \InvalidArgumentException("file invalid, expecting File or UploadedFile");
         }
         if (! isset(self::$sourceNames[$source])) {
             throw new \InvalidArgumentException("source {$source} not within the allowed range");
@@ -105,9 +114,9 @@ class Storedfile extends Model
             throw new \InvalidArgumentException("type {$type} not within the allowed range");
         }
         $user = User::where('id', $userId)->firstOrFail();
-
-        $location = Storage::put('storedfiles', $file);
-        if ($location === false) {
+        
+        $location = $file->hashName('storedfiles');
+        if (Storage::put($location, Crypt::encrypt(bzcompress(File::get($file->path()), 9), false)) === false) {
             throw new \Exception("failed to store uploaded file");
         }
 
@@ -125,6 +134,24 @@ class Storedfile extends Model
         return $storedfile;
     }
 
+    public function getTemporaryFile()
+    {
+        $tmpFilename = tempnam(sys_get_temp_dir(), 'c5fv');
+        File::put($tmpFilename, bzdecompress(Crypt::decrypt(Storage::get($this->location), false)));
+        $file = new \Illuminate\Http\File($tmpFilename);
+        
+        return $file;
+    }
+    
+    public function download()
+    {
+        $tmpFile = $this->getTemporaryFile();
+        
+        return response()->download($tmpFile->path(), $this->filename, [
+            'Content-Type: ' . $this->getMimeType()
+        ]);
+    }
+    
     public function getMimeType()
     {
         $extension = pathinfo($this->filename, PATHINFO_EXTENSION);

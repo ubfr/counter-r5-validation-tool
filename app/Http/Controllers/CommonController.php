@@ -1881,13 +1881,12 @@ class CommonController extends Controller
             // TODO: exception is not rendered, user is redirected to /filelist
             abort(403, 'You are not authorized to download this validation result.');
         }
-        if(! Storage::exists($storedfile->location)) {
+        if(! $storedfile->exists()) {
             // TODO: exception is not rendered, user is redirected to /filelist
             abort(404, 'Validation result not found.');
         }
 
-        return Storage::download($storedfile->location, $storedfile->filename,
-            [ 'Content-Type: ' . $storedfile->getMimeType() ]);
+        return $storedfile->download();
     }
     
     function downloadfile($storedfileId)
@@ -2081,7 +2080,7 @@ class CommonController extends Controller
             // TODO: exception is not rendered, user is redirected to /filelist
             abort(403, 'You are not authorized to download this validation result.');
         }
-        if(! Storage::exists($resultfile->location)) {
+        if(! $resultfile->exists()) {
             // TODO: exception is not rendered, user is redirected to /filelist
             abort(404, 'Validation result not found.');
         }
@@ -2096,8 +2095,9 @@ class CommonController extends Controller
                 'title' => $title,
                 'content' => $content
             ], function ($message) use ($resultfile, $emailTo) {
+                $tmpAttachFile = $resultfile->getTemporaryFile();
                 $message->subject('COUNTER Release 5 Report Validation Result');
-                $message->attach(storage_path('app' . DIRECTORY_SEPARATOR . $resultfile->location), [
+                $message->attach($tmpAttachFile->path(), [
                     'as' => $resultfile->filename,
                     'mime' => $resultfile->getMimeType()
                 ]);
