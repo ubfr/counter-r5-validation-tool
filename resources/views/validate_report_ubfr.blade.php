@@ -17,7 +17,6 @@ $now = date('Y-m-d H:i:s');
 @section("content")
 
   <!-- === validation report start === -->
-  <div class="container">
     <div class="row">
       <div class="col-xs-12 col-sm-12 col-lg-12 col-md-12">
         <div class="pull-left">
@@ -73,7 +72,6 @@ $now = date('Y-m-d H:i:s');
   @endif
       </div>
     </div>
-  </div>
   @endsection
   <!-- === validation report end === -->
 
