@@ -2095,7 +2095,7 @@ class CommonController extends Controller
                 'title' => $title,
                 'content' => $content
             ], function ($message) use ($resultfile, $emailTo) {
-                $message->subject('COUNTER Release 5 Report Validation Result');
+                $message->subject('COUNTER R5 Validation Tool Result');
                 $message->attachData($resultfile->get(), $resultfile->filename, [
                     'mime' => $resultfile->getMimeType()
                 ]);
