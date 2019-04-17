@@ -56,13 +56,13 @@
                                     <?php if ($utype === 'admin') { ?>
                                     <th class="sorting" aria-label="Email Address: activate to sort column">Email Address</th>
                                     <?php } ?>
-                                    <th class="sorting" aria-label="SUSHI Server: activate to sort column">SUSHI Server</th>
+                                    <th class="sorting" aria-label="Server URL: activate to sort column">Server URL</th>
+                                    <th class="sorting" aria-label="Path: activate to sort column ascending">Path</th>
                                     <th class="sorting" aria-label="Platform: activate to sort column ascending">Platform</th>
-                                    <th class="sorting" aria-label="Request: activate to sort column ascending">Request</th>
-                                    <th class="sorting" aria-label="Report ID: activate to sort column ascending">Report ID</th>
                                     <!-- Does this make sense? The format always should be JSON...
                                     <th class="sorting" aria-label="Report Format: activate to sort column ascending">Report Format</th>
                                     -->
+                                    <th class="sorting" aria-label="HTTP Code: activate to sort column ascending">HTTP Code</th>
                                     <th class="sorting" aria-label="Success: activate to sort column ascending">Success</th>
                                     <!-- must be fixed
                                     <th>Actions</th>
@@ -75,13 +75,13 @@
                                     <?php if ($utype === 'admin') { ?>
                                     <th>Email Address</th>
                                     <?php } ?>
-                                    <th>SUSHI Server</th>
+                                    <th>Server URL</th>
+                                    <th>Path</th>
                                     <th>Platform</th>
-                                    <th>Request</th>
-                                    <th>Report ID</th>
                                     <!-- Does this make sense? The format always should be JSON...
                                     <th>Report Format</th>
                                     -->
+                                    <th>HTTP Code</th>
                                     <th>Success</th>
                                     <!-- must be fixed
                                     <th>Actions</th>
@@ -90,13 +90,11 @@
                             </tfoot>
                             <tbody> 
                                 <?php 
-                                $DisplayValueOfMethod = [
-                                    'getstatus'=>'Get Status',
-                                    'getmembers'=>'Get Members',
-                                    'getreports'=>'Get Supported Reports',
-                                    'getreport'=>'Get Report'
-                                ];
                                 foreach($sushi_detail as $sushi_details) {
+                                    $path = '/' . substr($sushi_details->request_name, 3);
+                                    if($path === '/report') {
+                                        $path = '/reports/' . strtolower(str_replace('_', '', $sushi_details->report_id));
+                                    }
                                 ?>
                                 <tr role="row">
                                     <td>{{$sushi_details->date_time}}</td>
@@ -104,12 +102,12 @@
                                     <td class="">{{$sushi_details->user_email}}</td>
                                     <?php } ?>
                                     <td>{{$sushi_details->sushi_url}}</td>
+                                    <td>{{$path}}</td>
                                     <td>{{$sushi_details->platform}}</td>
-                                    <td>{{$DisplayValueOfMethod[$sushi_details->request_name]??''}}</td>
-                                    <td>{{$sushi_details->report_id}}</td>
                                     <!-- Does this make sense? The format always should be JSON...
                                     <td>{{$sushi_details->report_format}}</td>
                                     -->
+                                    <td>{{$sushi_details->number_of_errors}}</td>
                                     <td>{{$sushi_details->success === 'Y' ? 'Yes' : 'No'}}</td>
                                     <!-- must be fixed
                                     <td><a onclick="return confirm('Do you really want to delete this entry?')" 

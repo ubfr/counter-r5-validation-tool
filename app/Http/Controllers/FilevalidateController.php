@@ -430,6 +430,7 @@ class FilevalidateController extends CommonController
         
         $sushi_error = null;
         $httpCode = curl_getinfo($curl, CURLINFO_RESPONSE_CODE);
+        $transaction['number_of_errors'] = $httpCode; // temporary solution until the data model is improved
         if($httpCode !== 200) {
             $sushi_error = "The SUSHI server returned HTTP code {$httpCode} (" . Helper::getMessageForHttpCode($httpCode) . ')';
             try {
@@ -637,6 +638,7 @@ class FilevalidateController extends CommonController
         
         $sushi_error = null;
         $httpCode = curl_getinfo($curl, CURLINFO_RESPONSE_CODE);
+        $transaction['number_of_errors'] = $httpCode; // temporary solution until the data model is improved
         if($httpCode !== 200) {
             $sushi_error = "The SUSHI server returned HTTP code {$httpCode} (" . Helper::getMessageForHttpCode($httpCode) . ')';
             try {
