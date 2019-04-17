@@ -93,7 +93,7 @@
                                 foreach($sushi_detail as $sushi_details) {
                                     $path = '/' . substr($sushi_details->request_name, 3);
                                     if($path === '/report') {
-                                        $path = '/reports/' . strtolower(str_replace('_', '', $sushi_details->report_id));
+                                        $path = '/reports/' . strtolower($sushi_details->report_id);
                                     }
                                 ?>
                                 <tr role="row">
