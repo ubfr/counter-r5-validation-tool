@@ -37,8 +37,11 @@
     	<div class="row">
     		<div class="col-md-12">
     			<p class="preview">The is a preview of the COUNTER R5 Validation Tool which is still under development.
-    			    There are still checks missing, especially for Item Reports and SUSHI. All data in this preview
-    			    will be deleted when the final version of Validation Tool is made available. Feedback...</p>
+    			    There are still checks missing, especially for the Item Reports and SUSHI. Please use
+    			    <a href="https://www.surveymonkey.co.uk/r/B9LGW2H" target="_blank">this survey</a> which shouldn't
+    			    take more than 2 minutes to complete to send us your feedback and suggestions and report issues
+    			    with the Validation Tool.  All data in this preview will be deleted when the final version of
+    			    Validation Tool is made available.</p>
     		</div>
     	</div>
     	<div class="row">
