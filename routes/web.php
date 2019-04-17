@@ -18,9 +18,7 @@ Route::get('/', function () {
 
 Route::post('user_edit/{id}', 'UserlistController@user_edit');
 Route::get('useredit', 'UserlistController@useredit');
-//Route::post('login', 'UsersController@postLogin');
 Route::get('welcome', 'ShowController@checkview');
-//Route::get('home', 'UserlistController@userlist');
 Route::post('login', [ 'as' => 'login', 'uses' => 'UsersController@postLogin']);
 Route::post('/registeradmin', array(
     'as' => 'registeradmin',
@@ -60,14 +58,6 @@ Route::group([
 ],
     
 function () {
-//  Route::get('/download/{file_id}/{filename}', [
-//     'as' => 'admin.invoices.downloadfile',
-//     'uses' => 'FilevalidateController@downloadfile'
-// ]); 
-//Route::get('/email/{file_id}', [
-//    'as' => 'admin.invoices.emailfile',
-//    'uses' => 'FilevalidateController@emailfile'
-//    ]);
 });
 
 // /////////////////////////////Show admin Rule Management////////////////////////////////////////////////////
@@ -103,13 +93,11 @@ Route::get('edituser/{user_id}', 'UserlistController@edit_user_display');
 Route::get('home', 'UserlistController@userlist');
 
 // now sushiValidate
-//Route::post('/sushiValidate', 'FilevalidateController@sushiValiate');
 Route::get('uploadedreports','ShowController@uploaded_report');
 Route::get('uploadedreports/id','ShowController@uploadReportsDownload');
 Route::get('delete_upload_report/{id}','ShowController@delete_upload_report');
 
 
-// Route::get('/download','FilevalidateController@downloadfile');
  Route::get('/download/{file_id}', [
     'as' => 'admin.invoices.downloadfile',
     'uses' => 'FilevalidateController@downloadfile'
@@ -143,7 +131,6 @@ Route::get('consortium/{id}','ShowController@harvetsingvalidate');
 Route::get('delete_transaction/{id}', 'ShowController@delete_transaction');
 Route::get('consortium','ShowController@harvetsingvalidate');
 Route::post('saveconsortium', 'ShowController@saveConsortiumConfig');
-//Route::post('edit_consortium', 'ShowController@edit_consortium');
 Route::post('update_consortium', 'ShowController@update_consortium');
 
 
@@ -166,8 +153,6 @@ Route::post('consortiumimport', 'ShowController@readConfigurationFile');
 Route::get('member/{provider_id}', 'ShowController@memberListing');
 Route::get('delete_members/{id}/{provider_id}', 'ShowController@deleteMembers');
 Route::get('refresh_members/{provider_id}', 'ShowController@refreshMembers');
-//Route::get('/downloadfront/{file_id}/{filename}',  'CommonController@downloadfileFront');
-//Route::get('/downloadfront/{file_id}/',  'CommonController@downloadfileFrontforid');
 Route::get('delete_reportfile/{id}', 'CommonController@deleteReportfile');
 
 Route::get('sushirequest', 'FilevalidateController@sushiRequest');
