@@ -24,33 +24,33 @@
 	@endif
 	<?php foreach($user_detail as $user_details){?>
 	<form action="{{url('user_edit')}}/{{$user_details->id}}" method="post" name="user_edit">
-	<input type="hidden" name="_token" value="<?php echo csrf_token() ?>">
+	<input type="hidden" name="_token" value="{{csrf_token()}}">
 	
 	<div class="form-group row">
 		<label for="example-text-input" class="col-xs-2 col-form-label">First Name</label>
 		<div class="col-xs-10">
-			<input class="form-control" name="first_name" type="text" value="<?php echo $user_details->first_name;?>" id="example-text-input" placeholder="First Name">
+			<input class="form-control" name="first_name" type="text" value="{{$user_details->first_name}}" id="example-text-input" placeholder="First Name">
 		</div>
 	</div>
 	
 	<div class="form-group row" >
 		<label for="example-text-input" class="col-xs-2 col-form-label">Last Name</label>
 		<div class="col-xs-10">
-			<input class="form-control" type="text" name="last_name" value="<?php echo $user_details->last_name;?>" id="example-text-input" placeholder="Last Name">
+			<input class="form-control" type="text" name="last_name" value="{{$user_details->last_name}}" id="example-text-input" placeholder="Last Name">
 		</div>
 	</div>
 	
 	<div class="form-group row">
 		<label for="example-text-input" class="col-xs-2 col-form-label">Display Name</label>
 		<div class="col-xs-10">
-			<input class="form-control" type="text" name="display_name" value="<?php echo $user_details->display_name;?>" id="example-text-input" placeholder="Dislay Name">
+			<input class="form-control" type="text" name="display_name" value="{{$user_details->display_name}}" id="example-text-input" placeholder="Dislay Name">
 		</div>
 	</div>
 	
 	<div class="form-group row">
 		<label for="example-text-input" class="col-xs-2 col-form-label">Email</label>
 		<div class="col-xs-10">
-		<input class="form-control" type="email" readonly="readonly" value="<?php echo $user_details->email;?>" id="example-text-input" placeholder="test@testmail.com">
+		<input class="form-control" type="email" readonly="readonly" value="{{$user_details->email}}" id="example-text-input" placeholder="test@testmail.com">
 		</div>
 	</div>
 	
