@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 use Illuminate\Support\Facades\File;
 use App\User;
+use Illuminate\Support\Facades\Config;
 Use Illuminate\Support\Facades\Session;
 use Illuminate\Routing\Controller;
 use Illuminate\Support\Facades\Auth;
@@ -89,8 +90,9 @@ class Userscontroller extends Controller
 ////////////////////////////////////////////Register///////////////////////////////////////////////////////////
     
     public function register(){
-        
-        
+        if(! Config::get('c5tools.enableRegistration')) {
+            return view('index');
+        }
         
         $data=Input::all();
         $data['utype']='user';

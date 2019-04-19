@@ -26,7 +26,11 @@
     <div class="row">
    		<div class="col-md-6">
             <fieldset>
+            <?php if(Config::get('c5tools.enableRegistration')) { ?>
         	 <h3>Register now for <span class="text-success">FREE</span></h3>
+        	<?php } else { ?>
+        	 <h3>COUNTER R5 Validation Tool</h3>
+        	<?php } ?>
              <hr class="colorgraph">
               <ul class="list-unstyled" style="line-height: 2">
                   <li><span class="fa fa-check text-success"></span> Validate Your COUNTER Release 5 Reports</li>
@@ -36,14 +40,16 @@
                   <li><span class="fa fa-check text-success"></span> Test Development Environment</li>
                                    <li><span class="fa fa-check text-success"></span> Get On-Screen Error Display and Email Report</li>
                                    </ul>
+               <?php if(Config::get('c5tools.enableRegistration')) { ?>
                <div class="col-xs-6 col-sm-6 col-md-6 noPadding marTop10">
                     <a  data-toggle="modal" data-target="#myModal" class="btn btn-lg btn-primary btn-block">Register</a>
                 </div>
+                <?php } ?>
              </fieldset>
         </div>
         <div class="col-xs-12 col-sm-6 col-md-6  col-lg-6 ">
             <form action="login" method="post" name="login">
-			<input type="hidden" name="_token" value="<?php echo csrf_token() ?>">
+			<input type="hidden" name="_token" value="{{csrf_token()}}">
                 <fieldset>
                     <h3>Please Sign In</h3>
                     <hr class="colorgraph">
@@ -98,7 +104,7 @@
        		 <div class="row">
     <div class="col-xs-12 col-sm-121 col-md-12 ">
 		<form action="register" method="post" onsubmit="return checkForm(this);">
-		<input type="hidden" name="_token" value="<?php echo csrf_token() ?>">
+		<input type="hidden" name="_token" value="{{csrf_token()}}">
 			<h2>Please Sign Up <small>It's free and always will be.</small></h2>
 			<hr class="colorgraph">
 			<div class="row">
