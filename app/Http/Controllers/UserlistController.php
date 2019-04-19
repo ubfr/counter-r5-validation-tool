@@ -2,21 +2,13 @@
 
 namespace App\Http\Controllers;
 
-use App\Http\Requests;
-use App\Http\Controllers\Auth\PasswordController;
-use App\User;
-use App\Filename;
-use App\Allreportsname;
-use Illuminate\Support\Facades\Session;
-Use Exception;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Input;
 use Illuminate\Support\Facades\Redirect;
-use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Request;
-Use Illuminate\Auth\Passwords\TokenRepositoryInterface;
-use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Session;
 use Illuminate\Support\Facades\Validator;
-
+use App\User;
 
 class UserlistController extends Controller
 {

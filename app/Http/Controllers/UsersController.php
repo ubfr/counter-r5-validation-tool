@@ -1,17 +1,15 @@
 <?php
 
 namespace App\Http\Controllers;
-use Illuminate\Support\Facades\File;
-use App\User;
-use Illuminate\Support\Facades\Config;
-Use Illuminate\Support\Facades\Session;
+
 use Illuminate\Routing\Controller;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\Input;
 use Illuminate\Support\Facades\Redirect;
+Use Illuminate\Support\Facades\Session;
 use Illuminate\Support\Facades\Validator;
-use App\Filename;
-
+use App\User;
 
 class Userscontroller extends Controller
 {
@@ -72,7 +70,7 @@ class Userscontroller extends Controller
                     return Redirect::intended('welcome');
                      }
                      
-                } catch (Exception $exception) {
+                } catch (\Exception $exception) {
                     
                     report($exception);
                     

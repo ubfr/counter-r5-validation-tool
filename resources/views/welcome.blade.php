@@ -7,17 +7,7 @@
 
 @section("content")
 <link href="{{URL::asset('assets/css/multiselect.css')}}" rel="stylesheet">
-<?php
-// makeing parent and child relationship
-/*$allgroup = array();
-$i = 0;
-foreach ($reportsname as $reportDetails) {
-    $allgroup[$parentInfo[$reportDetails->parent_id]][$i]['id'] = $reportDetails->id;
-    $allgroup[$parentInfo[$reportDetails->parent_id]][$i]['report_name'] = $reportDetails->report_name;
-    $allgroup[$parentInfo[$reportDetails->parent_id]][$i]['report_code'] = $reportDetails->report_code;
-    $i ++;
-}*/
-?>
+
     <!--========================login form start here======================================-->
 
 

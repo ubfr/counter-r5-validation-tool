@@ -10,6 +10,7 @@
  * | contains the "web" middleware group. Now create something great!
  * |
  */
+use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', function () {
@@ -20,13 +21,11 @@ Route::post('user_edit/{id}', 'UserlistController@user_edit');
 Route::get('useredit', 'UserlistController@useredit');
 Route::get('welcome', 'ShowController@checkview');
 Route::post('login', [ 'as' => 'login', 'uses' => 'UsersController@postLogin']);
-Route::post('/registeradmin', array(
-    'as' => 'registeradmin',
-    'uses' => 'UserlistController@registeradmin'
-));
 
 Route::get('login', 'ShowController@checkview');
-Route::post('register', 'UsersController@register');
+if(Config::get('c5tools.enableRegistration')) {
+    Route::post('register', 'UsersController@register');
+}
 Route::get('logout', 'UsersController@logout');
 
 Route::post('fileValidate', 'FilevalidateController@filevalidate');
@@ -69,43 +68,18 @@ Route::group([
 ], 
 function () {
 Route::get('/userlist', 'UserlistController@userlist');
-
-//Route::get('reporthistory', 'ShowController@showreport');
-//Route::get('rulemanagement', 'RulemanagementController@rulemanagement');
-//Route::post('ajaxCall/{id}', 'RulemanagementController@ajaxCall');
-//Route::get('edit_column/{id}', 'RulemanagementController@edit_cloumn_view');
-//Route::get('loadvalue/{column_id}', 'RulemanagementController@getColumnData');
-//Route::post('edit_update/{id}', 'RulemanagementController@updatecolumn');
-//Route::get('createvalue/{row_id}/{report_id}', 'RulemanagementController@addColumnView');
-//Route::post('add_update/{id}', 'RulemanagementController@addnewcolumn');
-//Route::get('deleterow/{rowid}/{reportid}', 'RulemanagementController@deleterowFuntion');
-//Route::post('lastcolajax', 'RulemanagementController@is_lastcolumn');
-//Route::get('addrow/{rowid}', 'RulemanagementController@addRowFuntion');
-//Route::get('rule_manage', 'ShowController@show_rule_manage');
-//Route::get('edit_report/{id}', 'ShowController@edit_report');
-//Route::get('deletefile/{file_id}', 'ShowController@delete_report');
-//Route::post('report_update', 'ShowController@update_report');
 Route::get('/user_status/{id}/{status}', 'UserlistController@user_status');
 Route::post('delete_user', 'UserlistController@delete_user');
 Route::post('edit_user/{user_id}', 'UserlistController@edit_user');
-//Route::get('edit_report/{id}', 'ShowController@edit_report');
 Route::get('edituser/{user_id}', 'UserlistController@edit_user_display');
 Route::get('home', 'UserlistController@userlist');
+Route::post('/registeradmin', array(
+    'as' => 'registeradmin',
+    'uses' => 'UserlistController@registeradmin'
+));
 
-// now sushiValidate
-//Route::get('uploadedreports','ShowController@uploaded_report');
-//Route::get('uploadedreports/id','ShowController@uploadReportsDownload');
-//Route::get('delete_upload_report/{id}','ShowController@delete_upload_report');
-
-
- Route::get('/download/{file_id}', [
-    'as' => 'admin.invoices.downloadfile',
-    'uses' => 'FilevalidateController@downloadfile'
-]); 
-Route::get('/email/{file_id}', [
-    'as' => 'admin.invoices.emailfile',
-    'uses' => 'FilevalidateController@emailfile'
-    ]);
+Route::get('/download/{file_id}', 'FilevalidateController@downloadfile'); 
+Route::get('/email/{file_id}', 'FilevalidateController@emailfile');
 });
 
 
@@ -117,42 +91,35 @@ Route::group([
     ]
 ],
     function () {
- 
-        Route::get('/download/{file_id}', [
-            'as' => 'admin.invoices.downloadfile',
-            'uses' => 'FilevalidateController@downloadfile'
-        ]);
-        Route::get('/email/{file_id}', [
-            'as' => 'admin.invoices.emailfile',
-            'uses' => 'FilevalidateController@emailfile'
-        ]);
-        
+        Route::get('/download/{file_id}', 'FilevalidateController@downloadfile');
+        Route::get('/email/{file_id}', 'FilevalidateController@emailfile');
+
+        if(Config::get('c5tools.enableConsortiumTool')) {
 Route::get('consortium/{id}','ShowController@harvetsingvalidate');
 Route::get('delete_transaction/{id}', 'ShowController@delete_transaction');
 Route::get('consortium','ShowController@harvetsingvalidate');
 Route::post('saveconsortium', 'ShowController@saveConsortiumConfig');
 Route::post('update_consortium', 'ShowController@update_consortium');
 
+Route::get('add_provider/{id}', 'ShowController@addProvider');
+Route::get('edit_consortium/{id}', 'ShowController@editConsortium');
+Route::get('delete_consortium/{id}', 'ShowController@deleteConsortium');
+Route::get('delete_provider/{id}/{configid}', 'ShowController@deleteProvider');
+Route::get('edit_provider/{id}/{configid}', 'ShowController@addProvider');
+Route::post('save_provider', 'ShowController@saveProvider');
 
-// providers
-//Route::get('showreport', 'ShowController@showUser_Report');
-//Route::get('add_provider/{id}', 'ShowController@addProvider');
-//Route::get('edit_consortium/{id}', 'ShowController@editConsortium');
-//Route::get('delete_consortium/{id}', 'ShowController@deleteConsortium');
-//Route::get('delete_provider/{id}/{configid}', 'ShowController@deleteProvider');
-//Route::get('edit_provider/{id}/{configid}', 'ShowController@addProvider');
-//Route::post('save_provider', 'ShowController@saveProvider');
+Route::get('runconsortium/{id}/{transactionId}/{begin_date}/{end_date}/{selectedreports}/{selectedproviders}/{selectedmembers}/{selectedformat}', 'ShowController@runConsortium');
+Route::post('showprogress/', 'ShowController@showConsortiumProgress');
+Route::get('showprogressnew/{configurationId}', 'ShowController@showConsortiumProgressNew');
+Route::get('showprogressrecord/{id}/{transactionId}/{begin_date}/{end_date}/{selectedreports}', 'ShowController@showConsortiumProgressForRecord');
+Route::get('downloadconfiguration/{id}','ShowController@downloadExcelConfig');
+Route::get('importconfiguration', 'ShowController@importConfiguration');
+Route::post('consortiumimport', 'ShowController@readConfigurationFile');
+Route::get('member/{provider_id}', 'ShowController@memberListing');
+Route::get('delete_members/{id}/{provider_id}', 'ShowController@deleteMembers');
+Route::get('refresh_members/{provider_id}', 'ShowController@refreshMembers');
+        }
 
-//Route::get('runconsortium/{id}/{transactionId}/{begin_date}/{end_date}/{selectedreports}/{selectedproviders}/{selectedmembers}/{selectedformat}', 'ShowController@runConsortium');
-//Route::post('showprogress/', 'ShowController@showConsortiumProgress');
-//Route::get('showprogressnew/{configurationId}', 'ShowController@showConsortiumProgressNew');
-//Route::get('showprogressrecord/{id}/{transactionId}/{begin_date}/{end_date}/{selectedreports}', 'ShowController@showConsortiumProgressForRecord');
-//Route::get('downloadconfiguration/{id}','ShowController@downloadExcelConfig');
-//Route::get('importconfiguration', 'ShowController@importConfiguration');
-//Route::post('consortiumimport', 'ShowController@readConfigurationFile');
-//Route::get('member/{provider_id}', 'ShowController@memberListing');
-//Route::get('delete_members/{id}/{provider_id}', 'ShowController@deleteMembers');
-//Route::get('refresh_members/{provider_id}', 'ShowController@refreshMembers');
 Route::get('delete_reportfile/{id}', 'CommonController@deleteReportfile');
 
 Route::get('sushirequest', 'FilevalidateController@sushiRequest');
@@ -160,19 +127,8 @@ Route::get('delete_sushi_request/{id}', 'FilevalidateController@delete_sushi_req
 
 Route::post('showshushiparameter', 'FilevalidateController@sushiRequestParameter');
 Route::post('getsushireport', 'FilevalidateController@getSushiReport');
-Route::get('sushirequest/{id}', 'ShowController@sushiReportRequest');
 Route::get('filelist', 'ShowController@showvalidate');
 Route::get('filehistory', 'ShowController@fileHistory');
 
         
     });
-   
-    
-    
-        
-        
-        
-        
-        
-        
- 

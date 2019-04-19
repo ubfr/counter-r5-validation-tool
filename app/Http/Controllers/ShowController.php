@@ -1,40 +1,25 @@
 <?php
 namespace App\Http\Controllers;
 
-use App\Allreportsname;
-use App\Filename;
-use App\User;
-use App\Reportname;
-use App\Validateerror;
-use App\Validationrule;
+use DateTime;
+use Exception;
+use RecursiveDirectoryIterator;
+use RecursiveIteratorIterator;
+use ZipArchive;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Input;
 use Illuminate\Support\Facades\Redirect;
-use Illuminate\Support\Facades\Validator;
-use App\Parentreport;
-use App\Filtertype;
-use App\Consortium;
-use App\Provider;
-use Illuminate\Http\Request;
-use Maatwebsite\Excel\Facades\Excel;
-use Illuminate\Http\File;
-use App\Transactionmaster;
-use App\Transactionmasterdetail;
-use App\Members;
-use Exception;
-use ZipArchive;
-use RecursiveIteratorIterator;
-use RecursiveDirectoryIterator;
-use DateTime;
-use App\Currenttransaction;
-use PHPExcel_Cell;
-use PHPExcel_Cell_DataType;
-use App\Sushitransaction;
-use App\Transactiondetailtemp;
 use Illuminate\Support\Facades\Session;
-use Illuminate\Support\Facades\DB;
-use App\Reportfile;
+use Illuminate\Support\Facades\Validator;
+use Maatwebsite\Excel\Facades\Excel;
+use App\Consortium;
+use App\Members;
+use App\Provider;
+use App\Reportname;
+use App\Transactionmasterdetail;
 use App\Storedfile;
-
+use App\User;
 
 class ShowController extends Controller {
     
@@ -62,20 +47,6 @@ class ShowController extends Controller {
         }
     }
 
-    function showUser_Report() {
-        $user = Session::get('user');
-        if ($user['email'] == '') {
-            return Redirect::to('/');
-        }
-        $filename = Filename::where('user_id', $user['id'])->orderBy('id', 'desc')
-                ->take(10)
-                ->get();
-        $data['userDisplayName'] = $user['display_name'];
-        $data['utype'] = $user['utype'];
-        $data['file_detail'] = $filename;
-        return view('showreport', $data);
-    }
-    
     // ///////////show file upload list/////////////
     function showvalidate() {
         // ///////////show file upload list/////////////
@@ -85,8 +56,6 @@ class ShowController extends Controller {
         if(!in_array($context, [ 'file', 'sushi'])) {
             $context = 'file';
         }
-        
-        $AllReports = Reportname::where(array())->orderBy('report_name', 'asc')->get();
         
         $fileReports = Storedfile::with('reportfile', 'reportfile.checkresult')->where('user_id', $user['id'])
             ->where('source', Storedfile::SOURCE_FILE_VALIDATE)
@@ -103,11 +72,6 @@ class ShowController extends Controller {
             ->get();
 
         $data = [];
-        $data['reportsname'] = $AllReports;
-        $AllParents = Parentreport::get()->toArray();
-        foreach ($AllParents as $parentSingle) {
-            $data['parentInfo'][$parentSingle['id']] = $parentSingle['name'];
-        }
         $data['userDisplayName'] = $user['display_name'];
         $data['utype'] = $user['utype'];
         $data['fileReports'] = $fileReports;
@@ -438,7 +402,7 @@ class ShowController extends Controller {
         }
         $data = Input::all();
         $data['created_by']=$user['email'];
-        // echo "<pre>";print_r($data);die;
+
         $rules = array(
             'configuration_name' => 'required',
             'remarks' => 'required'
@@ -530,49 +494,6 @@ class ShowController extends Controller {
         }
     }
 
-    // //////////Function For Report History//////////
-    function showreport() {
-        $user = Session::get('user');
-        if ($user['email'] == '') {
-            return Redirect::to('/');
-        }
-        // ///////////show file upload list/////////////
-        $user = Session::get('user');
-
-        $filename = Filename::join('users', 'users.id', '=', 'filenames.user_id')->select('filenames.id', 'filenames.filename', 'filenames.file_type', 'filenames.report_name', 'filenames.report_id', 'filenames.filename', 'users.email')
-                ->orderBy('id', 'desc')
-                ->get();
-        // echo "<pre>";print_r($filename);die;
-        $AllSushiReports = Reportname::where(array())->orderBy('report_code', 'asc')
-                ->take(100)
-                ->get();
-        $data['reportsname'] = $AllSushiReports;
-        // echo "<pre>1234";print_r($AllSushiReports);die;
-        // //////////////////////////////////////////////
-        $data['userDisplayName'] = $user['display_name'];
-        $data['utype'] = $user['utype'];
-        $data['file_detail'] = $filename;
-        return view('report_history', $data);
-    }
-
-    // ///////////show file upload list/////////////
-    function uploaded_report() {
-        $user = Session::get('user');
-        if ($user['email'] == '') {
-            return Redirect::to('/');
-        }
-        // ///////////show file upload list/////////////
-        $user = Session::get('user');
-
-        $filename = Filename::join('users', 'users.id', '=', 'filenames.user_id')->select('filenames.id', 'filenames.filename', 'filenames.file_type', 'filenames.report_name', 'filenames.report_id', 'filenames.filename', 'users.email')
-                ->orderBy('id', 'desc')
-                ->get();
-        $data['userDisplayName'] = $user['display_name'];
-        $data['utype'] = $user['utype'];
-        $data['file_detail'] = $filename;
-        return view('Uploaded_report', $data);
-    }
-    
     public function fileHistory()
     {
         if(! Session::has('user')) {
@@ -597,44 +518,6 @@ class ShowController extends Controller {
                 'utype' => $user['utype'],
                 'filehistory' => $filehistoryQuery->get()
             ]);
-    }
-    
-    ///////////////downloading uploaded reports////////////
-    public function uploadReportsDownload($id=0) {
-        $user = Session::get('user');
-        if (Session::has('user')) {
-            if($user['utype']=='admin'){
-                $AllArray = Filename::where(array())->orderBy('upload_date', 'desc')
-                ->get()
-                ->toArray();
-                if($AllArray == array()){
-                    Session::flash('useralertmsg', 'No Reports Available');
-                    return Redirect::intended('/uploadedreports');  
-                }
-            }
-            
-            $reportHeader[] = array_keys($AllArray[0]);
-            $arr1 = array_merge($reportHeader,$AllArray);
-            $destinationPath = public_path() . "/upload/uploaded/" ;
-            $file = time() . '_uploadedfile';
-            
-            try{
-            
-            return Excel::create($file, function ($excel) use ($arr1) {
-                
-                // Build the spreadsheet, passing in the $dataValue
-                $excel->sheet('sheet1', function ($sheet) use ($arr1) {
-                    $sheet->fromArray($arr1, null, 'A1', false, false);
-                });
-            })->store('xlsx', $destinationPath)->download();
-           
-            } catch (Exception $exception) {
-                report($exception);
-                return parent::render($request, $exception);
-            }
-        }else{
-            return Redirect::to('login');
-        }
     }
     
     ///////////////downloading Transaction Lists////////////
@@ -693,53 +576,6 @@ class ShowController extends Controller {
         }
     }
     
-    
-    
-    
-    // ///////////show Rule Management Page////////////
-    function show_rule_manage() {
-        $user = Session::get('user');
-        if ($user['email'] == '') {
-            return Redirect::to('/');
-        }
-        $user = Session::get('user');
-        // $reportname=Reportname::all();
-        $reportname = Validationrule::all();
-
-        $data['userDisplayName'] = $user['display_name'];
-        $data['utype'] = $user['utype'];
-        $data['rule_detail'] = $reportname;
-        return view('rule_manage_view', $data);
-    }
-
-    // ///////////////////////////////////////////////
-    // /////////delete report///////////////////////////////
-    function delete_report($id) {
-        // echo "1";die;
-        if (Session::has('user')) {
-
-            DB::beginTransaction();
-            try {
-            $AllSushiReports = Reportname::where('id', $id)->delete();
-                DB::commit();
-            } catch(Exception $exception) {
-                DB::rollback();
-            }
-            
-            DB::beginTransaction();
-            try {
-            $Filedelete = Validateerror::where('id', $id)->delete();
-            DB::commit();
-            } catch(Exception $exception) {
-                DB::rollback();
-            }
-            
-            Session::flash('userdelmsg', 'Report successfully deleted');
-            return Redirect::intended('/reporthistory');
-            // echo "<pre>";print_r($id);die;
-        }
-    }
-
     // delete providers value
     function deleteConsortium($id) {
         $user = Session::get('user');
@@ -804,6 +640,7 @@ class ShowController extends Controller {
             // echo "<pre>";print_r($id);die;
         }
     }
+
     public function showConsortiumProgressnew(int $configurationId=0){
         $user = Session::get('user');
         if ($user['email'] == '') {
@@ -3527,84 +3364,6 @@ class ShowController extends Controller {
         return $ipaddress;
     }
 
-    // /////////delete uploaded report///////////////////////////////
-    function delete_upload_report($id)
-    {
-        // echo "2";die;
-        if (Session::has('user')) {
-            // $user = Session::get('user');
-            
-            
-            DB::beginTransaction();
-            try {
-            $AlluploadReports = Filename::where('id', $id)->delete();
-            DB::commit();
-            } catch(Exception $exception) {
-                DB::rollback();
-            }
-            
-            DB::beginTransaction();
-            try {
-            $Filedelete = Validateerror::where('id', $id)->delete();
-            DB::commit();
-            } catch(Exception $exception) {
-                DB::rollback();
-            }
-            Session::flash('userupdatemsg', 'File successfully deleted');
-            return Redirect::intended('/uploadedreports');
-            // echo "<pre>";print_r($id);die;
-        }
-    }
-
-    // ///////////////////edit report//////////////////////////////////
-    function edit_report($id)
-    {
-        
-        // echo "1".$id;die;
-        if (Session::has('user')) {
-            $user = Session::get('user');
-            $Reportdetail = Reportname::select('id', 'report_name', 'report_code')->where('id', $id)->get();
-            
-            $data['utype'] = $user['utype'];
-            $data['report_detail'] = $Reportdetail;
-            $data['userDisplayName'] = $user['display_name'];
-            
-            // echo "<pre>";print_r($data);die;
-            
-            return view('edit_report', $data);
-        } else {
-            return Redirect::to('login');
-        }
-    }
-
-    function update_report()
-    {
-        if (session::has('user')) {
-
-            $data = Input::all();
-            // echo "<pre>";print_r($data);die;
-            $user = Session::get('user');
-            $updatearray['report_name'] = $data['report_name'];
-            $updatearray['report_code'] = $data['report_code'];
-            
-            DB::beginTransaction();
-            try {
-                $Reportdetail = Reportname::where('id', $data['Id'])->update($updatearray);
-                DB::commit();
-            } catch (Exception $exception) {
-                DB::rollback();
-            }
-
-            $data['utype'] = $user['utype'];
-            $data['userDisplayName'] = $user['display_name'];
-            $data['report_detail'] = $Reportdetail;
-            Session::flash('userupdatemsg', 'Report successfully updated');
-            return Redirect::to('reporthistory');
-        } else {
-            return Redirect::to('login');
-        }
-    }
-
     // update consortium configration update
     function editConsortium()
     {
@@ -3632,7 +3391,7 @@ class ShowController extends Controller {
             $data['userDisplayName'] = $user['display_name'];
             $data['report_detail'] = $Reportdetail;
             Session::flash('userupdatemsg', 'Report successfully updated');
-            return Redirect::to('reporthistory');
+            return Redirect::to('reporthistory'); // obviously wrong...
         } else {
             return Redirect::to('login');
         }
@@ -3816,86 +3575,6 @@ class ShowController extends Controller {
                 return Redirect::to('add_provider/' . $data['configuration_id']);
                 // return view('provider', $data);
             }
-        }
-    }
-    
-    
-    ////////////// all sushi request download /////////////////
-    
-    public function sushiReportRequest($id=0) {
-        $user = Session::get('user');
-        
-        if (Session::has('user')) {
-            
-             
-            if($user['utype']=='admin'){
-                $AllMatricArray = Sushitransaction::where(array())->orderBy('id', 'desc')
-                ->get()
-                ->toArray();
-                
-                if($AllMatricArray == array()){
-                    
-                    Session::flash('useralertmsg', 'No Data Available');
-                    return Redirect::intended('/sushirequest');
-                }
-                
-            }else{
-                    $AllMatricArray = Sushitransaction::where(array('user_email'=>$user['email']))->orderBy('id', 'desc')
-                    ->get()
-                    ->toArray();
-                    if($AllMatricArray == array()){
-                        
-                        Session::flash('useralertmsg', 'No Data Available');
-                        return Redirect::intended('/sushirequest'); 
-                    }    
-            }
-            
-            
-            
-            //$sushiHeader[] = array_keys($AllMatricArray[0]);
-            
-            $sushiHeader[] = Array
-            (
-                'Id',
-                'User_Email',
-                'Session_Id',
-                'Sushi_URL',
-                'Request_Name',
-                'Platform',
-                'Report_Id',
-                'Report_Format',
-                'Success',
-                'Number_Of_Errors',
-                'Date_Time'
-            );
-            
-            
-            
-           // echo "<pre>";print_r($sushiHeader);die;
-            
-            
-            $arr1 = array_merge($sushiHeader,$AllMatricArray);
-            
-            
-            $destinationPath = public_path() . "/upload/json/" ;
-            $file = time() . '_file';
-//             try{
-            return Excel::create($file, function ($excel) use ($arr1) {
-                
-                // Build the spreadsheet, passing in the $dataValue
-                $excel->sheet('sheet1', function ($sheet) use ($arr1) {
-                    $sheet->fromArray($arr1, null, 'A1', false, false);
-                });
-            })->store('xlsx', $destinationPath)->download(); 
-            // return \Redirect::to($destinationPath . $file);
-//             } catch (Exception $exception) {
-//                 report($exception);
-                
-//                 return parent::render($request, $exception);
-//             }
-//         }else
-
-            return Redirect::to('login');
         }
     }
     
