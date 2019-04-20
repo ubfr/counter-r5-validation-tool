@@ -16,7 +16,7 @@ class Subscriber
      */
     public function handle($request, Closure $next)
     {
-        if(Auth::user()->utype=""){
+        if(Auth::user()->utype==""){
             return redirect()->guest('/');
         }
         return $next($request);
