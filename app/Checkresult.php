@@ -22,16 +22,19 @@ class Checkresult extends Model
 
     public function delete()
     {
-        if ($this->resultfile_id === null) {
-            return true;
-        }
+        // Checkresults are never deleted, only the associated files
 
-        // Checkresults are never deleted, only the associated files are deleted
-        $resultfile = $this->resultfile;
-        $this->resultfile_id = null;
-        return ($this->save() && $resultfile->delete());
+        if ($this->resultfile !== null) {
+            $this->resultfile->delete();
+        }
     }
 
+    public function detachFile()
+    {
+        $this->resultfile_id = null;
+        return $this->save();
+    }
+    
     protected function computeNumberOfMessages()
     {
         if ($this->numberOfMessages === null) {

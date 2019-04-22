@@ -20,14 +20,20 @@ class Reportfile extends Model
 
     public function delete()
     {
-        if ($this->reportfile_id === null) {
-            return true;
-        }
+        // Reportfiles are never deleted, only the associated files
         
-        // Reportfiles are never deleted, only the associated files are deleted
-        $reportfile = $this->reportfile;
+        if ($this->reportfile !== null) {
+            $this->reportfile->delete();
+        }
+        if($this->checkresult !== null) {
+            $this->checkresult->delete();
+        }
+    }
+    
+    public function detachFile()
+    {
         $this->reportfile_id = null;
-        return ($this->save() && $reportfile->delete() && $this->checkresult->delete());
+        return $this->save();
     }
     
     public static function store($report, $file, $filename, $source, $result, $userId)

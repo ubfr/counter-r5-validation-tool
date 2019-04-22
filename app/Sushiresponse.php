@@ -18,6 +18,24 @@ class Sushiresponse extends Model
         return $this->belongsTo('App\Checkresult');
     }
 
+    public function delete()
+    {
+        // Sushiresponses are never deleted, only the associated files
+        
+        if ($this->responsefile !== null) {
+            $this->responsefile->delete();
+        }
+        if($this->checkresult !== null) {
+            $this->checkresult->delete();
+        }
+    }
+    
+    public function detachFile()
+    {
+        $this->responsefile_id = null;
+        return $this->save();
+    }
+    
     public static function store($responsefile, $checkresult, $sushitransaction)
     {
         if (! ($responsefile instanceof Storedfile)) {

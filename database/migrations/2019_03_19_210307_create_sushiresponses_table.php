@@ -16,7 +16,7 @@ class CreateSushiresponsesTable extends Migration
         Schema::create('sushiresponses',
             function (Blueprint $table) {
                 $table->increments('id');
-                $table->integer('responsefile_id')->unsigned();
+                $table->integer('responsefile_id')->unsigned()->nullable();
                 $table->integer('checkresult_id')->unsigned();
                 $table->bigInteger('sushitransaction_id')->unsigned();
 

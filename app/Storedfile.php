@@ -87,8 +87,19 @@ class Storedfile extends Model
     
     public function delete()
     {
-        Storage::delete($this->location);
-
+        if($this->checkresult !== null) {
+            $this->checkresult->detachFile();
+        }
+        if($this->reportfile !== null) {
+            $this->reportfile->detachFile();
+        }
+        if($this->sushiresponse !== null) {
+            $this->sushiresponse->detachFile();
+        }
+        if($this->exists()) {
+            Storage::delete($this->location);
+        }
+        
         return parent::delete();
     }
 
