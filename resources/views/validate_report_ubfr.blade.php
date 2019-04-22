@@ -36,7 +36,7 @@ $now = date('Y-m-d H:i:s');
             <p>The report {{$reportfileName}} passed the (not yet complete) validation at {{$now}}.</p>
   @endif
             <p class="marTop20">
-              <a href="email/{{$reportfile->id}}?context={{$context}}" class="btn btn-primary btnBlockxs"><i class="fa fa-envelope"></i>Email Validation Result</a>&nbsp;<a href="download/{{$reportfile->checkresult->resultfile->id}}" class="btn btn-primary btnBlockxs"><i class="fa fa-cloud-download"></i>Download Validation Result</a>
+              <a href="email/{{$reportfile->id}}?context={{$context}}" class="btn btn-primary btnBlockxs"><i class="fa fa-envelope"></i> Email Validation Result</a>&nbsp;<a href="download/{{$reportfile->checkresult->resultfile->id}}" class="btn btn-primary btnBlockxs"><i class="fa fa-cloud-download"></i> Download Validation Result</a>
             </p>
           </div>
           <div class="col-md-6">
