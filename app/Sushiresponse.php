@@ -36,7 +36,7 @@ class Sushiresponse extends Model
         return $this->save();
     }
     
-    public static function store($responsefile, $checkresult, $sushitransaction)
+    public static function store($responsefile, $checkresult, $sushitransaction, $responsetime = 0.0)
     {
         if (! ($responsefile instanceof Storedfile)) {
             throw new \InvalidArgumentException("responsefile invalid, expecting Storedfile");
@@ -52,6 +52,7 @@ class Sushiresponse extends Model
         $sushiresponse->responsefile_id = $responsefile->id;
         $sushiresponse->checkresult_id = $checkresult->id;
         $sushiresponse->sushitransaction_id = $sushitransaction->id;
+        $sushiresponse->responsetime = $responsetime;
         if (! $sushiresponse->save()) {
             throw new \Exception("failed to save Sushiresponse");
         }

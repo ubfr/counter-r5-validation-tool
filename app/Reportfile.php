@@ -36,7 +36,7 @@ class Reportfile extends Model
         return $this->save();
     }
     
-    public static function store($report, $file, $filename, $source, $result, $userId)
+    public static function store($report, $file, $filename, $source, $result, $userId, $checktime = 0.0, $checkmemory = 0)
     {
         if ($report !== null && ! ($report instanceof \ubfr\c5tools\Report)) {
             throw new \InvalidArgumentException("report invalid, expecting \ubfr\c5tools\Report");
@@ -46,7 +46,7 @@ class Reportfile extends Model
         $storedResult = null;
         try {
             $storedReport = Storedfile::store($file, $filename, $source, Storedfile::TYPE_REPORT, $userId);
-            $storedResult = Checkresult::store($report, $filename, $result, $source, $userId);
+            $storedResult = Checkresult::store($report, $filename, $result, $source, $userId, $checktime, $checkmemory);
 
             $reportfile = new Reportfile();
             $reportfile->reportfile_id = $storedReport->id;

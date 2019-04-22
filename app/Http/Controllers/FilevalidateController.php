@@ -30,6 +30,7 @@ class FilevalidateController extends CommonController
             $file = Input::file('import_file');
             $extension = $file->getClientOriginalExtension();
             $report = null;
+            $starttime = microtime(true);
             try {
                 $report = \ubfr\c5tools\Report::createFromFile($file->getRealPath(), $extension);
                 $checkResult = $report->getcheckResult();
@@ -41,10 +42,13 @@ class FilevalidateController extends CommonController
                     // ignore expected exception
                 }
             }
+            $endtime = microtime(true);
+            $checktime = round($endtime - $starttime, 3);
+            $checkmemory = round(memory_get_peak_usage(true) / 1024.0 / 1024.0, 3);
             
             try {
                 $reportfile = Reportfile::store($report, $file, $file->getClientOriginalName(), Storedfile::SOURCE_FILE_VALIDATE,
-                    $checkResult, $user['id']);
+                    $checkResult, $user['id'], $checktime, $checkmemory);
             } catch (\Exception $e) {
                 report($e);
                 Session::flash('file_error', 'Error while storing validation result: ' . $e->getMessage());
@@ -116,8 +120,11 @@ class FilevalidateController extends CommonController
         curl_setopt($curl, CURLOPT_SSL_VERIFYPEER, false);
         curl_setopt($curl,CURLOPT_RETURNTRANSFER,1);
         curl_setopt($curl, CURLOPT_USERAGENT, Config::get('c5tools.userAgent'));
-            
+
+        $starttime = microtime(true);
         $result = curl_exec($curl);
+        $endtime = microtime(true);
+        $responsetime = round($endtime - $starttime, 3);
         if(curl_errno($curl) || $result === false) {
             Session::flash('sushi_error', 'SUSHI request failed: ' . curl_error($curl));
             return Redirect::back()->withInput();
@@ -317,7 +324,10 @@ class FilevalidateController extends CommonController
         curl_setopt($curl,CURLOPT_RETURNTRANSFER,1);
         curl_setopt($curl, CURLOPT_USERAGENT, Config::get('c5tools.userAgent'));
 
+        $starttime = microtime(true);
         $result = curl_exec($curl);
+        $endtime = microtime(true);
+        $responsetime = round($endtime - $starttime, 3);
         if(curl_errno($curl) || $result === false) {
             Session::flash('sushi_error', 'SUSHI request failed: ' . curl_error($curl));
             return Redirect::back()->withInput();
@@ -381,6 +391,7 @@ class FilevalidateController extends CommonController
         $extension = 'json';
         
         $report = null;
+        $starttime = microtime(true);
         try {
             $report = \ubfr\c5tools\Report::createFromFile($tmpFilename, $extension);
             $checkResult = $report->getcheckResult();
@@ -392,11 +403,14 @@ class FilevalidateController extends CommonController
                 // ignore expected exception
             }
         }
+        $endtime = microtime(true);
+        $checktime = round($endtime - $starttime, 3);
+        $checkmemory = round(memory_get_peak_usage(true) / 1024.0 / 1024.0, 3);
         
         try {
             $reportfile = Reportfile::store($report, $file, $filename, Storedfile::SOURCE_SUSHI_VALIDATE,
-                $checkResult, $user['id']);
-            Sushiresponse::store($reportfile->reportfile, $reportfile->checkresult, $sushitransaction);
+                $checkResult, $user['id'], $checktime, $checkmemory);
+            Sushiresponse::store($reportfile->reportfile, $reportfile->checkresult, $sushitransaction, $responsetime);
         } catch (\Exception $e) {
             report($e);
             Session::flash('sushi_error', 'Error while storing validation result: ' . $e->getMessage());

@@ -84,7 +84,7 @@ class Checkresult extends Model
         return $this->getNumberOfMessages(\ubfr\c5tools\CheckResult::CR_WARNING);
     }
 
-    public static function store($report, $filename, $result, $source, $userId)
+    public static function store($report, $filename, $result, $source, $userId, $checktime = 0.0, $checkmemory = 0)
     {
         if ($report !== null && ! ($report instanceof \ubfr\c5tools\Report)) {
             throw new \InvalidArgumentException("report invalid, expecting \ubfr\c5tools\Report");
@@ -112,6 +112,8 @@ class Checkresult extends Model
             $checkresult = new Checkresult();
             $checkresult->resultfile_id = $storedResult->id;
             $checkresult->sessionid = Session::getId();
+            $checkresult->checktime = $checktime;
+            $checkresult->checkmemory = $checkmemory;
             if (! $checkresult->save()) {
                 throw new \Exception("failed to save Checkresult");
             }
