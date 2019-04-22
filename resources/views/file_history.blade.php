@@ -54,6 +54,10 @@
                                     <th class="sorting" aria-label="Validation Result: activate to sort column">Validation Result</th>
                                     <th class="sorting" aria-label="Number of Errors: activate to sort column">#Errors</th>
                                     <th class="sorting" aria-label="Number of Warnings: activate to sort column">#Warnings</th>
+                                    <?php if($utype === 'admin') { ?>
+                                    <th class="sorting" aria-label="CPU: activate to sort column ascending">CPU</th>
+                                    <th class="sorting" aria-label="RAM: activate to sort column ascending">RAM</th>
+                                    <?php } ?>
                                     <th style="width: 96px;">Actions</th>
                                 </tr>
                             </thead>
@@ -69,6 +73,10 @@
                                     <th>Validation Result</th>
                                     <th>#Errors</th>
                                     <th>#Warnings</th>
+                                    <?php if($utype === 'admin') { ?>
+                                    <th>CPU</th>
+                                    <th>RAM</th>
+                                    <?php } ?>
                                     <th>Actions</th>
                                 </tr>
                             </tfoot>
@@ -97,6 +105,10 @@
                                     <td>{{$checkresult->getResult()}}</td>
                                     <td>{{$checkresult->getNumberOfErrors()}}</td>
                                     <td>{{$checkresult->getNumberOfWarnings()}}</td>
+                                    <?php if($utype === 'admin') { ?>
+                                    <td>{{$checkresult->checktime}}&nbsp;s</td>
+                                    <td>{{$checkresult->checkmemory}}&nbsp;MB</td>
+                                    <?php } ?>
                                     <td>
                                         <a href="download/{{$checkresult->resultfile->id}}" title="Download Validation Result"><i class="fa fa-download" aria-hidden="true"></i></a>
                                         &nbsp;
