@@ -18,7 +18,7 @@ class CreateCheckresultsTable extends Migration
                 $table->increments('id');
                 $table->integer('resultfile_id')->unsigned()->nullable();
                 $table->string('sessionid');
-                $table->float('checktime');
+                $table->double('checktime');
                 $table->integer('checkmemory');
                 $table->timestamps();
 

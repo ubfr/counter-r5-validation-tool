@@ -19,7 +19,7 @@ class CreateSushiresponsesTable extends Migration
                 $table->integer('responsefile_id')->unsigned()->nullable();
                 $table->integer('checkresult_id')->unsigned();
                 $table->bigInteger('sushitransaction_id')->unsigned();
-                $table->float('responsetime');
+                $table->double('responsetime');
 
                 $table->foreign('responsefile_id')
                     ->references('id')
