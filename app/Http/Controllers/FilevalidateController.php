@@ -43,8 +43,8 @@ class FilevalidateController extends CommonController
                 }
             }
             $endtime = microtime(true);
-            $checktime = round($endtime - $starttime, 3);
-            $checkmemory = round(memory_get_peak_usage(true) / 1024.0 / 1024.0, 3);
+            $checktime = round($endtime - $starttime, 2);
+            $checkmemory = (int)(memory_get_peak_usage(true) / 1024 / 1024);
             
             try {
                 $reportfile = Reportfile::store($report, $file, $file->getClientOriginalName(), Storedfile::SOURCE_FILE_VALIDATE,
@@ -124,7 +124,7 @@ class FilevalidateController extends CommonController
         $starttime = microtime(true);
         $result = curl_exec($curl);
         $endtime = microtime(true);
-        $responsetime = round($endtime - $starttime, 3);
+        $responsetime = round($endtime - $starttime, 2);
         if(curl_errno($curl) || $result === false) {
             Session::flash('sushi_error', 'SUSHI request failed: ' . curl_error($curl));
             return Redirect::back()->withInput();
@@ -327,7 +327,7 @@ class FilevalidateController extends CommonController
         $starttime = microtime(true);
         $result = curl_exec($curl);
         $endtime = microtime(true);
-        $responsetime = round($endtime - $starttime, 3);
+        $responsetime = round($endtime - $starttime, 2);
         if(curl_errno($curl) || $result === false) {
             Session::flash('sushi_error', 'SUSHI request failed: ' . curl_error($curl));
             return Redirect::back()->withInput();
@@ -404,8 +404,8 @@ class FilevalidateController extends CommonController
             }
         }
         $endtime = microtime(true);
-        $checktime = round($endtime - $starttime, 3);
-        $checkmemory = round(memory_get_peak_usage(true) / 1024.0 / 1024.0, 3);
+        $checktime = round($endtime - $starttime, 2);
+        $checkmemory = (int)(memory_get_peak_usage(true) / 1024 / 1024);
         
         try {
             $reportfile = Reportfile::store($report, $file, $filename, Storedfile::SOURCE_SUSHI_VALIDATE,
