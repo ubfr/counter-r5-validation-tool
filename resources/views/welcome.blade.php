@@ -46,7 +46,7 @@
 							<input type="hidden" name="_token"
 								value="{{csrf_token()}}">
 							<div class="file-uploader__message-area">
-								<p>Upload File Here</p>
+								<p>Please Upload Your COUNTER R5 Report Here</p>
 							</div>
 
 
@@ -427,7 +427,7 @@ src="https://cdn.datatables.net/1.10.11/js/dataTables.bootstrap.min.js">
 
 $(document).ready(function() {
     $('.fileUploader').uploader({
-        MessageAreaText: "Upload Your File Here"
+        MessageAreaText: "Please Upload Your COUNTER R5 Report Here"
     });
 
     setTimeout(function() {
