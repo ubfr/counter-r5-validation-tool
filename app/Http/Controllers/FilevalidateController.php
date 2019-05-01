@@ -2,6 +2,7 @@
 namespace App\Http\Controllers;
 
 use Exception;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\File;
@@ -198,12 +199,15 @@ class FilevalidateController extends CommonController
         if (Session::has('user')) {
             $user = Session::get('user');
             $UserType = $user['utype'];
+            $cleanupAfter = Carbon::now()->subDays(Config::get('c5tools.cleanupAfterDays'))->toDateTimeString();
             if($UserType==='admin'){
                 $allSushiRequest = Sushitransaction::select()
+                            ->where('date_time', '>', $cleanupAfter)
                             ->orderBy('date_time', 'desc')->get();
             }else{
                 $allSushiRequest = Sushitransaction::select()
                             ->where('user_email', $user['email'])
+                            ->where('date_time', '>', $cleanupAfter)
                             ->orderBy('date_time', 'desc')->get();
             }
 

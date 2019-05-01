@@ -118,7 +118,7 @@
 								</table>
 							</div> <!-- /widget-content -->
 						</div> <!-- /widget -->
-						<p style="padding-top: 1ex;">Please see the <a href="{{url('filehistory')}}">Report History</a> for a list of all reports validated within the past {{Config::get('c5tools.clearAfter')}}.</p>
+						<p style="padding-top: 1ex;">Please see the <a href="{{url('filehistory')}}">Report History</a> for a list of all reports validated within the past {{Config::get('c5tools.cleanupAfterDays')}} days.</p>
 					</div>
 					<div class="clearfix"></div>
 				</div>
@@ -241,7 +241,7 @@
 								</table>
 							</div> <!-- /widget-content -->
 						</div> <!-- /widget -->
-						<p style="padding-top: 1ex;">Please see the <a href="{{url('filehistory')}}">Report History</a> for a list of all reports validated and the <a href="{{url('sushirequest')}}">SUSHI History</a> for the SUSHI requests made within the past {{Config::get('c5tools.clearAfter')}}.</p>
+						<p style="padding-top: 1ex;">Please see the <a href="{{url('filehistory')}}">Report History</a> for a list of all reports validated and the <a href="{{url('sushirequest')}}">SUSHI History</a> for the SUSHI requests made within the past {{Config::get('c5tools.cleanupAfterDays')}} days.</p>
 					</div>
 				    <div class="clearfix"></div>
 				</div>

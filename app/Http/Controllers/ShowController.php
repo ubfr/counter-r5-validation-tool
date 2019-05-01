@@ -6,6 +6,8 @@ use Exception;
 use RecursiveDirectoryIterator;
 use RecursiveIteratorIterator;
 use ZipArchive;
+use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Input;
@@ -57,9 +59,11 @@ class ShowController extends Controller {
             $context = 'file';
         }
         
+        $cleanupAfter = Carbon::now()->subDays(Config::get('c5tools.cleanupAfterDays'))->toDateTimeString();
         $fileReports = Storedfile::with('reportfile', 'reportfile.checkresult')->where('user_id', $user['id'])
             ->where('source', Storedfile::SOURCE_FILE_VALIDATE)
             ->where('type', Storedfile::TYPE_REPORT)
+            ->where('created_at', '>', $cleanupAfter)
             ->orderBy('created_at', 'desc')
             ->limit(5)
             ->get();
@@ -67,6 +71,7 @@ class ShowController extends Controller {
         $sushiReports = Storedfile::with('reportfile', 'reportfile.checkresult')->where('user_id', $user['id'])
             ->where('source', Storedfile::SOURCE_SUSHI_VALIDATE)
             ->where('type', Storedfile::TYPE_REPORT)
+            ->where('created_at', '>', $cleanupAfter)
             ->orderBy('created_at', 'desc')
             ->limit(5)
             ->get();
@@ -511,6 +516,8 @@ class ShowController extends Controller {
                Storedfile::SOURCE_FILE_VALIDATE,
                 Storedfile::SOURCE_SUSHI_VALIDATE
             ]);
+        $cleanupAfter = Carbon::now()->subDays(Config::get('c5tools.cleanupAfterDays'))->toDateTimeString();
+        $filehistoryQuery->where('created_at', '>', $cleanupAfter);
         
         return view('file_history',
             [

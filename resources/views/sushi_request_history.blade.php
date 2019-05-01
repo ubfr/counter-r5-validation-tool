@@ -42,7 +42,7 @@
 	 
     <div class="row">
         <div class="col-sm-12">
-            <h3>SUSHI History for the past {{Config::get('c5tools.clearAfter')}}</h3>
+            <h3>SUSHI History for the past {{Config::get('c5tools.cleanupAfterDays')}} days</h3>
             <hr class="colorgraph" />
         </div>
         <div class="col-sm-12">
