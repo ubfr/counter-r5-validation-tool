@@ -119,6 +119,7 @@ class FilevalidateController extends CommonController
         $curl = curl_init($url);
         curl_setopt($curl, CURLOPT_NOBODY, false);
         curl_setopt($curl, CURLOPT_SSL_VERIFYPEER, false);
+        curl_setopt($curl, CURLOPT_FOLLOWLOCATION, 1);
         curl_setopt($curl,CURLOPT_RETURNTRANSFER,1);
         curl_setopt($curl, CURLOPT_USERAGENT, Config::get('c5tools.userAgent'));
 
@@ -325,6 +326,7 @@ class FilevalidateController extends CommonController
         $curl = curl_init($url);
         curl_setopt($curl, CURLOPT_NOBODY, false);
         curl_setopt($curl, CURLOPT_SSL_VERIFYPEER, false);
+        curl_setopt($curl, CURLOPT_FOLLOWLOCATION, 1);
         curl_setopt($curl,CURLOPT_RETURNTRANSFER,1);
         curl_setopt($curl, CURLOPT_USERAGENT, Config::get('c5tools.userAgent'));
 
