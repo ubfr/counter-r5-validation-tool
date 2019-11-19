@@ -54,6 +54,7 @@
                                     <th class="sorting" aria-label="Validation Result: activate to sort column">Validation Result</th>
                                     <th class="sorting" aria-label="Number of Errors: activate to sort column">#Errors</th>
                                     <th class="sorting" aria-label="Number of Warnings: activate to sort column">#Warnings</th>
+                                    <th class="sorting" aria-label="Number of Notices: activate to sort column">#Notices</th>
                                     <?php if($utype === 'admin') { ?>
                                     <th class="sorting" aria-label="CPU: activate to sort column ascending">CPU</th>
                                     <th class="sorting" aria-label="RAM: activate to sort column ascending">RAM</th>
@@ -73,6 +74,7 @@
                                     <th>Validation Result</th>
                                     <th>#Errors</th>
                                     <th>#Warnings</th>
+                                    <th>#Notices</th>
                                     <?php if($utype === 'admin') { ?>
                                     <th>CPU</th>
                                     <th>RAM</th>
@@ -105,6 +107,7 @@
                                     <td>{{$checkresult->getResult()}}</td>
                                     <td>{{$checkresult->getNumberOfErrors()}}</td>
                                     <td>{{$checkresult->getNumberOfWarnings()}}</td>
+                                    <td>{{$checkresult->getNumberOfNotices()}}</td>
                                     <?php if($utype === 'admin') { ?>
                                     <td>{{$checkresult->checktime}}&nbsp;s</td>
                                     <td>{{$checkresult->checkmemory}}&nbsp;MB</td>

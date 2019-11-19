@@ -84,6 +84,11 @@ class Checkresult extends Model
         return $this->getNumberOfMessages(\ubfr\c5tools\CheckResult::CR_WARNING);
     }
 
+    public function getNumberOfNotices()
+    {
+        return $this->getNumberOfMessages(\ubfr\c5tools\CheckResult::CR_NOTICE);
+    }
+
     public static function store($report, $filename, $result, $source, $userId, $checktime = 0.0, $checkmemory = 0)
     {
         if ($report !== null && ! ($report instanceof \ubfr\c5tools\Report)) {

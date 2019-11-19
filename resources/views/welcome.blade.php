@@ -79,6 +79,7 @@
 											<th>Validation Result</th>
 											<th>#Errors</th>
 											<th>#Warnings</th>
+											<th>#Notices</th>
 											<th>Actions</th>
 										</tr>
 									</thead>
@@ -103,6 +104,7 @@
 											<td>{{$checkresult->getResult()}}</td>
 											<td>{{$checkresult->getNumberOfErrors()}}</td>
 											<td>{{$checkresult->getNumberOfWarnings()}}</td>
+											<td>{{$checkresult->getNumberOfNotices()}}</td>
 											<td class="td-actions">
 												<a href="download/{{$checkresult->resultfile->id}}" title="Download Validation Result"><i class="fa fa-download" aria-hidden="true"></i></a>
 												&nbsp;
@@ -202,6 +204,7 @@
 											<th>Validation Result</th>
 											<th>#Errors</th>
 											<th>#Warnings</th>
+											<th>#Notices</th>
 											<th>Actions</th>
 										</tr>
 									</thead>
@@ -226,6 +229,7 @@
 											<td>{{$checkresult->getResult()}}</td>
 											<td>{{$checkresult->getNumberOfErrors()}}</td>
 											<td>{{$checkresult->getNumberOfWarnings()}}</td>
+											<td>{{$checkresult->getNumberOfNotices()}}</td>
 											<td class="td-actions">
 												<a href="download/{{$checkresult->resultfile->id}}" title="Download Validation Result"><i class="fa fa-download" aria-hidden="true"></i></a>
 												&nbsp;

@@ -3,8 +3,10 @@
 $reportfileName = $reportfile->reportfile->filename;
 
 $crFatal = $checkResult->getNumberOfMessages(\ubfr\c5tools\CheckResult::CR_FATAL);
-$crErrors = $crFatal + $checkResult->getNumberOfMessages(\ubfr\c5tools\CheckResult::CR_CRITICAL) + $checkResult->getNumberOfMessages(\ubfr\c5tools\CheckResult::CR_ERROR);
+$crCritical = $checkResult->getNumberOfMessages(\ubfr\c5tools\CheckResult::CR_CRITICAL);
+$crErrors = $crFatal + $crCritical + $checkResult->getNumberOfMessages(\ubfr\c5tools\CheckResult::CR_ERROR);
 $crWarnings = $checkResult->getNumberOfMessages(\ubfr\c5tools\CheckResult::CR_WARNING);
+$crNotices = $checkResult->getNumberOfMessages(\ubfr\c5tools\CheckResult::CR_NOTICE);
 $crMessages = $checkResult->asArray();
 $now = date('Y-m-d H:i:s');
 ?>
@@ -29,9 +31,13 @@ $now = date('Y-m-d H:i:s');
         <div class="validationReport">
           <div class="col-md-6">
   @if($crFatal !== 0)
-            <p>The validation of the report {{$reportfileName}} failed with a fatal error at {{$now}}, please review the errors and warnings.</p>
+            <p>The validation of the report {{$reportfileName}} failed with a fatal error at {{$now}}, please review the errors, warnings and notices.</p>
+  @elseif($crCritical !== 0)
+            <p>The validation of the report {{$reportfileName}} failed with critical errors at {{$now}}, please review the errors, warnings and notices.</p>
   @elseif($crErrors + $crWarnings > 0)
-            <p>The report {{$reportfileName}} did not pass the validation at {{$now}}, please review the errors and warnings.</p>
+            <p>The report {{$reportfileName}} did not pass the validation at {{$now}}, please review the errors, warnings and notices.</p>
+  @elseif($crNotices !== 0)
+            <p>The report {{$reportfileName}} passed the (not yet complete) validation at {{$now}}, please review the notices.</p>
   @else
             <p>The report {{$reportfileName}} passed the (not yet complete) validation at {{$now}}.</p>
   @endif
@@ -46,16 +52,17 @@ $now = date('Y-m-d H:i:s');
                   <th class="col-md-6 my_important"></th>
                   <th class="col-md-3 my_planFeature my_pusty">{{$crErrors}}<br> Errors</th>
                   <th class="col-md-3 my_planFeature my_pusty">{{$crWarnings}}<br> Warnings</th>
+                  <th class="col-md-3 my_planFeature my_pusty">{{$crNotices}}<br> Notices</th>
                 </tr>
               </table>
             </div>
           </div>
         </div>
-  @if($crErrors + $crWarnings > 0)
+  @if($crErrors + $crWarnings + $crNotices > 0)
         <div class="clearfix"></div>
-        <h2>{{$crErrors}} Errors, {{$crWarnings}} Warnings</h2>
+        <h2>{{$crErrors}} Errors, {{$crWarnings}} Warnings, {{$crNotices}} Notices</h2>
     <?php foreach($crMessages as $crMessage) { ?>
-    @if($crMessage['level'] === \ubfr\c5tools\CheckResult::CR_WARNING)
+    @if(in_array($crMessage['level'], [ \ubfr\c5tools\CheckResult::CR_WARNING, \ubfr\c5tools\CheckResult::CR_NOTICE ]))
         <div class="alert alert-warning">
     @else
         <div class="alert alert-danger">
