@@ -1,6 +1,7 @@
 <!DOCTYPE HTML>
 <?php
 $reportfileName = $reportfile->reportfile->filename;
+$reportId = $reportfile->reportid . ' ';
 
 $crFatal = $checkResult->getNumberOfMessages(\ubfr\c5tools\CheckResult::CR_FATAL);
 $crCritical = $checkResult->getNumberOfMessages(\ubfr\c5tools\CheckResult::CR_CRITICAL);
@@ -29,17 +30,17 @@ $now = date('Y-m-d H:i:s');
         </div>
         <div class="clearfix"></div>
         <div class="validationReport">
-          <div class="col-md-6">
+          <div class="col-md-6"><!-- reportid: '{{$reportId}}' -->
   @if($crFatal !== 0)
-            <p>The validation of the report {{$reportfileName}} failed with a fatal error at {{$now}}, please review the errors, warnings and notices.</p>
+            <p>The validation of the {{$reportId}}report {{$reportfileName}} failed with a fatal error at {{$now}}, please review the errors, warnings and notices.</p>
   @elseif($crCritical !== 0)
-            <p>The validation of the report {{$reportfileName}} failed with critical errors at {{$now}}, please review the errors, warnings and notices.</p>
+            <p>The validation of the {{$reportId}}report {{$reportfileName}} failed with critical errors at {{$now}}, please review the errors, warnings and notices.</p>
   @elseif($crErrors + $crWarnings > 0)
-            <p>The report {{$reportfileName}} did not pass the validation at {{$now}}, please review the errors, warnings and notices.</p>
+            <p>The {{$reportId}}report {{$reportfileName}} did not pass the validation at {{$now}}, please review the errors, warnings and notices.</p>
   @elseif($crNotices !== 0)
-            <p>The report {{$reportfileName}} passed the (not yet complete) validation at {{$now}}, please review the notices.</p>
+            <p>The {{$reportId}}report {{$reportfileName}} passed the (not yet complete) validation at {{$now}}, please review the notices.</p>
   @else
-            <p>The report {{$reportfileName}} passed the (not yet complete) validation at {{$now}}.</p>
+            <p>The {{$reportId}}report {{$reportfileName}} passed the (not yet complete) validation at {{$now}}.</p>
   @endif
             <p class="marTop20">
               <a href="email/{{$reportfile->id}}?context={{$context}}" class="btn btn-primary btnBlockxs"><i class="fa fa-envelope"></i> Email Validation Result</a>&nbsp;<a href="download/{{$reportfile->checkresult->resultfile->id}}" class="btn btn-primary btnBlockxs"><i class="fa fa-cloud-download"></i> Download Validation Result</a>
