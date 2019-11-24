@@ -53,8 +53,13 @@ class Reportfile extends Model
             $reportfile->checkresult_id = $storedResult->id;
             if ($report !== null) {
                 $reportfile->release = $report->getRelease();
-                $reportfile->reportname = $report->getReportName();
-                $reportfile->reportid = $report->getReportId();
+                try {
+                    $reportfile->reportname = $report->getReportName();
+                    $reportfile->reportid = $report->getReportId();
+                } catch (\Exception $e) {
+                    $reportfile->reportname = null;
+                    $reportfile->reportid = null;
+                }
                 $reportFilters = $report->getReportFilters();
                 if (isset($reportFilters['Platform'])) {
                     $reportfile->platform = $reportFilters['Platform'];

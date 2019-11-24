@@ -98,9 +98,15 @@ class Checkresult extends Model
             throw new \InvalidArgumentException("result invalid, expecting \ubfr\c5tools\CheckResult");
         }
 
+        $resultSpreadsheet = null;
         if ($report !== null) {
-            $resultSpreadsheet = $report->getCheckResultAsSpreadsheet();
-        } else {
+            try {
+                $resultSpreadsheet = $report->getCheckResultAsSpreadsheet();
+            } catch (\Exception $e) {
+                // ignore exception, method might fail if there are serious issues with the report heade
+            }
+        }
+        if ($resultSpreadsheet === null) {
             $resultSpreadsheet = $result->asSpreadsheet();
         }
 
