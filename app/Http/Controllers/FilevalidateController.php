@@ -282,7 +282,9 @@ class FilevalidateController extends CommonController
         $parameters = Input::all();
         $rules = [
             'api_url' => 'required|url|regex:/^https?:/|not_regex:/\?/',
-            'customer_id' => 'required'
+            'customer_id' => 'required',
+            'startmonth' => 'required|date_format:m-Y',
+            'endmonth' => 'required|date_format:m-Y'
         ];
         $messages = [
             'url' => 'The COUNTER_SUSHI API URL must be a valid URL.',
