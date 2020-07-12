@@ -46,7 +46,7 @@
 
 <?php
 print "<!-- " . Request::path() . " -->\n";
-if(Request::path()==='consortium' || Request::path()==='filelist'){
+if(Request::path()==='filelist'){
 ?>
 <script type="text/javascript">
 var jQuery_1_3_2 = $.noConflict(true);

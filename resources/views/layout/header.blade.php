@@ -73,9 +73,6 @@
         				    <li><a href="{{url('filelist')}}">File / SUSHI Validate</a></li>
         					<li><a href="{{url('filehistory')}}">Report History</a></li>
         					<li><a href="{{url('sushirequest')}}">SUSHI History</a></li>
-        				    <?php if(Config::get('c5tools.enableConsortiumTool')) {?>
-        				    <li><a href="{{url('consortium')}}">Consortium Tool</a></li>
-        				    <?php }?>
         				    </ul>
         				<ul class="nav navbar-nav pull-right">
         			     <li><a href="{{url('useredit')}}" ><i class="fa fa-user" aria-hidden="true"></i> Welcome {{$userDisplayName}}</a></li>
@@ -94,9 +91,6 @@
         				    <li><a href="{{url('filelist')}}">File / SUSHI Validate</a></li>
         					<li><a href="{{url('filehistory')}}">Report History</a></li>
         					<li><a href="{{url('sushirequest')}}">SUSHI History</a></li>
-        				    <?php if(Config::get('c5tools.enableConsortiumTool')) {?>
-        					<li><a href="{{url('consortium')}}">Consortium Tool</a></li>
-        				    <?php }?>
         					<li><a href="{{url('userlist')}}">User Management</a></li>
         				</ul>
         				<ul class="nav navbar-nav pull-right" style="margin-top:15px;">

@@ -13,8 +13,6 @@ class Storedfile extends Model
 
     const SOURCE_SUSHI_VALIDATE = 2;
 
-    const SOURCE_CONSORTIUM_TOOL = 3;
-
     const TYPE_ERROR_MODEL = 1;
 
     const TYPE_SERVICE_STATUS = 2;
@@ -30,7 +28,6 @@ class Storedfile extends Model
     protected static $sourceNames = [
         self::SOURCE_FILE_VALIDATE => 'File Validate',
         self::SOURCE_SUSHI_VALIDATE => 'SUSHI Validate',
-        self::SOURCE_CONSORTIUM_TOOL => 'Consortium Tool'
     ];
 
     protected static $typeNames = [

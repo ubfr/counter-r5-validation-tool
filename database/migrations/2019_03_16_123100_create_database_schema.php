@@ -22,11 +22,6 @@ class CreateDatabaseSchema extends Migration
         $this->createParentreportsTable();
         $this->createReportnamesTable();
         $this->createSushiTransactionTable();
-        $this->createConsortiumConfigurationTable();
-        $this->createProviderDetailsTable();
-        $this->createConsortiumMemberTable();
-        $this->createTransactionMasterDetailTable();
-        $this->createTransactionDetailTempTable();
     }
 
     protected function createUsersTable()
@@ -147,151 +142,6 @@ class CreateDatabaseSchema extends Migration
                 $table->timestamp('date_time')
                     ->nullable()
                     ->useCurrent();
-            });
-    }
-
-    protected function createConsortiumConfigurationTable()
-    {
-        if (Schema::hasTable('consortium_configuration')) {
-            return;
-        }
-        Schema::create('consortium_configuration',
-            function (Blueprint $table) {
-                $table->engine = 'InnoDB';
-                $table->charset = 'utf8';
-                $table->collation = 'utf8_unicode_ci';
-
-                $table->increments('id');
-                $table->string('configuration_name')->default('');
-                $table->string('provider_name')->nullable();
-                $table->string('provider_url')->nullable();
-                $table->string('apikey')->nullable();
-                $table->string('requestor_id')->nullable();
-                $table->string('created_by')->nullable();
-                $table->string('customer_id')->nullable();
-                $table->tinyInteger('status')->default(1);
-                $table->string('remarks');
-                $table->timestamp('time_stamp')->useCurrent();
-                $table->integer('user_id')->nullable();
-
-                $table->unique([
-                    'configuration_name',
-                    'provider_name'
-                ]);
-            });
-    }
-
-    protected function createProviderDetailsTable()
-    {
-        if (Schema::hasTable('provider_details')) {
-            return;
-        }
-        Schema::create('provider_details',
-            function (Blueprint $table) {
-                $table->engine = 'InnoDB';
-                $table->charset = 'utf8';
-                $table->collation = 'utf8_unicode_ci';
-
-                $table->increments('id');
-                $table->string('configuration_id')->default('');
-                // TODO: Why are the following columns both in consortium_configuration and provider_details?
-                $table->string('provider_name')->nullable();
-                $table->string('provider_url')->nullable();
-                $table->string('apikey')->nullable();
-                $table->string('requestor_id')->nullable();
-                $table->string('customer_id')->nullable();
-                $table->tinyInteger('status')->default(1);
-                $table->string('remarks');
-                $table->timestamp('time_stamp')->useCurrent();
-            });
-    }
-
-    protected function createConsortiumMemberTable()
-    {
-        if (Schema::hasTable('consortium_member')) {
-            return;
-        }
-        Schema::create('consortium_member',
-            function (Blueprint $table) {
-                $table->engine = 'InnoDB';
-                $table->charset = 'utf8';
-                $table->collation = 'utf8_unicode_ci';
-
-                $table->increments('id');
-                $table->string('customer_id')->nullable();
-                $table->string('requestor_id')->nullable();
-                $table->string('name')->nullable();
-                $table->string('notes')->nullable();
-                $table->string('institution_id_type')->nullable();
-                $table->string('institution_id_value')->nullable();
-                $table->string('provider_id')->nullable();
-            });
-    }
-
-    protected function createTransactionMasterDetailTable()
-    {
-        if (Schema::hasTable('transaction_master_detail')) {
-            return;
-        }
-        Schema::create('transaction_master_detail',
-            function (Blueprint $table) {
-                $table->engine = 'InnoDB';
-                $table->charset = 'utf8';
-                $table->collation = 'utf8_unicode_ci';
-
-                $table->increments('id'); // corrected ID => id
-                $table->string('user_id', 128)->default('');
-                $table->string('transaction_id', 128)->default('');
-                $table->string('config_name', 128)->default('');
-                $table->string('client_ip', 15)->default(''); // TODO: This doesn't work for IPv6.
-                $table->string('provider_name', 128)->default('');
-                $table->string('member_name', 128)->default('');
-                $table->string('report_id', 55)->default('');
-                $table->date('begin_date')->default('1970-01-01');
-                $table->date('end_date')->default('1970-01-01');
-                $table->integer('status')->default(0);
-                $table->string('message', 128)->default('');
-                $table->string('remarks')->default('');
-                $table->string('exception')->default('');
-                $table->string('details')->default('');
-                $table->string('file_name')->default('');
-                $table->integer('file_size')->default(0);
-                $table->datetime('start_date_time')->default('1970-01-01 00:00:00');
-                $table->datetime('end_date_time')->default('1970-01-01 00:00:00');
-                $table->timestamp('time_stamp')->useCurrent();
-
-                $table->unique(
-                    [
-                        'user_id',
-                        'transaction_id',
-                        'config_name',
-                        'provider_name',
-                        'member_name',
-                        'report_id'
-                    ]);
-                $table->index('transaction_id');
-            });
-    }
-
-    protected function createTransactionDetailTempTable()
-    {
-        if (Schema::hasTable('transaction_detail_temp')) {
-            return;
-        }
-        Schema::create('transaction_detail_temp',
-            function (Blueprint $table) {
-                $table->engine = 'InnoDB';
-                $table->charset = 'utf8';
-                $table->collation = 'utf8_unicode_ci';
-
-                // TODO: Why does this table replicate parts of the transaction_master_details table?
-                $table->increments('id');
-                $table->string('transaction_id', 128);
-                $table->string('reports');
-                $table->string('providers');
-                $table->string('members');
-                $table->string('begin_date');
-                $table->string('end_date');
             });
     }
 
@@ -445,11 +295,6 @@ class CreateDatabaseSchema extends Migration
      */
     public function down()
     {
-        Schema::dropIfExists('transaction_detail_temp');
-        Schema::dropIfExists('transaction_master_detail');
-        Schema::dropIfExists('consortium_member');
-        Schema::dropIfExists('provider_details');
-        Schema::dropIfExists('consortium_configuration');
         Schema::dropIfExists('sushi_transaction');
         Schema::dropIfExists('reportnames');
         Schema::dropIfExists('parentreports');
