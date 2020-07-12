@@ -169,7 +169,7 @@ class UserlistController extends Controller
         function edit_user_display($id){
             if (Session::has('user')){
                 $user = Session::get('user');
-                $Userdetail=User::select('id','first_name','display_name','last_name','email','no_of_times')
+                $Userdetail=User::select('id','first_name','display_name','last_name','email')
                 ->where('id',$id)->get();
                 $data['utype']=$user['utype'];
                 $data['userDisplayName']= $user['display_name'];
@@ -193,7 +193,6 @@ class UserlistController extends Controller
                     "first_name" => $data['first_name'],
                     "last_name" => $data['last_name'],
                     "display_name" => $data['display_name'],
-                    "no_of_times" => $data['no_of_times'],
                 );
                 if(!empty($newpassword)){
                     $newpasswordincoded = Hash::make($newpassword);
@@ -225,7 +224,7 @@ class UserlistController extends Controller
                 $user=session::get('user');
                 $data = Input::all();
                 
-                $Userdetail=User::select('id','first_name','last_name','display_name','utype','email','status','no_of_times')
+                $Userdetail=User::select('id','first_name','last_name','display_name','utype','email','status')
                 ->where('id',$id)->get();
                 
                 $updatearray = array(  "status" => $status);

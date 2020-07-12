@@ -57,13 +57,6 @@
 	</div>
 	
 	<div class="form-group row">
-		<label for="example-text-input" class="col-xs-2 col-form-label">Limit</label>
-		<div class="col-xs-10">
-			<input class="form-control" name="no_of_times" type="no_of_times"  value="{{$user_details->no_of_times}}" id="example-text-input" placeholder="Enter Limit">
-		</div>
-	</div>
-	
-	<div class="form-group row">
 		<div class="offset-sm-2 col-sm-10" align="center">
 			<a href="{{url('userlist')}}" class="btn btn-primary btnBlockxs ">Back</a>
 			<button type="submit" class="btn btn-primary">Save</button>
