@@ -26,8 +26,8 @@
                         <label for="reportsmater">Reports:</label>
                         <select id="reportsmater" name="ReportName" onchange="showDiv(this.value)">
                             <option  value="">Select Report</option>
-                            @foreach($allreports as $report)
-                            <option  value="{{$report['report_code']}}">{{$report['report_code']}}</option>
+                            @foreach($reportIds as $reportId)
+                            <option  value="{{$reportId}}">{{$reportId}}</option>
                             @endforeach
                         </select>
                     </div>

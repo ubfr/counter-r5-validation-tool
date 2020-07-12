@@ -12,7 +12,6 @@ use Illuminate\Support\Facades\Session;
 use Illuminate\Support\Facades\Validator;
 use App\Helper;
 use App\Reportfile;
-use App\Reportname;
 use App\Storedfile;
 use App\Sushiresponse;
 use App\Sushitransaction;
@@ -264,11 +263,8 @@ class FilevalidateController extends CommonController
         $data['customer_id'] = $parameters['customer_id'];
         $data['requestor_id'] = $parameters['requestor_id'];
         $data['api_key'] = $parameters['api_key'];
-        $data['allreports'] = Reportname::select([
-            'report_code'
-        ])->orderBy('report_code', 'asc')
-            ->get()
-            ->toArray();
+        $data['reportIds'] = \ubfr\c5tools\Config::forRelease('5')->getReportIds();
+        sort($data['reportIds']);
         
         return view('sushi_parameter_view', $data);
     }
