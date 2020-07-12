@@ -9,10 +9,10 @@
 
 			<div class="footer-menu">
 				<div class="menu-main-container"><ul class="menu" id="menu-main-2"><li class="menu-item menu-item-type-custom menu-item-object-custom current-menu-item current_page_item menu-item-home menu-item-160"><a href="https://www.projectcounter.org/">Home</a></li>
-<li class="menu-item menu-item-type-custom menu-item-object-custom menu-item-has-children menu-item-535"><a href="#">About</a></li>
-<li class="menu-item menu-item-type-custom menu-item-object-custom menu-item-has-children menu-item-536"><a href="#">Code of Practice</a></li>
+<li class="menu-item menu-item-type-custom menu-item-object-custom menu-item-has-children menu-item-535"><a href="https://www.projectcounter.org/about/">About</a></li>
+<li class="menu-item menu-item-type-custom menu-item-object-custom menu-item-has-children menu-item-536"><a href="https://www.projectcounter.org/code-of-practice-five-sections/">Code of Practice</a></li>
 <li class="menu-item menu-item-type-post_type menu-item-object-page menu-item-499"><a href="https://www.projectcounter.org/about/register/">Registries of Compliance</a></li>
-<li class="menu-item menu-item-type-custom menu-item-object-custom menu-item-has-children menu-item-537"><a href="#">Members' Section</a></li>
+<li class="menu-item menu-item-type-custom menu-item-object-custom menu-item-has-children menu-item-537"><a href="https://www.projectcounter.org/members-section/">Members' Section</a></li>
 <li class="menu-item menu-item-type-post_type menu-item-object-page menu-item-164"><a href="https://www.projectcounter.org/contact-counter/">Contact</a></li>
 </ul></div>			</div>
 
