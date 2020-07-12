@@ -105,7 +105,7 @@ class FilevalidateController extends CommonController
         }
         $url .= substr($parameters['method'], 3) . '?';
         $query = [
-            'apikey' => $parameters['api_key'],
+            'api_key' => $parameters['api_key'],
             'requestor_id' => $parameters['requestor_id'],
             'customer_id' => $parameters['customer_id'],
             'platform' => $parameters['platform']
