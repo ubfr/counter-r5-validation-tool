@@ -13,8 +13,7 @@ class ShowController extends Controller {
     public $TransctionIdCurrent=0;
 
     public function __construct() {
-        $user = Session::get('user');
-        if ($user['email'] == '') {
+        if (! Session::has('user')) {
             return Redirect::to('login');
         }
     }
