@@ -36,12 +36,7 @@
     <header>
     	<div class="row">
     		<div class="col-md-12">
-    			<p class="preview">The is a preview of the COUNTER R5 Validation Tool which is still under development.
-    			    <b>A lot of checks that were missing so far have been added (2019-11-25)</b>. Please use
-    			    <a href="https://www.surveymonkey.co.uk/r/B9LGW2H" target="_blank">this survey</a> which shouldn't
-    			    take more than 2 minutes to complete to send us your feedback and suggestions and report issues
-    			    with the Validation Tool.  All data in this preview will be deleted when the final version of
-    			    Validation Tool is made available.</p>
+    			<p class="preview">This is a preview of the COUNTER R5 Validation Tool which is still under development. All data in this preview will be deleted when the final version of the Validation Tool is made available. <b>The Validation Tool has been updated for Release 5.0.2, please see the <a href="https://www.projectcounter.org/validation-tool/" target="_blank">COUNTER website</a> for details.</b></p>
     		</div>
     	</div>
     	<div class="row">
