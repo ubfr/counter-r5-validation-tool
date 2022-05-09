@@ -68,17 +68,18 @@
                         $allDataType = array(
                             'Article',
                             'Book',
-                            'Book Segment',
+                            'Book_Segment',
                             'Database',
                             'Dataset',
                             'Journal',
                             'Multimedia',
-                            'Newspaper or Newsletter',
+                            'Newspaper_or_Newsletter',
                             'Other',
                             'Platform',
                             'Report',
-                            'Repository Item',
-                            'Thesis or Dissertation'
+                            'Repository_Item',
+                            'Thesis_or_Dissertation',
+                            'Unspecified'
                                                 );
                         ?>
                     <select id="Data_Type" name="data_type[]" multiple class="multiselectoption">
